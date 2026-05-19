@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bonus: CI/CD Fundamentals | M's Web Development Guide</title>
+  <meta name="description" content="CI/CD fundamentals: automated testing, GitHub Actions, and deployment automation.">
+  <link rel="stylesheet" href="../../assets/css/main.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/themes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+  <div class="site-wrapper">
+    <header class="site-header">
+      <div class="site-title"><a href="../../index.html"><i class="fa-solid fa-house"></i> M's Web Development Guide</a></div>
+      <div class="header-controls">
+        <button data-sidebar-toggle class="sidebar-toggle" aria-label="Toggle table of contents">&#9776; TOC</button>
+        <button data-theme-toggle aria-label="Switch theme"><span class="icon">☾</span>Dark</button>
+      </div>
+    </header>
+    <aside class="sidebar" aria-label="Table of Contents">
+      <div id="sidebar-toc"></div>
+    </aside>
+    <main class="main-content" id="main">
+      <span class="chapter-number">Bonus</span>
+      <h1>CI/CD Fundamentals</h1>
+      <p class="chapter-subtitle">Automated testing, GitHub Actions, and deployment automation</p>
+
+      <p>CI/CD stands for Continuous Integration / Continuous Deployment. It means: every time you push code, your tests run automatically and your site deploys automatically. No manual steps, no forgetting to run tests, no "it works on my machine" issues.</p>
+
+      <section>
+        <h2>Why Automate?</h2>
+        <p>Manual deployments are error-prone:</p>
+        <ul>
+          <li>You forget to run tests before pushing</li>
+          <li>You deploy without checking for errors</li>
+          <li>Different machines have different setups</li>
+          <li>Rollbacks are manual and slow</li>
+        </ul>
+        <p>CI/CD fixes all of this. You push code → tests run → if passing, deploys automatically.</p>
+
+        <div class="callout-info">
+          <div class="callout-title">What CI/CD Actually Is</div>
+          <p><strong>CI (Continuous Integration):</strong> Every push triggers automated tests. Bad code gets caught before merging.</p>
+          <p><strong>CD (Continuous Deployment):</strong> Passing code automatically deploys to production (or staging).</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>GitHub Actions Basics</h2>
+        <p>GitHub Actions is free for public repos and included in GitHub. You define workflows in YAML files:</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Basic workflow: .github/workflows/test.yml</span></div>
+          <pre><code>name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm test</code></pre>
+        </div>
+
+        <p>This workflow: runs on every push to main and every PR, checks out code, sets up Node.js, installs dependencies, runs tests.</p>
+      </section>
+
+      <section>
+        <h2>Automated Deployment</h2>
+        <p>Add deployment after tests pass:</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Deploy workflow: .github/workflows/deploy.yml</span></div>
+          <pre><code>name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      - run: npm test
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: my-app
+          directory: dist</code></pre>
+        </div>
+
+        <p>The <code>needs: test</code> means deployment only runs if tests pass. This is the key: <strong>bad code never deploys</strong>.</p>
+      </section>
+
+      <section>
+        <h2>Environment Variables in CI</h2>
+        <p>Never hardcode secrets. Use GitHub secrets:</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Using secrets in workflows</span></div>
+          <pre><code>steps:
+  - run: npm run build
+    env:
+      API_URL: ${{ secrets.API_URL }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}</code></pre>
+        </div>
+
+        <p>Go to Settings → Secrets and variables → Actions in your GitHub repo to add secrets.</p>
+      </section>
+
+      <section>
+        <h2>Pull Request Previews</h2>
+        <p>Every PR gets its own preview deployment:</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Preview deployment</span></div>
+          <pre><code>on:
+  pull_request:
+    types: [opened, synchronize, closed]
+
+jobs:
+  deploy-preview:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: my-app
+          directory: dist
+          # Creates preview-123.pr-preview.pages.dev
+          branch: ${{ github.event.pull_request.number }}-pr-preview</code></pre>
+        </div>
+
+        <p>Team members can test the actual deployed site before merging.</p>
+      </section>
+
+      <section>
+        <h2>Getting Started</h2>
+        <p>Start simple: add tests + CI first, add deployment later.</p>
+
+        <ol>
+          <li>Create <code>.github/workflows/test.yml</code> in your repo</li>
+          <li>Push code — watch tests run automatically</li>
+          <li>Once tests pass reliably, add deployment workflow</li>
+          <li>Protect your main branch: require tests to pass before merging</li>
+        </ol>
+
+        <div class="callout-tip">
+          <div class="callout-title">Start Small</div>
+          <p>You don't need everything at once. A simple "run tests on push" workflow catches bugs immediately and only takes a few minutes to set up.</p>
+        </div>
+      </section>
+
+      <nav class="chapter-nav">
+        <a href="bonus-typescript.html"><span class="nav-label">Prev</span>Prev: TypeScript Basics</a>
+        <a href="bonus-debugging.html"><span class="nav-label">Next</span>Next: Debugging Your Project</a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../../assets/js/sidebar.js"></script>
+  <script src="../../assets/js/navigation.js"></script>
+  <script src="../../assets/js/themes.js"></script>
+</body>
+</html>

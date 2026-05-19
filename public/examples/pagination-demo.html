@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sliding Window Pagination — Interactive Example</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/themes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .pagination-demo { margin: 1.5rem 0; }
+    .controls-group { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; padding: 1rem; background: var(--bg-secondary); border-radius: 6px; }
+    .controls-group label { display: flex; flex-direction: column; font-size: 0.85rem; font-weight: 600; gap: 0.25rem; }
+    .controls-group input[type="range"] { min-width: 120px; }
+    .controls-group .value { font-family: monospace; font-size: 0.85rem; color: var(--text-secondary); }
+    .pagination-visual { margin: 1rem 0; }
+    .window-label { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.5rem; }
+    .page-dots { display: flex; align-items: center; gap: 0.25rem; flex-wrap: wrap; justify-content: center; padding: 0.75rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 6px; }
+    .page-dot { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 4px; font-size: 0.85rem; font-weight: 600; transition: all 0.2s; }
+    .page-dot.normal { background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); cursor: pointer; }
+    .page-dot.normal:hover { background: #e94560; color: #fff; border-color: #e94560; }
+    .page-dot.active { background: #e94560; color: #fff; }
+    .page-dot.ellipsis { background: transparent; border: none; color: var(--text-secondary); width: auto; padding: 0 0.15rem; }
+    .page-dot.window-highlight { box-shadow: 0 0 0 2px var(--border-color); }
+    .items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.75rem; margin: 1.5rem 0; }
+    .item-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 6px; padding: 1rem; }
+    .item-card h4 { margin: 0 0 0.25rem; font-size: 0.95rem; }
+    .item-card .item-date { font-size: 0.8rem; color: var(--text-secondary); }
+    .item-card .item-summary { font-size: 0.85rem; margin-top: 0.4rem; color: var(--text-primary); }
+    .stats { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 1rem; font-size: 0.85rem; }
+    .stat-box { padding: 0.5rem 0.75rem; background: var(--bg-secondary); border-radius: 4px; }
+    .stat-box strong { display: block; font-size: 1.1rem; }
+    #page-input { width: 60px; padding: 0.3rem; text-align: center; font-family: monospace; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-input); color: var(--text-primary); }
+    .nav-buttons { display: flex; gap: 0.5rem; justify-content: center; margin: 1rem 0; }
+    .nav-buttons button { padding: 0.4rem 1rem; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-card); cursor: pointer; }
+    .nav-buttons button:hover { background: #e94560; color: #fff; border-color: #e94560; }
+    .nav-buttons button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .diagram-box { border: 1px solid var(--border-color); border-radius: 6px; padding: 1.5rem; margin: 1.5rem 0; text-align: center; }
+    .diagram-box svg { max-width: 100%; }
+  </style>
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+  <div class="site-wrapper">
+    <header class="site-header" style="justify-content:space-between;">
+      <div class="site-title"><a href="../index.html"><i class="fa-solid fa-house"></i> M's Web Development Guide</a></div>
+      <a href="../chapters/11-project-walkthrough.html" style="font-size:0.85rem;">Back to Chapter 11</a>
+    </header>
+    <main class="main-content" id="main">
+      <h1>Sliding Window Pagination</h1>
+      <p class="chapter-subtitle">Interactively explore how the sliding window algorithm handles pagination at any scale.</p>
+
+      <div class="callout-info">
+        <div class="callout-title">The Algorithm</div>
+        <p>Always show: first page + last page + a window of pages around the current page. Insert ellipsis between gaps. The window stays compact even with 100+ pages — no scrolling through endless page numbers.</p>
+      </div>
+
+      <div class="controls-group">
+        <label>
+          Total Items
+          <input type="range" id="total-items" min="1" max="200" value="48">
+          <span class="value" id="total-items-value">48</span>
+        </label>
+        <label>
+          Items Per Page
+          <input type="range" id="per-page" min="1" max="20" value="6">
+          <span class="value" id="per-page-value">6</span>
+        </label>
+        <label>
+          Window Size (pages each side)
+          <input type="range" id="window-size" min="1" max="10" value="3">
+          <span class="value" id="window-size-value">3</span>
+        </label>
+        <label>
+          Current Page
+          <input type="number" id="page-input" min="1" value="1">
+        </label>
+      </div>
+
+      <div class="pagination-visual">
+        <div class="window-label">Pagination Controls</div>
+        <div id="pagination-rendered" class="page-dots"></div>
+      </div>
+
+      <div class="nav-buttons">
+        <button id="first-btn" disabled>&#xab; First</button>
+        <button id="prev-btn" disabled>&#x2039; Prev</button>
+        <span id="page-indicator" style="padding:0.4rem 0.75rem;font-family:monospace;">Page 1 of 8</span>
+        <button id="next-btn">Next &#x203a;</button>
+        <button id="last-btn">Last &#xbb;</button>
+      </div>
+
+      <div id="items-container" class="items-grid"></div>
+
+      <div class="stats">
+        <div class="stat-box"><strong id="stat-current">1</strong>Current Page</div>
+        <div class="stat-box"><strong id="stat-total">8</strong>Total Pages</div>
+        <div class="stat-box"><strong id="stat-window-start">2</strong>Window Start</div>
+        <div class="stat-box"><strong id="stat-window-end">5</strong>Window End</div>
+        <div class="stat-box"><strong id="stat-visible">6</strong>Items Visible</div>
+      </div>
+
+      <details style="margin-top:1.5rem;">
+        <summary style="cursor:pointer;font-weight:600;">How the Sliding Window Algorithm Works</summary>
+        <ol style="margin-top:0.5rem;">
+          <li>Always include page 1.</li>
+          <li>Calculate a window of <code>windowSize</code> pages on each side of the current page.</li>
+          <li>If the window overlaps with page 1 or the last page, shift it so it stays centered.</li>
+          <li>Add an ellipsis (<code>&hellip;</code>) if there's a gap between page 1 and the window start.</li>
+          <li>Add an ellipsis if there's a gap between the window end and the last page.</li>
+          <li>Always include the last page.</li>
+        </ol>
+      </details>
+    </main>
+  </div>
+  <script>
+    var totalItems = 48;
+    var perPage = 6;
+    var windowSize = 3;
+    var currentPage = 1;
+
+    function getTotalPages() {
+      return Math.ceil(totalItems / perPage) || 1;
+    }
+
+    function buildSlidingWindow(totalPages, current, windowSz) {
+      if (totalPages <= 1) return [1];
+
+      var pages = [];
+      pages.push(1);
+
+      var windowStart = Math.max(2, current - windowSz);
+      var windowEnd = Math.min(totalPages - 1, current + windowSz);
+
+      if (windowEnd - windowStart < windowSz * 2) {
+        if (current < totalPages / 2) {
+          windowEnd = Math.min(totalPages - 1, windowStart + windowSz * 2);
+        } else {
+          windowStart = Math.max(2, windowEnd - windowSz * 2);
+        }
+      }
+
+      if (windowStart > 2) {
+        pages.push('...');
+      }
+
+      for (var i = windowStart; i <= windowEnd; i++) {
+        pages.push(i);
+      }
+
+      if (windowEnd < totalPages - 1) {
+        pages.push('...');
+      }
+
+      if (totalPages > 1) {
+        pages.push(totalPages);
+      }
+
+      return { pages: pages, windowStart: windowStart, windowEnd: windowEnd };
+    }
+
+    var items = [];
+    for (var i = 1; i <= 200; i++) {
+      items.push({ title: 'Item ' + i, date: '2026-' + String(Math.floor(Math.random() * 12 + 1)).padStart(2, '0') + '-' + String(Math.floor(Math.random() * 28 + 1)).padStart(2, '0'), summary: 'Description for item ' + i + '.' });
+    }
+
+    function render() {
+      var totalPages = getTotalPages();
+      if (currentPage < 1) currentPage = 1;
+      if (currentPage > totalPages) currentPage = totalPages;
+
+      var result = buildSlidingWindow(totalPages, currentPage, windowSize);
+
+      // Render pagination dots
+      var rendered = document.getElementById('pagination-rendered');
+      rendered.innerHTML = '';
+      for (var i = 0; i < result.pages.length; i++) {
+        var p = result.pages[i];
+        var dot = document.createElement('span');
+        if (p === '...') {
+          dot.className = 'page-dot ellipsis';
+          dot.textContent = '\u2026';
+        } else {
+          dot.className = 'page-dot ' + (p === currentPage ? 'active' : 'normal');
+          dot.textContent = p;
+          dot.addEventListener('click', (function(pageNum) { return function() { currentPage = pageNum; render(); }; })(p));
+        }
+        rendered.appendChild(dot);
+      }
+
+      // Render items
+      var start = (currentPage - 1) * perPage;
+      var end = Math.min(start + perPage, totalItems);
+      var container = document.getElementById('items-container');
+      container.innerHTML = '';
+      for (var i = start; i < end; i++) {
+        var item = items[i];
+        var card = document.createElement('div');
+        card.className = 'item-card';
+        card.innerHTML = '<h4>' + escapeHtml(item.title) + '</h4><div class="item-date">' + escapeHtml(item.date) + '</div><div class="item-summary">' + escapeHtml(item.summary) + '</div>';
+        container.appendChild(card);
+      }
+
+      // Update controls
+      document.getElementById('page-input').value = currentPage;
+      document.getElementById('page-indicator').textContent = 'Page ' + currentPage + ' of ' + totalPages;
+
+      document.getElementById('first-btn').disabled = currentPage <= 1;
+      document.getElementById('prev-btn').disabled = currentPage <= 1;
+      document.getElementById('next-btn').disabled = currentPage >= totalPages;
+      document.getElementById('last-btn').disabled = currentPage >= totalPages;
+
+      // Stats
+      document.getElementById('stat-current').textContent = currentPage;
+      document.getElementById('stat-total').textContent = totalPages;
+      document.getElementById('stat-window-start').textContent = result.windowStart;
+      document.getElementById('stat-window-end').textContent = result.windowEnd;
+      document.getElementById('stat-visible').textContent = end - start;
+    }
+
+    document.getElementById('total-items').addEventListener('input', function() {
+      totalItems = parseInt(this.value);
+      document.getElementById('total-items-value').textContent = totalItems;
+      currentPage = 1;
+      render();
+    });
+
+    document.getElementById('per-page').addEventListener('input', function() {
+      perPage = parseInt(this.value);
+      document.getElementById('per-page-value').textContent = perPage;
+      currentPage = 1;
+      render();
+    });
+
+    document.getElementById('window-size').addEventListener('input', function() {
+      windowSize = parseInt(this.value);
+      document.getElementById('window-size-value').textContent = windowSize;
+      render();
+    });
+
+    document.getElementById('page-input').addEventListener('change', function() {
+      var val = parseInt(this.value);
+      if (val >= 1 && val <= getTotalPages()) {
+        currentPage = val;
+        render();
+      }
+    });
+
+    document.getElementById('first-btn').addEventListener('click', function() {
+      currentPage = 1; render();
+    });
+
+    document.getElementById('prev-btn').addEventListener('click', function() {
+      currentPage = Math.max(1, currentPage - 1); render();
+    });
+
+    document.getElementById('next-btn').addEventListener('click', function() {
+      currentPage = Math.min(getTotalPages(), currentPage + 1); render();
+    });
+
+    document.getElementById('last-btn').addEventListener('click', function() {
+      currentPage = getTotalPages(); render();
+    });
+
+    function escapeHtml(s) {
+      var d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    render();
+  </script>
+  <script src="../js/themes.js"></script>
+</body>
+</html>

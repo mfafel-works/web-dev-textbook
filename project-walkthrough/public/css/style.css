@@ -1,0 +1,283 @@
+/* My SPA — Application Styles */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.6;
+  color: #1a1a2e;
+  background: #f8f9fa;
+  min-height: 100vh;
+}
+
+/* Navigation */
+#nav {
+  background: #1a1a2e;
+  padding: 1rem 2rem;
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
+#nav a {
+  color: #a0a0b8;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: color 0.2s, background 0.2s;
+}
+
+#nav a:hover {
+  color: #fff;
+  background: rgba(255,255,255,0.1);
+}
+
+#nav a.active {
+  color: #fff;
+  background: #e94560;
+}
+
+/* Main content */
+#app {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
+}
+
+#app h1 {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  color: #1a1a2e;
+}
+
+/* Hero block */
+.hero {
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  color: #fff;
+  padding: 3rem 2rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.hero h2 {
+  font-size: 1.75rem;
+  margin: 0;
+}
+
+/* Text block */
+.text-block {
+  margin-bottom: 1.5rem;
+}
+
+.text-block p {
+  font-size: 1.1rem;
+  color: #333;
+}
+
+/* Image block */
+figure {
+  margin: 1.5rem 0;
+}
+
+figure img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+}
+
+figcaption {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+/* Contact form */
+.contact-form {
+  max-width: 500px;
+  margin: 1.5rem 0;
+}
+
+.contact-form label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.contact-form input,
+.contact-form textarea {
+  width: 100%;
+  padding: 0.6rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+  outline: none;
+  border-color: #e94560;
+  box-shadow: 0 0 0 2px rgba(233, 69, 96, 0.2);
+}
+
+.contact-form textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.contact-form button {
+  background: #e94560;
+  color: #fff;
+  border: none;
+  padding: 0.7rem 2rem;
+  font-size: 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.contact-form button:hover {
+  background: #d63851;
+}
+
+.contact-form button:disabled {
+  background: #999;
+  cursor: not-allowed;
+}
+
+#form-status {
+  margin-top: 1rem;
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+#form-status.success {
+  background: #d4edda;
+  color: #155724;
+}
+
+#form-status.error {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+/* Paginated list */
+.paginated-items {
+  display: grid;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.paginated-item {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 1.25rem;
+}
+
+.paginated-item h3 {
+  font-size: 1.15rem;
+  margin-bottom: 0.25rem;
+  color: #1a1a2e;
+}
+
+.paginated-item time {
+  display: block;
+  font-size: 0.85rem;
+  color: #888;
+  margin-bottom: 0.5rem;
+}
+
+.paginated-item p {
+  color: #444;
+}
+
+/* Pagination controls */
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.pagination-page {
+  background: #fff;
+  border: 1px solid #ddd;
+  color: #1a1a2e;
+  padding: 0.4rem 0.75rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.pagination-page:hover {
+  background: #e94560;
+  color: #fff;
+  border-color: #e94560;
+}
+
+.pagination-current {
+  background: #e94560;
+  color: #fff;
+  padding: 0.4rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.pagination-ellipsis {
+  padding: 0.4rem 0.25rem;
+  color: #888;
+}
+
+/* 404 page */
+#app h1:only-child + p,
+#app a[href="#/"] {
+  text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  #nav {
+    padding: 0.5rem 1rem;
+    justify-content: center;
+  }
+
+  #app {
+    margin: 1rem auto;
+    padding: 0 1rem;
+  }
+
+  #app h1 {
+    font-size: 1.5rem;
+  }
+
+  .hero {
+    padding: 2rem 1rem;
+  }
+
+  .hero h2 {
+    font-size: 1.35rem;
+  }
+
+  .pagination {
+    gap: 0.15rem;
+  }
+
+  .pagination-page,
+  .pagination-current {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.85rem;
+  }
+}

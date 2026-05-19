@@ -1,0 +1,345 @@
+/* ===================================================
+   COMPONENTS.CSS — Code Blocks, Callouts, Cards, Boxes
+   =================================================== */
+
+/* ---- Code Blocks ---------------------------------- */
+.code-block {
+  position: relative;
+  margin: 1.2em 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  background: var(--color-code-bg);
+}
+.code-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.3em 1em;
+  font-size: 0.75em;
+  font-family: var(--font-body);
+  background: var(--color-code-header-bg);
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.copy-btn {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 0.2em 0.6em;
+  font-size: 0.85em;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  transition: background 0.15s, color 0.15s;
+}
+.copy-btn:hover {
+  background: var(--color-accent);
+  color: #fff;
+  border-color: var(--color-accent);
+}
+.copy-btn.copied {
+  background: #22c55e;
+  color: #fff;
+  border-color: #22c55e;
+}
+.code-block pre {
+  margin: 0;
+  padding: 1em 1.2em;
+  font-size: var(--step--1);
+  line-height: 1.6;
+  tab-size: 2;
+}
+
+/* ---- "Why This Works" Callout --------------------- */
+.callout {
+  margin: 1.5em 0;
+  padding: 1em 1.2em 1em 1.5em;
+  border-left: 4px solid var(--color-accent);
+  background: var(--color-callout-bg);
+  border-radius: 0 8px 8px 0;
+}
+.callout-title {
+  font-weight: 700;
+  font-family: var(--font-heading);
+  color: var(--color-heading);
+  margin-bottom: 0.3em;
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+}
+.callout-title::before {
+  content: "\26A0";
+  font-size: 1.1em;
+}
+.callout p { margin-bottom: 0.5em; }
+.callout p:last-child { margin-bottom: 0; }
+
+/* ---- Tip Callout (alternative style) -------------- */
+.callout-tip {
+  border-left-color: #22c55e;
+  background: var(--color-tip-bg);
+}
+.callout-tip .callout-title::before { content: "\2713"; }
+
+/* ---- Warning Callout ------------------------------ */
+.callout-warning {
+  border-left-color: #eab308;
+  background: var(--color-warning-bg);
+}
+.callout-warning .callout-title::before { content: "\26A0"; }
+
+/* ---- Junior vs Senior Box ------------------------- */
+.compare-box {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 1.5em 0;
+}
+.compare-col {
+  padding: 1em 1.2em;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+}
+.compare-col.junior {
+  background: var(--color-junior-bg);
+  border-color: var(--color-junior-border);
+}
+.compare-col.senior {
+  background: var(--color-senior-bg);
+  border-color: var(--color-senior-border);
+}
+.compare-label {
+  font-size: 0.75em;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  margin-bottom: 0.5em;
+}
+.compare-col.junior .compare-label { color: var(--color-junior-label); }
+.compare-col.senior .compare-label { color: var(--color-senior-label); }
+.compare-col h4 { margin-bottom: 0.4em; }
+.compare-col ul { margin: 0; padding-left: 1.2em; }
+.compare-col li { margin-bottom: 0.2em; font-size: 0.92em; }
+
+/* ---- Decision Tree (ASCII + SVG container) -------- */
+.decision-tree {
+  margin: 1.5em 0;
+  padding: 1.2em 1.8em;
+  background: var(--color-code-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-family: var(--font-code);
+  font-size: var(--step-0);
+  line-height: 1.5;
+  white-space: pre;
+  overflow-x: auto;
+}
+
+/* ---- Cheat Sheet (end-of-chapter) ----------------- */
+.cheatsheet {
+  margin: 2em 0;
+  padding: 1.5em;
+  background: var(--color-cheatsheet-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+.cheatsheet-title {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: var(--step-1);
+  color: var(--color-heading);
+  margin-bottom: 0.8em;
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+}
+.cheatsheet-title::before { content: "\1F4D6"; }
+.cheatsheet table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--step--1);
+}
+.cheatsheet th, .cheatsheet td {
+  text-align: left;
+  padding: 0.4em 0.6em;
+  border-bottom: 1px solid var(--color-border);
+}
+.cheatsheet th {
+  font-weight: 600;
+  color: var(--color-heading);
+}
+
+/* ---- Inline Code ---------------------------------- */
+code:not(pre code) {
+  background: var(--color-inline-code-bg);
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  font-size: 0.85em;
+  color: var(--color-inline-code-text);
+}
+
+/* ---- File Tree (folder structure display) --------- */
+.file-tree {
+  margin: 1.2em 0;
+  padding: 1em 1.5em;
+  background: var(--color-code-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-family: var(--font-code);
+  font-size: var(--step--1);
+  line-height: 1.6;
+  white-space: pre;
+}
+
+/* ---- Images & Figures ----------------------------- */
+figure {
+  margin: 1.5em 0;
+  text-align: center;
+}
+figure img {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+figcaption {
+  font-size: var(--step--1);
+  color: var(--color-text-muted);
+  margin-top: 0.5em;
+  font-style: italic;
+}
+
+/* ---- Keyboard Shortcuts --------------------------- */
+kbd {
+  display: inline-block;
+  padding: 0.15em 0.5em;
+  font-family: var(--font-code);
+  font-size: 0.85em;
+  background: var(--color-code-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  box-shadow: 0 1px 0 var(--color-border);
+}
+
+/* ---- Responsive compare boxes --------------------- */
+@media (max-width: 600px) {
+  .compare-box { grid-template-columns: 1fr; }
+}
+
+/* ---- Back to Top Button --------------------------- */
+.back-to-top {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--color-card-bg, #fff);
+  border: 1px solid var(--color-border, #ccc);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: var(--color-text, #333);
+  opacity: 0.7;
+  transition: opacity 0.2s, transform 0.2s, background 0.2s;
+  z-index: 100;
+}
+
+.back-to-top:hover {
+  opacity: 1;
+  transform: translateY(-3px);
+  background: var(--color-hover-bg, #f0f0f0);
+  text-decoration: none;
+}
+
+.back-to-top:focus {
+  outline: 2px solid var(--color-accent, #2563eb);
+  outline-offset: 2px;
+}
+
+/* ---- Print styles for components ------------------ */
+@media print {
+  .code-block { break-inside: avoid; border: 0.5pt solid #ccc; }
+  .callout { break-inside: avoid; }
+  .compare-box { break-inside: avoid; }
+  .cheatsheet { break-inside: avoid; }
+  .copy-btn { display: none; }
+  .back-to-top { display: none; }
+}
+
+/* ---- 404 Error Page --------------------------------- */
+.error-page {
+  text-align: center;
+  padding: 4rem 2rem;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.error-icon {
+  font-size: 4rem;
+  color: var(--color-accent);
+  margin-bottom: 1rem;
+  opacity: 0.7;
+}
+
+.error-page h1 {
+  font-size: 6rem;
+  font-weight: var(--font-bold);
+  line-height: 1;
+  margin: 0;
+  color: var(--color-accent);
+}
+
+.error-message {
+  font-size: 1.5rem;
+  font-weight: var(--font-semibold);
+  margin: 1rem 0 0.5rem;
+  color: var(--color-text);
+}
+
+.error-description {
+  font-size: 1rem;
+  color: var(--color-text-light);
+  margin-bottom: 2rem;
+}
+
+.error-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.error-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-weight: var(--font-medium);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.error-actions .btn-primary {
+  background: var(--color-accent);
+  color: var(--color-bg);
+}
+
+.error-actions .btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.error-actions .btn-secondary {
+  background: var(--color-border);
+  color: var(--color-text);
+}
+
+.error-actions .btn-secondary:hover {
+  background: var(--color-text-light);
+  color: var(--color-bg);
+}

@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The M's Web Development Guide — From Zero to Career Ready</title>
+  <meta name="description" content="A comprehensive textbook covering web development from absolute beginner to production-ready engineer. HTML, CSS, JavaScript, React, PHP, deployment, scaling, and production mindset.">
+  <link rel="stylesheet" href="assets/css/main.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+  <link rel="stylesheet" href="assets/css/themes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <div class="site-wrapper">
+    <header class="site-header">
+      <div class="site-title"><a href="index.html"><i class="fa-solid fa-house"></i> M's Web Development Guide</a></div>
+      <div class="header-controls">
+        <button data-sidebar-toggle class="sidebar-toggle" aria-label="Toggle table of contents">&#9776; TOC</button>
+        <button data-theme-toggle aria-label="Switch theme"><span class="icon">☾</span>Dark</button>
+      </div>
+    </header>
+
+    <aside class="sidebar" aria-label="Table of Contents">
+      <div id="sidebar-toc"></div>
+    </aside>
+
+    <main class="main-content" id="main">
+      <h1>M's Web Development Guide</h1>
+      <p class="chapter-subtitle">From Zero to Career Ready — A Complete Guide to Building for the Web</p>
+
+      <p>This textbook is structured chronologically, assuming no prior knowledge. Each chapter builds on the last, teaching not just <em>how</em> to do something but <em>why</em> one approach is chosen over another. The goal is to make you self-sufficient — able to make your own architectural decisions, not just follow tutorials.</p>
+
+      <section class="part-section" style="background: var(--color-callout-bg, #f5f5f5); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+        <h2 class="part-title">How to Work Through This Textbook</h2>
+        <ul>
+          <li><strong>Read in order:</strong> Chapters build on each other. Start from First Steps and work forward.</li>
+          <li><strong>Try the code:</strong> Don't just read — type the examples yourself. This is how you actually learn.</li>
+          <li><strong>Use VS Code:</strong> Install <a href="https://code.visualstudio.com/">Visual Studio Code</a> as your text editor. It has a built-in terminal and makes coding much easier.</li>
+          <li><strong>Practice with real files:</strong> Create a folder on your computer and save the code examples there. Then open them in your browser to see the results.</li>
+          <li><strong>Don't skip the "why":</strong> The textbook explains not just how to do something but why it's done that way. This is what separates junior developers from seniors.</li>
+          <li><strong>Use the sidebar:</strong> The navigation on the left lets you jump between chapters quickly.</li>
+          <li><strong>Toggle the theme:</strong> Click the dark/light button in the header to switch between modes if you prefer reading in dark mode.</li>
+        </ul>
+      </section>
+
+      <section class="part-section">
+        <h2 class="part-title">First Steps</h2>
+        <p class="part-subtitle">Understand how the web works before you build for it.</p>
+        <div class="chapter-grid">
+          <div class="chapter-card">
+            <a href="chapters/00-first-steps/01-how-the-web-works.html">
+              <div class="card-number">Chapter 1</div>
+              <div class="card-title">How the Web Works</div>
+              <div class="card-desc">Client-server, HTTP, DNS, the request/response cycle, status codes, headers, caching. What happens when you press Enter.</div>
+            </a>
+          </div>
+          <div class="chapter-card">
+            <a href="chapters/00-first-steps/02-browser-internals.html">
+              <div class="card-number">Chapter 2</div>
+              <div class="card-title">How the Browser Works</div>
+              <div class="card-desc">Rendering pipeline, event loop, V8/JIT compilation, storage APIs, Web APIs, feature detection, browser compat.</div>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section class="part-section">
+        <h2 class="part-title">Part 1: Foundations</h2>
+        <p class="part-subtitle">Set up your development environment and learn to manage your code.</p>
+        <div class="chapter-grid">
+          <div class="chapter-card">
+            <a href="chapters/01-foundations/03-terminal-and-tools.html">
+              <div class="card-number">Chapter 3</div>
+              <div class="card-title">The Command Line &amp; Local Dev</div>
+              <div class="card-desc">Terminal basics, file paths, JSON, reading errors, local dev servers. The tools you&#8217;ll use every single day.</div>
+            </a>
+          </div>
+          <div class="chapter-card">
+            <a href="chapters/01-foundations/04-git-and-version-control.html">
+              <div class="card-number">Chapter 4</div>
+              <div class="card-title">Git &amp; Version Control</div>
+              <div class="card-desc">init, add, commit, push, pull, branching, merging, pull requests, merge conflicts, .gitignore, undoing changes.</div>
+            </a>
+          </div>
+          <div class="chapter-card">
+            <a href="chapters/01-foundations/05-folder-structure-and-docs.html">
+              <div class="card-number">Chapter 5</div>
+              <div class="card-title">Folder Structure &amp; Docs</div>
+              <div class="card-desc">Project organization patterns, naming conventions, README standards, code comments, API docs, documentation-driven dev.</div>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section class="part-section">
+        <h2 class="part-title">Part 2: Tooling</h2>
+        <p class="part-subtitle">The core languages and package management of the web.</p>
+        <div class="chapter-grid">
+          <div class="chapter-card">
+            <a href="chapters/02-tooling/06-html.html">
+              <div class="card-number">Chapter 6</div>
+              <div class="card-title">HTML</div>
+              <div class="card-desc">Semantic structure, forms, accessibility foundations, SEO basics. Build the content layer of every web page.</div>
+            </a>
+          </div>
+          <div class="chapter-card">
+            <a href="chapters/02-tooling/07-css.html">
+              <div class="card-number">Chapter 7</div>
+              <div class="card-title">CSS</div>
+              <div class="card-desc">Decision-tree approach to every major CSS concept. Box model, flexbox, grid, positioning, responsive design — and why each choice matters.</div>
+            </a>
+          </div>
+          <div class="chapter-card">
+            <a href="chapters/02-tooling/08-javascript.html">
+              <div class="card-number">Chapter 8</div>
+              <div class="card-title">JavaScript</div>
+              <div class="card-desc">Core language, DOM manipulation, async programming, fetch API, modern ES features. The programming backbone of the web.</div>
+            </a>
+          </div>
+          <div class="chapter-card">
+            <a href="chapters/02-tooling/09-package-management.html">
+              <div class="card-number">Chapter 9</div>
+              <div class="card-title">Package Management &amp; npm</div>
+              <div class="card-desc">package.json, node_modules, lockfiles, semantic versioning, npm install vs ci, dependencies vs devDependencies, scripts.</div>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section class="part-section">
+        <h2 class="part-title">Part 3: UX Design</h2>
+        <p class="part-subtitle">Design thinking, accessibility, and visual craftsmanship.</p>
+        <div class="chapter-grid">
+          <div class="chapter-card">
+            <a href="chapters/03-ux-design/10-ux-design.html">
+              <div class="card-number">Chapter 10</div>
+              <div class="card-title">UX Design Fundamentals</div>
+              <div class="card-desc">Design thinking, user research, information architecture, wireframing, visual hierarchy, color theory, typography, design systems.</div>
+            </a>
+          </div>
+          <div class="chapter-card">
+            <a href="chapters/03-ux-design/11-accessibility.html">
+              <div class="card-number">Chapter 11</div>
+              <div class="card-title">Accessibility</div>
+              <div class="card-desc">WCAG POUR, screen reader testing, focus management, ARIA, keyboard navigation, accessible forms, legal requirements.</div>
+            </a>
+          </div>
+          <div class="chapter-card">
+            <a href="chapters/03-ux-design/12-figma.html">
+              <div class="card-number">Chapter 12</div>
+              <div class="card-title">Figma for Web</div>
+              <div class="card-desc">Frames, auto layout, components, variants, prototyping, styles, developer handoff. The industry-standard design tool.</div>
+            </a>
+          </div>
+          <div class="chapter-card">
+            <a href="chapters/03-ux-design/13-photoshop-for-web.html">
+              <div class="card-number">Chapter 13</div>
+              <div class="card-title">Photoshop for Web</div>
+              <div class="card-desc">Web-optimized assets, export formats, Retina, GIF animation, embossed effects. Legacy tooling that still appears.</div>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section class="part-section">
+        <h2 class="part-title">Part 4: Building Applications</h2>
+        <p class="part-subtitle">Backend, frontend frameworks, and API design.</p>
+        <div class="chapter-grid">
+          <div class="chapter-card">
+            <a href="chapters/04-building-applications/14-backend-considerations.html">
+              <div class="card-number">Chapter 14</div>
+              <div class="card-title">Backend Considerations</div>
+              <div class="card-desc">API design, databases, auth models, server vs serverless. Understand when and why you need a backend.</div>
+            </a>
+          </div>
+          <div class="chapter-card">
+            <a href="chapters/04-building-applications/15-php.html">
+              <div class="card-number">Chapter 15</div>
+              <div class="card-title">PHP</div>
+              <div class="card-desc">Form handling, sessions, MySQL, REST APIs. A pragmatic backend language that still powers a massive portion of the web.</div>
+            </a>
+          </div>
+          <div class="chapter-card">
+            <a href="chapters/04-building-applications/16-react.html">
+              <div class="card-number">Chapter 16</div>
+              <div class="card-title">React</div>
+              <div class="card-desc">Components, state, hooks, routing, Vite toolchain. The dominant frontend framework and component-based thinking.</div>
+            </a>
+          </div>
+          <div class="chapter-card">
+            <a href="chapters/04-building-applications/17-api-design.html">
+              <div class="card-number">Chapter 17</div>
+              <div class="card-title">API Design &amp; REST</div>
+              <div class="card-desc">URL design, error handling, pagination, versioning, CORS, rate limiting, OpenAPI specs. Design APIs people love.</div>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section class="part-section">
+        <h2 class="part-title">Part 5: Production</h2>
+        <p class="part-subtitle">Security, deployment, performance, and architecture.</p>
+        <div class="chapter-grid">
+          <div class="chapter-card">
+            <a href="chapters/05-production/18-security-by-design.html">
+              <div class="card-number">Chapter 18</div>
+              <div class="card-title">Security by Design</div>
+              <div class="card-desc">XSS, CSRF, SQL injection, HTTPS, CSP, rate limiting, Turnstile. Security isn&#8217;t an afterthought.</div>
+            </a>
+          </div>
+          <div class="chapter-card">
+            <a href="chapters/05-production/19-deployment.html">
+              <div class="card-number">Chapter 19</div>
+              <div class="card-title">Deployment</div>
+              <div class="card-desc">Cloudflare Pages, custom domains, CDN, Turnstile, Workers, VPS, Docker, AWS. Choosing the right platform.</div>
+            </a>
+          </div>
+          <div class="chapter-card">
+            <a href="chapters/05-production/20-performance.html">
+              <div class="card-number">Chapter 20</div>
+              <div class="card-title">Performance</div>
+              <div class="card-desc">Core Web Vitals, Lighthouse, image optimization, code splitting, critical CSS, caching strategies, performance budgets.</div>
+            </a>
+          </div>
+          <div class="chapter-card">
+            <a href="chapters/05-production/21-architecture-blueprints.html">
+              <div class="card-number">Chapter 21</div>
+              <div class="card-title">Architecture Blueprints</div>
+              <div class="card-desc">The 4-layer model, architecture patterns, decision trees for choosing the right system design.</div>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section class="part-section">
+        <h2 class="part-title">Part 6: The Senior Mindset</h2>
+        <p class="part-subtitle">Scaling, thinking, and career growth.</p>
+        <div class="chapter-grid">
+          <div class="chapter-card">
+            <a href="chapters/06-senior-mindset/22-scaling-strategies.html">
+              <div class="card-number">Chapter 22</div>
+              <div class="card-title">Scaling Strategies</div>
+              <div class="card-desc">Vertical vs horizontal, CDN caching, database scaling, load balancing, rate limiting. Growth without collapse.</div>
+            </a>
+          </div>
+          <div class="chapter-card">
+            <a href="chapters/06-senior-mindset/23-junior-vs-senior.html">
+              <div class="card-number">Chapter 23</div>
+              <div class="card-title">Junior vs Senior Thinking</div>
+              <div class="card-desc">The mindset shift from writing features to designing systems. Tradeoffs, communication, preventing problems.</div>
+            </a>
+          </div>
+          <div class="chapter-card">
+            <a href="chapters/06-senior-mindset/24-career.html">
+              <div class="card-number">Chapter 24</div>
+              <div class="card-title">Career &amp; Communication</div>
+              <div class="card-desc">Code review, commit messages, asking questions, estimating, portfolios, impostor syndrome, using AI tools effectively.</div>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section class="part-section">
+        <h2 class="part-title">Part 7: Capstone</h2>
+        <p class="part-subtitle">Apply everything you've learned.</p>
+        <div class="chapter-grid">
+          <div class="chapter-card">
+            <a href="chapters/07-capstone/25-project-overview.html">
+              <div class="card-number">Chapter 25</div>
+              <div class="card-title">Project Overview</div>
+              <div class="card-desc">Choose your topic, plan the structure, select features — and understand why each decision matters for your specific goals.</div>
+            </a>
+          </div>
+          <div class="chapter-card">
+            <a href="chapters/07-capstone/26-frontend-implementation.html">
+              <div class="card-number">Chapter 26</div>
+              <div class="card-title">Frontend Implementation</div>
+              <div class="card-desc">Build the user interface with React, Vite, components, routing, and state management. Connect everything to your backend.</div>
+            </a>
+          </div>
+          <div class="chapter-card">
+            <a href="chapters/07-capstone/27-backend-implementation.html">
+              <div class="card-number">Chapter 27</div>
+              <div class="card-title">Backend Implementation</div>
+              <div class="card-desc">Create API endpoints, design your database, handle forms, and add authentication. Bring the logic to life.</div>
+            </a>
+          </div>
+          <div class="chapter-card">
+            <a href="chapters/07-capstone/28-final-considerations.html">
+              <div class="card-number">Chapter 28</div>
+              <div class="card-title">Final Considerations</div>
+              <div class="card-desc">Test your app, deploy with Cloudflare Pages or traditional PHP hosting, reflect on what you built, and plan next steps.</div>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section class="part-section">
+        <h2 class="part-title">Bonus: Additional Skills</h2>
+        <p class="part-subtitle">Optional skills that enhance your development workflow.</p>
+        <div class="chapter-grid">
+          <div class="chapter-card">
+            <a href="chapters/bonus/bonus-typescript.html">
+              <div class="card-number">Bonus</div>
+              <div class="card-title">TypeScript Basics</div>
+              <div class="card-desc">Add type safety to catch bugs at compile time instead of runtime. Basic types, interfaces, and why it matters.</div>
+            </a>
+          </div>
+          <div class="chapter-card">
+            <a href="chapters/bonus/bonus-svg-coordinates.html">
+              <div class="card-number">Bonus</div>
+              <div class="card-title">SVG Diagram Coordinates</div>
+              <div class="card-desc">SVG coordinate system, viewBox, grid paper approach, spacing budget, formula reference, and blank template for future diagrams.</div>
+            </a>
+          </div>
+          <div class="chapter-card">
+            <a href="chapters/bonus/bonus-cicd.html">
+              <div class="card-number">Bonus</div>
+              <div class="card-title">CI/CD Fundamentals</div>
+              <div class="card-desc">Automate testing and deployment with GitHub Actions. Never manually deploy again.</div>
+            </a>
+          </div>
+          <div class="chapter-card">
+            <a href="chapters/bonus/bonus-debugging.html">
+              <div class="card-number">Bonus</div>
+              <div class="card-title">Debugging Your Project</div>
+              <div class="card-desc">Console techniques, DevTools, and solving common issues in your capstone project.</div>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section class="part-section">
+        <h2 class="part-title">Reference</h2>
+        <div class="chapter-grid">
+          <div class="chapter-card">
+            <a href="resources.html">
+              <div class="card-number">Appendix</div>
+              <div class="card-title">Resources &amp; Links</div>
+              <div class="card-desc">Curated references: MDN, WCAG, CSS-Tricks, imagecolorpicker, Cloudflare, OWASP, and more.</div>
+            </a>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="assets/js/sidebar.js"></script>
+  <script src="assets/js/navigation.js"></script>
+  <script src="assets/js/themes.js"></script>
+</body>
+</html>

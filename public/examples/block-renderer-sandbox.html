@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Block Renderer Sandbox — Interactive Example</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/themes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .sandbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 1.5rem 0; }
+    @media (max-width: 700px) { .sandbox-grid { grid-template-columns: 1fr; } }
+    .sandbox-panel { border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden; }
+    .sandbox-panel h3 { margin: 0; padding: 0.75rem 1rem; background: var(--bg-secondary); border-bottom: 1px solid var(--border-color); font-size: 0.9rem; }
+    .sandbox-content { padding: 1rem; }
+    #editor { width: 100%; min-height: 350px; font-family: monospace; font-size: 0.85rem; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-code); color: var(--text-primary); resize: vertical; tab-size: 2; }
+    #preview { min-height: 200px; }
+    #error-bar { display: none; padding: 0.5rem 0.75rem; background: #f8d7da; color: #721c24; border-radius: 4px; margin-top: 0.5rem; font-size: 0.85rem; }
+    #preview .hero { background: linear-gradient(135deg, #1a1a2e, #16213e); color: #fff; padding: 2rem; border-radius: 6px; margin-bottom: 1rem; text-align: center; }
+    #preview .hero h2 { margin: 0; font-size: 1.3rem; }
+    #preview .text-block { margin-bottom: 1rem; }
+    #preview figure { margin: 1rem 0; }
+    #preview figure img { max-width: 100%; border-radius: 4px; }
+    #preview .paginated-list { margin: 1rem 0; }
+    #preview .paginated-items { display: grid; gap: 0.75rem; }
+    #preview .paginated-item { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.75rem; }
+    #preview .paginated-item h3 { margin: 0 0 0.25rem; font-size: 1rem; }
+    #preview .paginated-item time { font-size: 0.8rem; color: var(--text-secondary); }
+    #preview .pagination { display: flex; gap: 0.25rem; justify-content: center; margin-top: 1rem; }
+    #preview .pagination-current { background: #e94560; color: #fff; padding: 0.3rem 0.6rem; border-radius: 3px; }
+    #preview .pagination-ellipsis { padding: 0.3rem 0.25rem; color: var(--text-secondary); }
+    .block-list { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+    .block-btn { padding: 0.3rem 0.6rem; border: 1px solid var(--border-color); border-radius: 3px; background: var(--bg-secondary); cursor: pointer; font-size: 0.8rem; }
+    .block-btn:hover { background: #e94560; color: #fff; border-color: #e94560; }
+    .render-options { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+    .render-options button { padding: 0.4rem 1rem; border: none; border-radius: 4px; cursor: pointer; }
+    .render-options button.primary { background: #e94560; color: #fff; }
+    .render-options button.secondary { background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); }
+  </style>
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+  <div class="site-wrapper">
+    <header class="site-header" style="justify-content:space-between;">
+      <div class="site-title"><a href="../index.html"><i class="fa-solid fa-house"></i> M's Web Development Guide</a></div>
+      <a href="../chapters/11-project-walkthrough.html" style="font-size:0.85rem;">Back to Chapter 11</a>
+    </header>
+    <main class="main-content" id="main">
+      <h1>Block Renderer Sandbox</h1>
+      <p class="chapter-subtitle">Live-editing demo of the block-based render engine from the project walkthrough</p>
+
+      <div class="callout-info">
+        <div class="callout-title">How It Works</div>
+        <p>The render engine uses a <code>switch</code> statement on each block's <code>type</code> field to generate HTML. Edit the JSON on the left and see the rendered output update instantly. This is the same pattern used by component frameworks — just without the framework.</p>
+      </div>
+
+      <div class="block-list">
+        <button class="block-btn" data-preset="hero">Hero Block</button>
+        <button class="block-btn" data-preset="text">Text Block</button>
+        <button class="block-btn" data-preset="image">Image Block</button>
+        <button class="block-btn" data-preset="contact">Contact Form</button>
+        <button class="block-btn" data-preset="paginated">Paginated List</button>
+        <button class="block-btn" data-preset="all">Full Page</button>
+      </div>
+
+      <div class="sandbox-grid">
+        <div class="sandbox-panel">
+          <h3>Block JSON</h3>
+          <div class="sandbox-content">
+            <textarea id="editor" spellcheck="false"></textarea>
+            <div id="error-bar"></div>
+          </div>
+        </div>
+        <div class="sandbox-panel">
+          <h3>Rendered Output</h3>
+          <div class="sandbox-content">
+            <div id="preview"><p style="color:var(--text-secondary);">Edit the JSON to see rendered output.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="render-options">
+        <button class="primary" id="render-btn">Render</button>
+        <button class="secondary" id="format-btn">Format JSON</button>
+      </div>
+
+      <details style="margin-top:1.5rem;">
+        <summary style="cursor:pointer;font-weight:600;">Block Type Reference</summary>
+        <div class="cheatsheet" style="margin-top:0.5em;">
+          <table>
+            <thead><tr><th>Type</th><th>Fields</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>hero</code></td><td><code>type</code>, <code>text</code></td><td>Full-width banner with gradient background</td></tr>
+              <tr><td><code>text</code></td><td><code>type</code>, <code>content</code></td><td>Standard paragraph text</td></tr>
+              <tr><td><code>image</code></td><td><code>type</code>, <code>src</code>, <code>alt</code></td><td>Image with figure wrapper</td></tr>
+              <tr><td><code>contact-form</code></td><td><code>type</code>, <code>endpoint</code></td><td>Full contact form with validation</td></tr>
+              <tr><td><code>paginated-list</code></td><td><code>type</code>, <code>perPage</code>, <code>items[]</code></td><td>Sliding window pagination</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </main>
+  </div>
+  <script>
+    const presets = {
+      hero: JSON.stringify({ type: 'hero', text: 'Welcome to My Site' }, null, 2),
+      text: JSON.stringify({ type: 'text', content: 'This block system is the same mental model that React, Vue, and other frameworks use.' }, null, 2),
+      image: JSON.stringify({ type: 'image', src: 'https://picsum.photos/seed/block/600/300', alt: 'Example image' }, null, 2),
+      contact: JSON.stringify({ type: 'contact-form', endpoint: '/api/contact' }, null, 2),
+      paginated: JSON.stringify({ type: 'paginated-list', perPage: 3, items: [
+        { title: 'Post One', date: '2026-01-15', summary: 'First post summary.' },
+        { title: 'Post Two', date: '2026-01-20', summary: 'Second post summary.' },
+        { title: 'Post Three', date: '2026-01-25', summary: 'Third post summary.' },
+        { title: 'Post Four', date: '2026-02-01', summary: 'Fourth post summary.' },
+        { title: 'Post Five', date: '2026-02-05', summary: 'Fifth post summary.' }
+      ] }, null, 2),
+      all: JSON.stringify([
+        { type: 'hero', text: 'My SPA Site' },
+        { type: 'text', content: 'This page was built entirely from JSON blocks.' },
+        { type: 'image', src: 'https://picsum.photos/seed/sandbox/600/300', alt: 'Random image' }
+      ], null, 2)
+    };
+
+    const editor = document.getElementById('editor');
+    const preview = document.getElementById('preview');
+    const errorBar = document.getElementById('error-bar');
+
+    function escapeHtml(str) {
+      var d = document.createElement('div');
+      d.textContent = str;
+      return d.innerHTML;
+    }
+
+    function escapeAttr(str) {
+      return String(str).replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function renderBlock(block) {
+      switch (block.type) {
+        case 'hero':
+          return '<section class="hero"><h2>' + escapeHtml(block.text) + '</h2></section>';
+        case 'text':
+          return '<section class="text-block"><p>' + escapeHtml(block.content) + '</p></section>';
+        case 'image':
+          return '<figure><img src="' + escapeAttr(block.src) + '" alt="' + escapeAttr(block.alt) + '"></figure>';
+        case 'contact-form':
+          return '<section class="text-block"><p><strong>Contact Form Block</strong> &mdash; Would render a full form with name, email, message fields and a Turnstile widget.</p></section>';
+        case 'paginated-list':
+          return renderPaginatedList(block);
+        default:
+          return '<p>Unknown block type: ' + escapeHtml(block.type) + '</p>';
+      }
+    }
+
+    function renderPaginatedList(block) {
+      var page = block._page || 1;
+      var perPage = block.perPage || 10;
+      var items = block.items || [];
+      var totalPages = Math.ceil(items.length / perPage) || 1;
+      var start = (page - 1) * perPage;
+      var end = start + perPage;
+      var pageItems = items.slice(start, end);
+
+      var html = '<div class="paginated-list">';
+      html += '<div class="paginated-items">';
+      for (var i = 0; i < pageItems.length; i++) {
+        var item = pageItems[i];
+        html += '<div class="paginated-item">';
+        html += '<h3>' + escapeHtml(item.title) + '</h3>';
+        html += '<time>' + escapeHtml(item.date) + '</time>';
+        html += '<p>' + escapeHtml(item.summary) + '</p>';
+        html += '</div>';
+      }
+      html += '</div>';
+
+      if (totalPages > 1) {
+        html += '<nav class="pagination">';
+        for (var p = 1; p <= totalPages; p++) {
+          if (p === page) {
+            html += '<span class="pagination-current">' + p + '</span>';
+          } else {
+            html += '<span class="pagination-ellipsis">' + p + '</span>';
+          }
+        }
+        html += '</nav>';
+      }
+
+      html += '</div>';
+      return html;
+    }
+
+    function render() {
+      var raw = editor.value.trim();
+      if (!raw) { preview.innerHTML = '<p style="color:var(--text-secondary);">Edit the JSON to see rendered output.</p>'; errorBar.style.display = 'none'; return; }
+
+      try {
+        var data = JSON.parse(raw);
+        errorBar.style.display = 'none';
+
+        var blocks = Array.isArray(data) ? data : [data];
+        var html = '';
+        for (var i = 0; i < blocks.length; i++) {
+          html += renderBlock(blocks[i]);
+        }
+        preview.innerHTML = html;
+      } catch (e) {
+        errorBar.textContent = 'JSON Error: ' + e.message;
+        errorBar.style.display = 'block';
+      }
+    }
+
+    document.querySelectorAll('.block-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var preset = presets[this.dataset.preset];
+        if (preset) { editor.value = preset; render(); }
+      });
+    });
+
+    document.getElementById('render-btn').addEventListener('click', render);
+
+    document.getElementById('format-btn').addEventListener('click', function() {
+      try {
+        editor.value = JSON.stringify(JSON.parse(editor.value), null, 2);
+        render();
+      } catch (e) {
+        errorBar.textContent = 'Cannot format: ' + e.message;
+        errorBar.style.display = 'block';
+      }
+    });
+
+    editor.addEventListener('input', render);
+
+    // Load default
+    editor.value = presets.hero;
+    render();
+  </script>
+  <script src="../js/themes.js"></script>
+</body>
+</html>

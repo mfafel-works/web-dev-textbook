@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>07 — Package Management & npm | M's Web Development Guide</title>
+  <meta name="description" content="npm, package.json, node_modules, lockfiles, semantic versioning, and the JavaScript dependency ecosystem.">
+  <link rel="stylesheet" href="../../assets/css/main.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/themes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <div class="site-wrapper">
+    <header class="site-header">
+      <div class="site-title"><a href="../../index.html"><i class="fa-solid fa-house"></i> M's Web Development Guide</a></div>
+      <div class="header-controls">
+        <button data-sidebar-toggle class="sidebar-toggle" aria-label="Toggle table of contents">&#9776; TOC</button>
+        <button data-theme-toggle aria-label="Switch theme"><span class="icon">☾</span>Dark</button>
+      </div>
+    </header>
+
+    <aside class="sidebar" aria-label="Table of Contents">
+      <div id="sidebar-toc"></div>
+    </aside>
+
+    <main class="main-content" id="main">
+      <span class="chapter-number">Chapter 9</span>
+      <h1>Package Management &amp; npm</h1>
+      <p class="chapter-subtitle">Dependencies, lockfiles, semver, scripts, and surviving node_modules</p>
+
+      <p>Modern JavaScript development depends on open-source packages — small reusable modules that solve specific problems. A typical project uses hundreds of these packages. <strong>npm</strong> (Node Package Manager) is the tool that installs, updates, and manages them. Understanding how npm works is essential: it is the source of more confusing errors and hidden disk usage than almost any other tool.</p>
+
+      <div class="callout-tip">
+        <div class="callout-title">Where Does npm Come From?</div>
+        <p><strong>npm comes with Node.js.</strong> When you install Node.js (from <a href="https://nodejs.org/">nodejs.org</a>), you get both Node.js (the JavaScript runtime) and npm (the package manager) automatically. There's no separate install. If you have npm, you have Node. If you have Node, you have npm.</p>
+        <p>To check if you have them: run <code>node --version</code> and <code>npm --version</code> in your terminal. If you get version numbers, you're ready to go.</p>
+      </div>
+
+      <section>
+        <h2>What Is a Package Manager?</h2>
+        <p>A package manager is a tool that automates installing, updating, and removing third-party code. Without it, you would download libraries manually, save them to a <code>lib/</code> folder, and manage versions yourself. With npm, one command installs everything you need and records what you installed so it can be reproduced on another machine.</p>
+        <p>There are several package managers for JavaScript:</p>
+        <table>
+          <thead>
+            <tr><th>Tool</th><th>Used By</th><th>Key Difference</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>npm</code></td><td>Most projects (ships with Node.js)</td><td>The default. Largest registry.</td></tr>
+            <tr><td><code>yarn</code></td><td>Legacy preference</td><td>Faster than npm in 2016. npm caught up in v7+.</td></tr>
+            <tr><td><code>pnpm</code></td><td>Disk-space-conscious teams</td><td>Uses hard links — stores packages globally, saves disk space.</td></tr>
+          </tbody>
+        </table>
+        <p>This chapter uses npm, but the concepts apply to all three.</p>
+      </section>
+
+      <section>
+        <h2>The package.json File</h2>
+        <p>Every Node.js project has a <code>package.json</code> file at its root. This is the manifest — it describes your project and lists its dependencies.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Anatomy of package.json</span></div>
+          <pre><code>{
+  "name": "my-app",                    // project name (must be unique on npm if publishing)
+  "version": "1.0.0",                  // your project's current version (semver)
+  "description": "A contact form app", // human-readable summary
+  "main": "index.js",                  // entry point file
+  "scripts": {                         // commands you can run with npm run
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest"
+  },
+  "dependencies": {                    // packages your app needs to RUN
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {                 // packages your app needs to DEVELOP
+    "vite": "^5.0.0",
+    "vitest": "^1.0.0"
+  }
+}</code></pre>
+        </div>
+
+        <h3>dependencies vs devDependencies</h3>
+        <p>This distinction matters:</p>
+        <ul>
+          <li><strong>dependencies</strong> — packages required at runtime. React, Vue, Express, axios. When someone installs your package, these are installed too.</li>
+          <li><strong>devDependencies</strong> — packages needed only during development. Testing frameworks, bundlers (Vite, Webpack), linters, type definitions. These are NOT installed when a user installs your package.</li>
+        </ul>
+        <p>Install a dependency: <code>npm install react</code> (adds to <code>dependencies</code>)<br>
+        Install a dev dependency: <code>npm install -D vitest</code> (adds to <code>devDependencies</code>)</p>
+      </section>
+
+      <section>
+        <h2>node_modules — The Elephant in the Room</h2>
+        <p>When you run <code>npm install</code>, npm downloads every package listed in <code>package.json</code> <strong>and all of their dependencies</strong> into a folder called <code>node_modules</code>. A typical React project with a few dependencies pulls in 500-1500 packages. The folder can be 200-500 MB.</p>
+
+        <h3>Why So Many Packages?</h3>
+        <p>Modern packages are tiny and modular. A package that formats dates depends on a package that parses time zones, which depends on a package that handles locale data. Each of those may have their own dependencies. This is called the <strong>dependency tree</strong>. It is normal and expected.</p>
+
+        <div class="callout-warning">
+          <div class="callout-title">Never Commit node_modules</div>
+          <p>The <code>node_modules</code> folder must NEVER be committed to Git. It is huge, platform-specific, and entirely reproducible from <code>package.json</code> and the lockfile. Always add <code>node_modules/</code> to your <code>.gitignore</code>. If you accidentally commit it, remove it with <code>git rm -r --cached node_modules</code>.</p>
+        </div>
+
+        <h3>Why Is node_modules So Slow to Install?</h3>
+        <p>npm resolves the dependency tree (which version of each package satisfies all dependencies), downloads each package, extracts it to the correct location, and runs any install scripts. With hundreds of packages, this takes time. <code>npm ci</code> (see below) is faster because it skips the resolution step.</p>
+      </section>
+
+      <section>
+        <h2>The Lockfile (package-lock.json)</h2>
+        <p>The <code>package-lock.json</code> file is automatically generated by npm. It records the <strong>exact version</strong> of every package and every sub-dependency that was installed. This is the most important file you never think about.</p>
+
+        <h3>Why You Need It</h3>
+        <p>Your <code>package.json</code> might say <code>"react": "^18.2.0"</code> — which means "any React 18.x.x version." Today that installs 18.2.0. Tomorrow it might install 18.3.0, which could have a subtle breaking change. The lockfile pins every package to its exact installed version so that <code>npm install</code> on another machine (or next week) produces identical output.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Lockfile entry (simplified)</span></div>
+          <pre><code>{
+  "react": {
+    "version": "18.2.0",           // exact version installed
+    "resolved": "https://...",     // where it was downloaded from
+    "integrity": "sha512-...",     // checksum to verify file integrity
+    "dependencies": {
+      "loose-envify": "^1.1.0"   // React's own dependencies
+    }
+  }
+}</code></pre>
+        </div>
+
+        <div class="callout-warning">
+          <div class="callout-title">Always Commit package-lock.json</div>
+          <p>Without the lockfile, different developers (and your CI server) may install different versions of dependencies, causing "works on my machine" bugs. Always commit <code>package-lock.json</code> to Git. Never add it to <code>.gitignore</code>.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Semantic Versioning</h2>
+        <p>Every npm package follows <strong>semantic versioning</strong> (semver): a three-part number <code>MAJOR.MINOR.PATCH</code>.</p>
+
+        <table>
+          <thead>
+            <tr><th>Part</th><th>Change means</th><th>Example</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>MAJOR</strong></td><td>Breaking change — your code may break</td><td>2.0.0 → 3.0.0 (API changed)</td></tr>
+            <tr><td><strong>MINOR</strong></td><td>New feature, backward compatible</td><td>2.1.0 → 2.2.0 (new function added)</td></tr>
+            <tr><td><strong>PATCH</strong></td><td>Bug fix, backward compatible</td><td>2.1.0 → 2.1.1 (bug fixed)</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Version Ranges</h3>
+        <p>In <code>package.json</code>, you specify allowed version ranges:</p>
+        <table>
+          <thead>
+            <tr><th>Notation</th><th>Meaning</th><th>Example</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>^1.2.3</code></td><td>Compatible with 1.x.x (update to minor/patch)</td><td>Allows 1.2.3 through 1.999.999</td></tr>
+            <tr><td><code>~1.2.3</code></td><td>Approximately — patch only</td><td>Allows 1.2.3 through 1.2.999</td></tr>
+            <tr><td><code>1.2.3</code></td><td>Exact version only</td><td>Only 1.2.3</td></tr>
+            <tr><td><code>*</code></td><td>Any version (avoid)</td><td>Could install 5.0.0 with breaking changes</td></tr>
+          </tbody>
+        </table>
+
+        <div class="callout-warning">
+          <div class="callout-title">The ^ Range Is Not Safe</div>
+          <p>The <code>^</code> prefix (default for npm install) allows minor version bumps. In theory, minor versions are backward compatible. In practice, packages occasionally introduce breaking changes in minor versions — accidentally or by poor semver discipline. This is the most common cause of "it broke after npm install." The lockfile protects you from this, but only if it is committed.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>npm install vs npm ci</h2>
+        <p>Two commands that look similar but behave very differently:</p>
+
+        <table>
+          <thead>
+            <tr><th></th><th><code>npm install</code></th><th><code>npm ci</code></th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Use when</td><td>Local development, adding/removing packages</td><td>CI/CD pipelines, fresh clones, deployment</td></tr>
+            <tr><td>Lockfile</td><td>May update it</td><td>Follows it exactly — errors if lockfile is missing</td></tr>
+            <tr><td>node_modules</td><td>Adds to existing folder</td><td>Deletes and reinstalls from scratch</td></tr>
+            <tr><td>Speed</td><td>Slower (resolves dependency tree)</td><td>Faster (skips resolution, uses lockfile)</td></tr>
+            <tr><td>Deterministic</td><td>No — may install different versions</td><td>Yes — identical install every time</td></tr>
+          </tbody>
+        </table>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>When to use each</span></div>
+          <pre><code># Local development — add a package
+npm install react-router-dom
+
+# CI server — reproduce exactly what's committed
+npm ci
+
+# First time cloning a project
+npm ci        # faster than npm install, respects lockfile
+
+# Updating all packages to latest within semver range
+npm update</code></pre>
+        </div>
+
+        <div class="callout-tip">
+          <div class="callout-title">Always Use npm ci in CI</div>
+          <p>In your CI pipeline (GitHub Actions, GitLab CI, etc.), always use <code>npm ci</code> instead of <code>npm install</code>. It is faster, it respects the lockfile (so builds are reproducible), and it fails if the lockfile is out of sync with package.json — catching mistakes early.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>npm Scripts</h2>
+        <p>The <code>"scripts"</code> field in <code>package.json</code> lets you define commands that run with <code>npm run &lt;name&gt;</code>. This is how projects standardize their workflows:</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Common npm scripts</span></div>
+          <pre><code>{
+  "scripts": {
+    "dev": "vite",                    // start dev server
+    "build": "vite build",            // production build
+    "preview": "vite preview",        // preview production build
+    "test": "vitest",                 // run tests
+    "lint": "eslint src/",            // check code quality
+    "format": "prettier --write src/", // auto-format code
+    "typecheck": "tsc --noEmit"       // check TypeScript types
+  }
+}
+
+# Run them:
+npm run dev
+npm run build
+npm test          # "test" is a special alias — npm test works without "run"
+npm start         # "start" is also a special alias</code></pre>
+        </div>
+
+        <h3>Pre and Post Hooks</h3>
+        <p>npm automatically runs scripts with <code>pre</code> and <code>post</code> prefixes. If you define <code>prebuild</code>, it runs before <code>build</code>. If you define <code>postbuild</code>, it runs after:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Script lifecycle hooks</span></div>
+          <pre><code>{
+  "scripts": {
+    "prebuild": "rm -rf dist",         // clean output folder before building
+    "build": "vite build",
+    "postbuild": "cp _headers dist/"   // copy deployment config after building
+  }
+}
+
+// npm run build runs: prebuild → build → postbuild</code></pre>
+        </div>
+      </section>
+
+      <section>
+        <h2>npx — Run Without Installing</h2>
+        <p><code>npx</code> (bundled with npm) lets you run a package without permanently installing it. It downloads the package to a temporary cache, runs it, and discards it:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>npx in action</span></div>
+          <pre><code># Create a new React project without installing create-react-app globally
+npx create-react-app my-app
+
+# Run a one-off command
+npx serve .                    # start a static file server
+npx jsonlint config.json       # validate JSON without installing jsonlint
+npx vitest                     # run tests without installing vitest globally</code></pre>
+        </div>
+        <p>Use <code>npx</code> for one-off commands, scaffolding tools, and rarely-used packages. If you use a tool daily (like Vite or ESLint), install it locally with <code>npm install -D</code> so it is available to your scripts.</p>
+      </section>
+
+      <div class="compare-box">
+        <div class="compare-col junior">
+          <div class="compare-label">Junior Developer</div>
+          <h4>How a Junior Might Think</h4>
+          <ul>
+            <li>Does not understand <code>node_modules</code> — deletes and reinstalls when something breaks</li>
+            <li>Ignores <code>package-lock.json</code> — may even add it to <code>.gitignore</code></li>
+            <li>Uses <code>npm install</code> everywhere, including CI</li>
+            <li>Does not understand semantic versioning — sees <code>^1.2.3</code> as a mystery</li>
+            <li>Installs packages globally with <code>-g</code> when they should be local</li>
+            <li>Does not use or write npm scripts — runs tools by typing full paths</li>
+          </ul>
+        </div>
+        <div class="compare-col senior">
+          <div class="compare-label">Senior Developer</div>
+          <h4>How a Senior Thinks</h4>
+          <ul>
+            <li>Understands that <code>node_modules</code> is reproducible — deletes it freely and reinstalls with <code>npm ci</code></li>
+            <li>Always commits <code>package-lock.json</code> and uses <code>npm ci</code> in CI</li>
+            <li>Uses exact version pins for critical dependencies, <code>^</code> for trusted ones</li>
+            <li>Keeps dependencies minimal — audits them regularly with <code>npm audit</code></li>
+            <li>Writes npm scripts for every repeated task — standardizes the team workflow</li>
+            <li>Knows the difference between <code>npm install</code> and <code>npm ci</code> and uses each correctly</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="cheatsheet">
+        <div class="cheatsheet-title">Cheat Sheet</div>
+        <table>
+          <thead>
+            <tr><th>Concept</th><th>Key Takeaway</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>package.json</td><td>Project manifest — lists dependencies, scripts, metadata</td></tr>
+            <tr><td>dependencies</td><td>Packages needed at runtime (<code>npm install react</code>)</td></tr>
+            <tr><td>devDependencies</td><td>Packages for development only (<code>npm install -D vite</code>)</td></tr>
+            <tr><td>node_modules</td><td>Never commit it. Reproducible from package.json + lockfile.</td></tr>
+            <tr><td>Lockfile</td><td>Always commit <code>package-lock.json</code> — ensures identical installs.</td></tr>
+            <tr><td>Semver</td><td><code>MAJOR.MINOR.PATCH</code>. <code>^</code> = minor/patch, <code>~</code> = patch only, exact = no range.</td></tr>
+            <tr><td>npm install</td><td>For local dev — may update lockfile</td></tr>
+            <tr><td>npm ci</td><td>For CI/deploy — uses lockfile exactly, faster, fails if mismatch</td></tr>
+            <tr><td>npm scripts</td><td>Define in <code>package.json</code>, run with <code>npm run &lt;name&gt;</code></td></tr>
+            <tr><td>npx</td><td>Run packages without installing them permanently</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <nav class="chapter-nav">
+  <a href="08-javascript.html"><span class="nav-label">Prev</span>Prev: JavaScript</a>
+  <a href="10-ux-design.html"><span class="nav-label">Next</span>Next: UX Design Fundamentals</a>
+</nav>
+    </main>
+  </div>
+
+  <script src="../../assets/js/sidebar.js"></script>
+  <script src="../../assets/js/navigation.js"></script>
+  <script src="../../assets/js/themes.js"></script>
+</body>
+</html>

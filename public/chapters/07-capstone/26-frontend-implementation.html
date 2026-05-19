@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>26 — Frontend Implementation | M's Web Development Guide</title>
+  <meta name="description" content="Build the user interface with React, Vite, components, routing, and state management.">
+  <link rel="stylesheet" href="../../assets/css/main.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/themes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+  <div class="site-wrapper">
+    <header class="site-header">
+      <div class="site-title"><a href="../../index.html"><i class="fa-solid fa-house"></i> M's Web Development Guide</a></div>
+      <div class="header-controls">
+        <button data-sidebar-toggle class="sidebar-toggle" aria-label="Toggle table of contents">&#9776; TOC</button>
+        <button data-theme-toggle aria-label="Switch theme"><span class="icon">☾</span>Dark</button>
+      </div>
+    </header>
+    <aside class="sidebar" aria-label="Table of Contents">
+      <div id="sidebar-toc"></div>
+    </aside>
+    <main class="main-content" id="main">
+      <span class="chapter-number">Chapter 26</span>
+      <h1>Frontend Implementation</h1>
+      <p class="chapter-subtitle">Build the user interface with React, Vite, components, routing, and state management — and understand why each choice matters.</p>
+
+      <p>This chapter walks through building the frontend of your capstone project. We'll cover setup, component architecture, routing, state management, and connecting to your backend. Every decision explains the <em>why</em> — not just what to code.</p>
+
+      <section>
+        <h2>Project Setup with Vite</h2>
+        <p>Vite has become the standard build tool for modern frontend development. Its speed and developer experience make it the natural choice for new projects.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Creating a new project</span></div>
+          <pre><code>npm create vite@latest my-app -- --template react
+cd my-app
+npm install
+npm run dev</code></pre>
+        </div>
+
+        <h3>Why Vite?</h3>
+        <p>Earlier build tools like Webpack parse all files upfront — slow on large projects. Vite uses native ES modules in development (instant server start), only bundling for production. The difference is noticeable: projects that took 30+ seconds to start now start in under 1 second.</p>
+
+        <div class="callout-tip">
+          <div class="callout-title">Why Not Create React App?</div>
+          <p>Create React App (CRA) is no longer recommended by the React team. It uses Webpack under the hood, meaning slow builds. Vite is the official recommended alternative. If you've used CRA before, Vite's workflow will feel familiar but noticeably faster.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Component Architecture</h2>
+        <p>Components are the building blocks of React applications. But organizing them effectively requires thought — the difference between a maintainable app and a tangled mess often comes down to structure.</p>
+
+        <h3>Folder Structure</h3>
+        <div class="file-tree">src/
+├── components/       # Reusable UI components
+│   ├── Button.jsx
+│   ├── Card.jsx
+│   └── Header.jsx
+├── pages/           # Page-level components (routes)
+│   ├── Home.jsx
+│   ├── About.jsx
+│   └── Contact.jsx
+├── hooks/           # Custom hooks
+│   └── useAuth.js
+├── services/        # API communication
+│   └── api.js
+├── App.jsx          # Main app component
+├── main.jsx         # Entry point
+└── index.css        # Global styles</div>
+
+        <h3>Component Design Principles</h3>
+        <ul>
+          <li><strong>Single responsibility:</strong> Each component does one thing well. A Button handles buttons — not also fetching data.</li>
+          <li><strong>Prop-driven:</strong> Components receive data via props, not from global state directly (except context).</li>
+          <li><strong>Presentational vs Container:</strong> Presentational components handle UI only; containers handle data and logic. This separation makes testing and reuse easier.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Routing</h2>
+        <p>Client-side routing gives your app a native feel — pages change without full reloads. React Router is the standard solution.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Installing React Router</span></div>
+          <pre><code>npm install react-router-dom</code></pre>
+        </div>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>App.jsx with routing</span></div>
+          <pre><code>import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Home from './pages/Home';
+import About from './pages/About';
+import Contact from './pages/Contact';
+
+function App() {
+  return (
+    &lt;BrowserRouter&gt;
+      &lt;Routes&gt;
+        &lt;Route path="/" element={&lt;Home /&gt;} /&gt;
+        &lt;Route path="/about" element={&lt;About /&gt;} /&gt;
+        &lt;Route path="/contact" element={&lt;Contact /&gt;} /&gt;
+      &lt;/Routes&gt;
+    &lt;/BrowserRouter&gt;
+  );
+}</code></pre>
+        </div>
+
+        <h3>Why Client-Side Routing?</h3>
+        <p>Traditional server-side routing sends a request to the server for each URL — slow, requires full page reload. Client-side routing intercepts URL changes in JavaScript, swaps components instantly. The user experience is smoother, and your app feels more like a native application.</p>
+      </section>
+
+      <section>
+        <h2>State Management</h2>
+        <p>As your app grows, managing state becomes critical. The key is choosing the right level of complexity for your needs.</p>
+
+        <h3>Local State with useState</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span>Simple state example</span></div>
+          <pre><code>function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    &lt;button onClick={() => setCount(count + 1)}&gt;
+      Count: {count}
+    &lt;/button&gt;
+  );
+}</code></pre>
+        </div>
+
+        <h3>Global State with useContext</h3>
+        <p>For state that multiple components need (user authentication, theme, cart), React Context avoids prop-drilling through many layers.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Creating context</span></div>
+          <pre><code>const AuthContext = createContext();
+
+function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+
+  const login = (userData) => setUser(userData);
+  const logout = () => setUser(null);
+
+  return (
+    &lt;AuthContext.Provider value={{ user, login, logout }}&gt;
+      {children}
+    &lt;/AuthContext.Provider&gt;
+  );
+}</code></pre>
+        </div>
+
+        <div class="callout-info">
+          <div class="callout-title">When to Add State Libraries</div>
+          <p>If you find yourself passing props through 4+ component levels, or if multiple unrelated components need the same data, reach for Context. Only reach for Redux, Zustand, or similar when you have complex derived state, middleware needs, or time-travel debugging requirements. For most projects, Context + useState is sufficient.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Connecting to the Backend</h2>
+        <p>Your frontend needs to communicate with your API. Centralize this communication rather than scattering fetch calls throughout components.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>API service module</span></div>
+          <pre><code>const API_BASE = import.meta.env.VITE_API_URL;
+
+async function fetchJSON(endpoint, options = {}) {
+  const response = await fetch(`${API_BASE}${endpoint}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+    ...options,
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.message || `HTTP ${response.status}`);
+  }
+
+  return response.json();
+}
+
+export const api = {
+  get: (endpoint) => fetchJSON(endpoint),
+  post: (endpoint, data) => fetchJSON(endpoint, { 
+    method: 'POST', 
+    body: JSON.stringify(data) 
+  }),
+  // ... put, delete
+};</code></pre>
+        </div>
+
+        <h3>Why a Service Layer?</h3>
+        <p>Direct fetch calls in components create duplication, make error handling inconsistent, and complicate changes (like adding authentication later). A service layer centralizes: base URL configuration, headers, error handling, and response transformation. One place to change, everywhere benefits.</p>
+      </section>
+
+      <section>
+        <h2>Form Handling</h2>
+        <p>Forms are where users input data. Good form handling improves user experience dramatically.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Controlled form component</span></div>
+          <pre><code>function ContactForm() {
+  const [formData, setFormData] = useState({ name: '', email: '', message: '' });
+  const [errors, setErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+
+  const validate = () => {
+    const errs = {};
+    if (!formData.name.trim()) errs.name = 'Name is required';
+    if (!formData.email.includes('@')) errs.email = 'Valid email required';
+    if (!formData.message.trim()) errs.message = 'Message is required';
+    return errs;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const errs = validate();
+    if (Object.keys(errs).length) {
+      setErrors(errs);
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await api.post('/contact', formData);
+      alert('Message sent!');
+      setFormData({ name: '', email: '', message: '' });
+    } catch (err) {
+      alert('Failed to send message');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    &lt;form onSubmit={handleSubmit}&gt;
+      &lt;input 
+        value={formData.name} 
+        onChange={(e) => setFormData({...formData, name: e.target.value})}
+        placeholder="Your name"
+      /&gt;
+      {errors.name && &lt;span className="error"&gt;{errors.name}&lt;/span&gt;}
+      {/* more fields... */}
+      &lt;button type="submit" disabled={submitting}&gt;
+        {submitting ? 'Sending...' : 'Send'}
+      &lt;/button&gt;
+    &lt;/form&gt;
+  );
+}</code></pre>
+        </div>
+      </section>
+
+      <nav class="chapter-nav">
+        <a href="25-project-overview.html"><span class="nav-label">Prev</span>Prev: Project Overview</a>
+        <a href="27-backend-implementation.html"><span class="nav-label">Next</span>Next: Backend Implementation</a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../../assets/js/sidebar.js"></script>
+  <script src="../../assets/js/navigation.js"></script>
+  <script src="../../assets/js/themes.js"></script>
+</body>
+</html>

@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>06 — PHP | M's Web Development Guide</title>
+  <meta name="description" content="Form handling, sessions, MySQL, and pragmatic server-side programming.">
+  <link rel="stylesheet" href="../../assets/css/main.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/themes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <div class="site-wrapper">
+    <header class="site-header">
+      <div class="site-title"><a href="../../index.html"><i class="fa-solid fa-house"></i> M's Web Development Guide</a></div>
+      <div class="header-controls">
+        <button data-sidebar-toggle class="sidebar-toggle" aria-label="Toggle table of contents">&#9776; TOC</button>
+        <button data-theme-toggle aria-label="Switch theme"><span class="icon">☾</span>Dark</button>
+      </div>
+    </header>
+
+    <aside class="sidebar" aria-label="Table of Contents">
+      <div id="sidebar-toc"></div>
+    </aside>
+
+    <main class="main-content" id="main">
+      <span class="chapter-number">Chapter 15</span>
+      <h1>PHP</h1>
+      <p class="chapter-subtitle">Form handling, sessions, MySQL, and pragmatic server-side programming</p>
+
+      <p>PHP powers 75% of the web (WordPress, Laravel, Wikipedia, Facebook's original backend). It is not fashionable but it is practical: you write a PHP file, put it on a server, and it runs. No build step, no process manager, no cold starts. This chapter covers the PHP you actually need for modern web work.</p>
+
+      <section>
+        <h2>PHP Fundamentals</h2>
+        <p>PHP is a server-side scripting language designed for the web. You embed PHP code inside HTML using <code>&lt;?php ... ?&gt;</code> tags. The server executes the PHP and sends the resulting HTML to the browser.</p>
+
+        <h3>Basic Syntax</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span>PHP embedded in HTML</span></div>
+          <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;body&gt;
+  &lt;h1&gt;Welcome, &lt;?= $username ?&gt;!&lt;/h1&gt;
+  &lt;!-- &lt;?= is shorthand for &lt;?php echo --&gt;
+
+  &lt;?php if ($loggedIn): ?&gt;
+    &lt;p&gt;You are logged in.&lt;/p&gt;
+  &lt;?php else: ?&gt;
+    &lt;p&gt;Please &lt;a href="login.php"&gt;log in&lt;/a&gt;.&lt;/p&gt;
+  &lt;?php endif; ?&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+        </div>
+
+        <h3>Variables and Arrays</h3>
+        <p>PHP variables start with <code>$</code>. No <code>let</code> or <code>const</code> — just <code>$</code>. Arrays can be indexed or associative:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>PHP variables and arrays</span></div>
+          <pre><code>&lt;?php
+$name = "Alice";
+$age = 30;
+$isAdmin = true;
+
+// Indexed array
+$users = ["Alice", "Bob", "Charlie"];
+
+// Associative array (like a JS object)
+$user = [
+  "name" =&gt; "Alice",
+  "email" =&gt; "alice@example.com",
+  "role" =&gt; "admin"
+];
+
+echo $user["name"]; // "Alice"
+
+// Superglobals — available everywhere
+$method = $_SERVER["REQUEST_METHOD"];  // GET, POST, etc.
+$input  = $_POST["email"];             // Form input
+$query  = $_GET["search"];            // URL query parameter
+?&gt;</code></pre>
+        </div>
+
+        <h3>Control Structures</h3>
+        <p>PHP supports the expected <code>if</code>, <code>foreach</code>, <code>while</code>, and <code>switch</code>. The colon syntax (<code>if (condition): ... endif;</code>) is idiomatic when mixing with HTML — it avoids searching for curly braces.</p>
+      </section>
+
+      <section>
+        <h2>Working with Forms</h2>
+        <p>Forms are PHP's bread and butter. A PHP file receives form data and processes it — typically validating, sanitizing, storing, and responding.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Form handler with validation</span></div>
+          <pre><code>&lt;?php
+$errors = [];
+
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $name = trim($_POST["name"] ?? "");
+    $email = trim($_POST["email"] ?? "");
+
+    // Validation
+    if ($name === "") {
+        $errors[] = "Name is required";
+    }
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = "Valid email is required";
+    }
+
+    if (empty($errors)) {
+        // Sanitize for output
+        $safeName = htmlspecialchars($name, ENT_QUOTES, "UTF-8");
+        $safeEmail = htmlspecialchars($email, ENT_QUOTES, "UTF-8");
+
+        // Save to database, send email, etc.
+        // ...
+
+        header("Location: /thank-you.php");
+        exit;
+    }
+}
+?&gt;
+
+&lt;?php if (!empty($errors)): ?&gt;
+  &lt;ul class="errors"&gt;
+    &lt;?php foreach ($errors as $error): ?&gt;
+      &lt;li&gt;&lt;?= htmlspecialchars($error) ?&gt;&lt;/li&gt;
+    &lt;?php endforeach; ?&gt;
+  &lt;/ul&gt;
+&lt;?php endif; ?&gt;</code></pre>
+        </div>
+
+        <p>Key points: validate on the server (never trust the frontend), use <code>htmlspecialchars()</code> for output escaping (prevents XSS), always redirect after successful POST (prevents duplicate submissions on refresh).</p>
+
+        <div class="callout-info">
+          <div class="callout-title">Modern PHP 8+ Features</div>
+          <p>PHP has evolved significantly. Modern PHP (8.0+) includes named arguments, match expressions, constructor property promotion, readonly properties, enums, and union types. Features like <code>match</code> replace verbose <code>switch</code> statements: <code>$result = match($status) { 200 => 'OK', 404 => 'Not Found', default => 'Unknown' };</code> PHP 8.1 added enums and fibers, 8.2 added readonly classes and standalone types. Write PHP 8 — treat older versions as legacy.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Sessions and Authentication</h2>
+        <p>PHP sessions are file-based by default — when you call <code>session_start()</code>, PHP creates a unique session ID, sends it as a cookie, and stores session data on the server.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Login flow with sessions</span></div>
+          <pre><code>&lt;?php
+session_start();
+
+// Login
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $email = $_POST["email"];
+    $password = $_POST["password"];
+
+    // Fetch user from database
+    $stmt = $pdo-&gt;prepare("SELECT * FROM users WHERE email = ?");
+    $stmt-&gt;execute([$email]);
+    $user = $stmt-&gt;fetch();
+
+    if ($user &amp;&amp; password_verify($password, $user["password_hash"])) {
+        $_SESSION["user_id"] = $user["id"];
+        $_SESSION["role"] = $user["role"];
+        session_regenerate_id(true);  // Prevent session fixation
+        header("Location: /dashboard.php");
+        exit;
+    }
+}
+
+// Check auth on any page
+function requireAuth() {
+    if (empty($_SESSION["user_id"])) {
+        header("Location: /login.php");
+        exit;
+    }
+}
+
+// Check role
+function requireRole($role) {
+    if (($_SESSION["role"] ?? "") !== $role) {
+        http_response_code(403);
+        die("Access denied.");
+    }
+}
+
+// Logout
+function logout() {
+    session_destroy();
+    header("Location: /login.php");
+    exit;
+}
+?&gt;</code></pre>
+        </div>
+
+        <div class="callout-warning">
+          <div class="callout-title">Always Use password_hash and password_verify</div>
+          <p>Never hash passwords with <code>md5()</code>, <code>sha1()</code>, or even plain <code>hash("sha256", ...)</code>. PHP's <code>password_hash()</code> uses bcrypt with automatic salting. The <code>password_verify()</code> function checks the hash safely. This single function call prevents the most common authentication vulnerability.</p>
+        </div>
+
+        <div class="callout-warning">
+          <div class="callout-title">PHP Variables Start with $ — The #1 Syntax Error</div>
+          <p>Every PHP variable must start with <code>$</code>. Forgetting it is the most common beginner mistake. <code>name = "Alice"</code> is a syntax error in PHP — it must be <code>$name = "Alice"</code>. Also, PHP variables are case-sensitive: <code>$name</code> and <code>$Name</code> are different variables.</p>
+        </div>
+
+        <div class="callout-warning">
+          <div class="callout-title">PHP echo vs print — They Look the Same But Aren't</div>
+          <p>Both output text, but with differences: <code>echo</code> is slightly faster and can output multiple values (<code>echo $a, $b;</code>). <code>print</code> returns 1 (so it can be used in expressions like <code>$result = print "done"</code>). For simple output, use <code>echo</code>. The main trap: beginners use <code>print</code> expecting it to work like JavaScript's <code>console.log()</code> — it won't.</p>
+        </div>
+
+        <div class="callout-warning">
+          <div class="callout-title">PHP Arrays Start at 0 — But Can Be Associative</div>
+          <p>PHP has two array types: indexed (0-based) and associative (string keys). Both use the same <code>$array[]</code> syntax:</p>
+          <pre><code>$fruits[0] = "apple";
+$fruits[1] = "banana";
+
+$user["name"] = "Alice";
+$user["email"] = "alice@example.com";</code></pre>
+          <p>Mixing them creates an "array with mixed keys" — valid but confusing. Choose one style per array. The trap: iterating a mixed array with a numeric <code>for</code> loop fails because the keys aren't sequential.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Database Access with PDO</h2>
+        <p>PDO (PHP Data Objects) is a consistent interface for accessing databases in PHP. It supports MySQL, PostgreSQL, SQLite, and others with the same API. The most important feature: <strong>prepared statements</strong> that prevent SQL injection.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>PDO connection and CRUD</span></div>
+          <pre><code>&lt;?php
+// Connect
+$dsn = "mysql:host=localhost;dbname=myapp;charset=utf8mb4";
+$pdo = new PDO($dsn, "username", "password", [
+    PDO::ATTR_ERRMODE =&gt; PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_DEFAULT_FETCH_MODE =&gt; PDO::FETCH_ASSOC
+]);
+
+// READ — parameterized query
+$stmt = $pdo-&gt;prepare("SELECT * FROM posts WHERE id = ?");
+$stmt-&gt;execute([$_GET["id"]]);
+$post = $stmt-&gt;fetch();
+
+// READ ALL
+$posts = $pdo-&gt;query("SELECT * FROM posts ORDER BY created_at DESC")-&gt;fetchAll();
+
+// CREATE
+$stmt = $pdo-&gt;prepare("INSERT INTO posts (title, body) VALUES (?, ?)");
+$stmt-&gt;execute([$_POST["title"], $_POST["body"]]);
+$newId = $pdo-&gt;lastInsertId();
+
+// UPDATE
+$stmt = $pdo-&gt;prepare("UPDATE posts SET body = ? WHERE id = ?");
+$stmt-&gt;execute([$_POST["body"], $_POST["id"]]);
+
+// DELETE
+$stmt = $pdo-&gt;prepare("DELETE FROM posts WHERE id = ?");
+$stmt-&gt;execute([$_POST["id"]]);
+?&gt;</code></pre>
+        </div>
+
+        <p>The <code>?</code> placeholders in the SQL are replaced with the array values in <code>execute()</code>. The database receives the query structure and the data separately — the data is never interpreted as SQL. This is the only reliable way to prevent SQL injection.</p>
+      </section>
+
+      <section>
+        <h2>Composer and Modern PHP Ecosystem</h2>
+        <p>Composer is PHP's dependency manager (like npm for JavaScript). It handles autoloading, installs packages from Packagist, and manages version constraints.</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Composer setup and usage</span></div>
+          <pre><code># Install Composer globally
+php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+php composer-setup.php --install-dir=/usr/local/bin --filename=composer
+
+# Create a new project
+composer init
+
+# Install dependencies
+composer require vlucas/phpdotenv
+composer require --dev phpunit/phpunit
+
+# Autoload your own classes (add to composer.json)
+{
+  "autoload": {
+    "psr-4": {
+      "App\\": "src/"
+    }
+  }
+}
+# Then run: composer dump-autoload</code></pre>
+        </div>
+        <p>PSR-4 autoloading maps namespaces to directory structures. A class <code>App\Controllers\UserController</code> lives at <code>src/Controllers/UserController.php</code>. Use <code>composer dump-autoload</code> after updating the autoload config — no manual <code>require</code> or <code>include</code> needed.</p>
+
+        <h3>Environment Configuration</h3>
+        <p>Never hardcode configuration values. Use environment variables and a <code>.env</code> file with <code>vlucas/phpdotenv</code>:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>.env and loading</span></div>
+          <pre><code># .env (never commit to Git)
+DB_HOST=localhost
+DB_NAME=myapp
+DB_USER=app_user
+DB_PASS=secure_password_here
+APP_ENV=production
+
+# config.php
+require __DIR__ . '/vendor/autoload.php';
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+$dotenv->load();
+
+$dsn = "mysql:host={$_ENV['DB_HOST']};dbname={$_ENV['DB_NAME']};charset=utf8mb4";
+$pdo = new PDO($dsn, $_ENV['DB_USER'], $_ENV['DB_PASS']);</code></pre>
+        </div>
+        <div class="callout-warning">
+          <div class="callout-title">Never Commit .env Files</div>
+          <p>Add <code>.env</code> to your <code>.gitignore</code>. Commit a <code>.env.example</code> file instead with placeholder values and documentation. Leaked credentials from committed <code>.env</code> files are the most common CI/CD security incident on GitHub.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Laravel: The Dominant PHP Framework</h2>
+        <p>While you can build anything with vanilla PHP, Laravel is the standard for professional PHP development. It provides routing, ORM (Eloquent), templating (Blade), authentication, queues, testing, and more.</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Laravel route and controller</span></div>
+          <pre><code>// routes/web.php
+Route::get('/posts', [PostController::class, 'index']);
+Route::post('/posts', [PostController::class, 'store']);
+
+// app/Http/Controllers/PostController.php
+class PostController extends Controller
+{
+    public function index(): View
+    {
+        $posts = Post::latest()->paginate(10);
+        return view('posts.index', ['posts' => $posts]);
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'title' => 'required|max:255',
+            'body'  => 'required',
+        ]);
+
+        Post::create($validated);
+        return redirect('/posts')->with('success', 'Post created!');
+    }
+}</code></pre>
+        </div>
+        <p>Key Laravel concepts: Eloquent provides an ActiveRecord ORM (<code>Post::find($id)</code>, <code>Post::where('published', true)</code>), Blade templates extend layouts and include components, Artisan CLI generates code (<code>php artisan make:controller</code>), and queues with Horizon handle async jobs.</p>
+        <div class="callout-tip">
+          <div class="callout-title">Start with Vanilla, Scale with Laravel</div>
+          <p>For small projects (1-5 endpoints, simple database), vanilla PHP with PDO and a single-file router is faster to write and deploy. As complexity grows — multiple models, auth roles, email, queues, testing — Laravel's conventions save time and prevent architectural drift. The boundary is around 10+ database tables or 3+ developers.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Testing PHP Code</h2>
+        <p>PHPUnit is the standard testing framework. Write tests for your business logic, HTTP endpoints, and database interactions.</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>PHPUnit test example</span></div>
+          <pre><code>use PHPUnit\Framework\TestCase;
+
+class UserTest extends TestCase
+{
+    public function test_user_can_be_created_with_valid_data(): void
+    {
+        $user = new User('Alice', 'alice@example.com');
+        
+        $this->assertSame('Alice', $user->name);
+        $this->assertSame('alice@example.com', $user->email);
+        $this->assertTrue($user->isValid());
+    }
+
+    public function test_invalid_email_throws_exception(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        new User('Bob', 'not-an-email');
+    }
+}</code></pre>
+        </div>
+        <p>Run tests with <code>./vendor/bin/phpunit</code> or define a <code>composer.json</code> script: <code>"scripts": { "test": "phpunit" }</code>. Integrate with CI/CD — tests should run on every push and every pull request. Laravel projects include PHPUnit by default with <code>php artisan test</code>.</p>
+
+        <div class="callout-info">
+          <div class="callout-title">Test What Matters</div>
+          <p>Focus tests on business logic and critical paths: validation rules, pricing calculations, authentication flows, and API responses. Don't test PHP's core functions or simple getters. A good test suite catches regressions without becoming a maintenance burden — 50 well-written tests are better than 500 brittle ones.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Building a REST API</h2>
+        <p>PHP can serve as a lightweight API backend. The modern approach: a single <code>index.php</code> entry point that reads the request URI and routes accordingly.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Simple PHP router</span></div>
+          <pre><code>&lt;?php
+header("Content-Type: application/json");
+header("Access-Control-Allow-Origin: https://mysite.com");
+header("Access-Control-Allow-Methods: GET, POST");
+
+$method = $_SERVER["REQUEST_METHOD"];
+$path = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);
+
+// Route
+switch (true) {
+    case $path === "/api/posts" &amp;&amp; $method === "GET":
+        $posts = $pdo-&gt;query("SELECT * FROM posts")-&gt;fetchAll();
+        echo json_encode($posts);
+        break;
+
+    case $path === "/api/posts" &amp;&amp; $method === "POST":
+        $data = json_decode(file_get_contents("php://input"), true);
+        $stmt = $pdo-&gt;prepare("INSERT INTO posts (title, body) VALUES (?, ?)");
+        $stmt-&gt;execute([$data["title"], $data["body"]]);
+        http_response_code(201);
+        echo json_encode(["id" =&gt; $pdo-&gt;lastInsertId()]);
+        break;
+
+    default:
+        http_response_code(404);
+        echo json_encode(["error" =&gt; "Not found"]);
+}
+?&gt;</code></pre>
+        </div>
+        <p>For larger APIs, use a framework (Laravel, Slim, Symfony) that provides routing, middleware, validation, and error handling built-in. But for small projects, a single-file router like this is sufficient and keeps complexity low.</p>
+      </section>
+
+      <div class="compare-box">
+        <div class="compare-col junior">
+          <div class="compare-label">Junior Developer</div>
+          <h4>How a Junior Might Think</h4>
+          <ul>
+            <li>Mixes PHP and HTML freely without separation of concerns</li>
+            <li>Uses <code>mysql_*</code> functions (deprecated and insecure)</li>
+            <li>Concatenates variables into SQL queries directly</li>
+            <li>Hashes passwords with <code>md5()</code></li>
+            <li>Does not validate or sanitize form input server-side</li>
+          </ul>
+        </div>
+        <div class="compare-col senior">
+          <div class="compare-label">Senior Developer</div>
+          <h4>How a Senior Thinks</h4>
+          <ul>
+            <li>Uses MVC pattern or a framework (Laravel, Slim)</li>
+            <li>Always uses PDO with prepared statements</li>
+            <li>Validates and sanitizes all input server-side</li>
+            <li>Uses <code>password_hash()</code> / <code>password_verify()</code></li>
+            <li>Separates business logic from presentation logic</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="cheatsheet">
+        <div class="cheatsheet-title">Cheat Sheet</div>
+        <table>
+          <thead>
+            <tr><th>Task</th><th>PHP Approach</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Output a value</td><td><code>&lt;?= $var ?&gt;</code></td></tr>
+            <tr><td>Escape output (XSS prevention)</td><td><code>htmlspecialchars($str, ENT_QUOTES, 'UTF-8')</code></td></tr>
+            <tr><td>Hash a password</td><td><code>password_hash($pw, PASSWORD_BCRYPT)</code></td></tr>
+            <tr><td>Verify a password</td><td><code>password_verify($pw, $hash)</code></td></tr>
+            <tr><td>Query with parameters</td><td><code>$pdo->prepare("SELECT ... WHERE id = ?")</code> + <code>->execute([$id])</code></td></tr>
+            <tr><td>Redirect</td><td><code>header("Location: /url"); exit;</code></td></tr>
+            <tr><td>Read JSON body</td><td><code>json_decode(file_get_contents("php://input"), true)</code></td></tr>
+            <tr><td>Send JSON response</td><td><code>header("Content-Type: application/json"); echo json_encode($data);</code></td></tr>
+            <tr><td>Read session data</td><td><code>$_SESSION["key"]</code> (after <code>session_start()</code>)</td></tr>
+            <tr><td>Validate email</td><td><code>filter_var($email, FILTER_VALIDATE_EMAIL)</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <nav class="chapter-nav">
+        <a href="14-backend-considerations.html"><span class="nav-label">Prev</span>Prev: Backend Considerations</a>
+        <a href="16-react.html"><span class="nav-label">Next</span>Next: React</a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../../assets/js/sidebar.js"></script>
+  <script src="../../assets/js/navigation.js"></script>
+  <script src="../../assets/js/themes.js"></script>
+</body>
+</html>

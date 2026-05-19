@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>12 — UX Design Fundamentals | M's Web Development Guide</title>
+  <meta name="description" content="Design thinking, user research, wireframing, visual hierarchy, color, typography, and design systems.">
+  <link rel="stylesheet" href="../../assets/css/main.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/themes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <div class="site-wrapper">
+    <header class="site-header">
+      <div class="site-title"><a href="../../index.html"><i class="fa-solid fa-house"></i> M's Web Development Guide</a></div>
+      <div class="header-controls">
+        <button data-sidebar-toggle class="sidebar-toggle" aria-label="Toggle table of contents">&#9776; TOC</button>
+        <button data-theme-toggle aria-label="Switch theme"><span class="icon">☾</span>Dark</button>
+      </div>
+    </header>
+
+    <aside class="sidebar" aria-label="Table of Contents">
+      <div id="sidebar-toc"></div>
+    </aside>
+
+    <main class="main-content" id="main">
+      <span class="chapter-number">Chapter 10</span>
+      <h1>UX Design Fundamentals</h1>
+      <p class="chapter-subtitle">Design thinking, research, wireframing, visual hierarchy, and building a design system</p>
+
+      <p>UX (User Experience) design is the process of creating products that provide meaningful and relevant experiences to users. It is not about how something looks — it is about how something works. A beautiful website that confuses users is a failure. An ugly website that gets out of the way and lets users accomplish their goals is a success. The best engineers understand UX deeply because they make hundreds of decisions every day that affect their users.</p>
+
+      <section>
+        <h2>UX vs UI: What Is the Difference?</h2>
+        <p>The terms are often used interchangeably but they describe different things:</p>
+        <table>
+          <thead>
+            <tr><th></th><th>UX (User Experience)</th><th>UI (User Interface)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Focus</td><td>How the product works and feels</td><td>How the product looks and is arranged</td></tr>
+            <tr><td>Questions</td><td>Can users find what they need? Is the flow logical?</td><td>Are the colors consistent? Is the spacing balanced?</td></tr>
+            <tr><td>Outputs</td><td>Wireframes, user flows, research reports, prototypes</td><td>Mockups, style guides, component specs</td></tr>
+            <tr><td>Tools</td><td>Figma (wireframes), Miro, paper sketches</td><td>Figma (high-fidelity), Illustrator, Photoshop</td></tr>
+          </tbody>
+        </table>
+        <p>In small teams, one person often does both. The distinction matters because they require different thinking modes: UX is logic and empathy; UI is taste and craft.</p>
+      </section>
+
+      <section>
+        <h2>Design Thinking Process</h2>
+        <p>Design thinking is a structured approach to solving problems. It is not linear — you loop back to earlier stages as you learn. The five stages are:</p>
+
+        <div class="decision-tree">Empathize → Define → Ideate → Prototype → Test
+&nbsp;&nbsp;&nbsp;&nbsp;↓&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓
+Understand users → Define problem → Brainstorm → Build quick → Get feedback
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;← Iterate ←</div>
+
+        <ol>
+          <li><strong>Empathize</strong> — Conduct user interviews, observe behavior, understand pain points. You are not the user. Your assumptions are wrong until validated.</li>
+          <li><strong>Define</strong> — Synthesize research into a clear problem statement: "Travelers need a way to compare flight prices without opening ten tabs because they feel overwhelmed by choice."</li>
+          <li><strong>Ideate</strong> — Brainstorm solutions. Quantity over quality at this stage. Sketch multiple approaches. The first idea is rarely the best.</li>
+          <li><strong>Prototype</strong> — Build a low-fidelity version. Paper sketch, clickable wireframe, or basic HTML. Just enough to test the concept.</li>
+          <li><strong>Test</strong> — Put the prototype in front of real users. Watch where they hesitate. Listen to their questions. Then go back to step 2 or 3.</li>
+        </ol>
+
+        <div class="callout-info">
+          <div class="callout-title">You Are Already Doing Design Thinking</div>
+          <p>If you have ever built a feature, showed it to someone, watched them struggle, and then changed it — you did design thinking. The formal process just makes it intentional and repeatable. The biggest mistake is skipping the Empathize and Test stages because they require talking to humans.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>User Research Methods</h2>
+        <p>Research prevents building the wrong thing. Use these methods depending on what you need to learn:</p>
+        <table>
+          <thead>
+            <tr><th>Method</th><th>When to Use</th><th>Effort</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>User interviews</td><td>Understand motivations, pain points, mental models</td><td>High</td></tr>
+            <tr><td>Surveys</td><td>Gather quantitative data at scale</td><td>Medium</td></tr>
+            <tr><td>Usability testing</td><td>Watch real users try to complete tasks on your product</td><td>High</td></tr>
+            <tr><td>Analytics review</td><td>See where users drop off, what they click, where they get stuck</td><td>Low (data exists)</td></tr>
+            <tr><td>Competitive analysis</td><td>Learn what works (and does not) in similar products</td><td>Low</td></tr>
+            <tr><td>Card sorting</td><td>Determine how users expect information to be organized</td><td>Medium</td></tr>
+          </tbody>
+        </table>
+        <p><strong>Rule of thumb:</strong> Watch three users use your product. The first three will reveal 80% of the biggest issues. Do not wait until you have 50 testers — three is enough to start.</p>
+      </section>
+
+      <section>
+        <h2>Information Architecture</h2>
+        <p>Information architecture (IA) is how you organize and label content. Good IA means users find what they need without thinking. Bad IA means users scan the page three times before clicking something wrong.</p>
+
+        <h3>Key IA Principles</h3>
+        <ul>
+          <li><strong>Hierarchy</strong> — Group related items. Primary navigation, secondary navigation, content. No more than 5-7 top-level navigation items (Miller's Law).</li>
+          <li><strong>Label clearly</strong> — "Products" is better than "Solutions Portfolio". Users scan labels, they do not decode them.</li>
+          <li><strong>Progressive disclosure</strong> — Show the minimum needed for the current task. Reveal advanced options only when requested.</li>
+          <li><strong>Consistency</strong> — Same action, same label, same location across the entire product.</li>
+        </ul>
+
+        <h3>Navigation Patterns</h3>
+        <table>
+          <thead>
+            <tr><th>Pattern</th><th>When to Use</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Top navigation bar</td><td>5-7 top-level pages. Most common for marketing sites.</td></tr>
+            <tr><td>Sidebar navigation</td><td>Many sections (dashboards, docs, admin panels).</td></tr>
+            <tr><td>Hamburger menu</td><td>Mobile — frees screen space but hides navigation. Use as a last resort or for secondary nav.</td></tr>
+            <tr><td>Breadcrumbs</td><td>Deep hierarchies (e-commerce categories, documentation). Shows where the user is.</td></tr>
+            <tr><td>Tabs</td><td>Switching between views of the same content type (settings sections, profile views).</td></tr>
+          </tbody>
+        </table>
+
+        <div class="callout-tip">
+          <div class="callout-title">Card Sorting Exercise</div>
+          <p>Write every content type and feature on sticky notes. Ask 3-5 people to group them into categories. The groups that emerge naturally are your navigation structure. Do not invent a structure — discover it from how users think.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Wireframing and Prototyping</h2>
+        <p>A wireframe is a low-fidelity layout that shows structure, not polish. No colors, no images, no typography decisions — just boxes, lines, and labels. A prototype is a clickable version of a wireframe that simulates the user flow.</p>
+
+        <h3>Fidelity Levels</h3>
+        <table>
+          <thead>
+            <tr><th>Fidelity</th><th>Form</th><th>Purpose</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Low</td><td>Paper sketch or bare Figma frames</td><td>Explore layout options quickly. Cheap to change.</td></tr>
+            <tr><td>Medium</td><td>Grayscale wireframes with real content placement</td><td>Test navigation and information hierarchy.</td></tr>
+            <tr><td>High</td><td>Pixel-perfect mockups with colors, typography, icons</td><td>Final sign-off, developer handoff, visual testing.</td></tr>
+          </tbody>
+        </table>
+
+        <p><strong>The rule:</strong> Start at the lowest fidelity that answers your current question. Do not polish a layout until you have validated the structure. Changing a wireframe takes minutes. Changing a high-fidelity mockup takes hours. Changing production code takes days.</p>
+      </section>
+
+      <section>
+        <h2>Visual Hierarchy</h2>
+        <p>Visual hierarchy is the arrangement of elements in order of importance. Users do not read — they scan. Hierarchy guides their eyes to what matters first.</p>
+
+        <h3>Six Tools for Creating Hierarchy</h3>
+        <table>
+          <thead>
+            <tr><th>Tool</th><th>How It Works</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Size</strong></td><td>Larger elements are more important. Headings larger than body text.</td></tr>
+            <tr><td><strong>Color</strong></td><td>Bright or high-contrast elements draw attention. Muted colors recede.</td></tr>
+            <tr><td><strong>Spacing</strong></td><td>More space around an element signals importance. Whitespace is not wasted space.</td></tr>
+            <tr><td><strong>Position</strong></td><td>Top-left (in Western reading patterns) is the primary attention zone.</td></tr>
+            <tr><td><strong>Weight</strong></td><td>Bold text stands out from regular text. Thin weights fade into the background.</td></tr>
+            <tr><td><strong>Motion</strong></td><td>Animating elements draw immediate attention. Use sparingly.</td></tr>
+          </tbody>
+        </table>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Hierarchy through CSS — before and after</span></div>
+          <pre><code>/* Before — everything looks the same */
+.card { font-size: 16px; padding: 12px; border: 1px solid #ddd; }
+
+/* After — clear hierarchy */
+.card-title   { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.25rem; }
+.card-meta    { font-size: 0.875rem; color: #666; margin-bottom: 0.75rem; }
+.card-body    { font-size: 1rem; line-height: 1.5; }
+.card-cta     { display: inline-block; background: blue; color: white; padding: 0.5rem 1rem; }</code></pre>
+        </div>
+      </section>
+
+      <section>
+        <h2>Color Theory for the Web</h2>
+        <p>Color communicates meaning, creates hierarchy, and establishes brand identity. You do not need to be a designer to use color effectively — you need a system.</p>
+
+        <h3>The 60-30-10 Rule</h3>
+        <p>A simple formula for balanced color usage:</p>
+        <ul>
+          <li><strong>60%</strong> dominant/neutral color — background, large areas</li>
+          <li><strong>30%</strong> secondary color — headers, cards, UI elements</li>
+          <li><strong>10%</strong> accent color — buttons, links, calls to action</li>
+        </ul>
+
+        <h3>Color Roles</h3>
+        <table>
+          <thead>
+            <tr><th>Role</th><th>Purpose</th><th>Example</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Primary</td><td>Main brand color, used for key interactive elements</td><td>Button background, link color</td></tr>
+            <tr><td>Secondary</td><td>Supporting color, complements primary</td><td>Secondary buttons, badges</td></tr>
+            <tr><td>Neutral</td><td>Text, backgrounds, borders</td><td>Grayscale palette (50-900)</td></tr>
+            <tr><td>Success</td><td>Positive feedback</td><td>Green for confirmation messages</td></tr>
+            <tr><td>Warning</td><td>Caution feedback</td><td>Amber for validation warnings</td></tr>
+            <tr><td>Error</td><td>Negative feedback</td><td>Red for validation errors</td></tr>
+            <tr><td>Info</td><td>Informational feedback</td><td>Blue for informational banners</td></tr>
+          </tbody>
+        </table>
+
+        <div class="callout-warning">
+          <div class="callout-title">Never Rely on Color Alone</div>
+          <p>Approximately 8% of men have some form of color blindness (red-green is most common). Never convey information using color alone — always include text labels, icons, or patterns. A required field should have a label AND an asterisk, not just a red border. Error states should include text AND color.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Typography</h2>
+        <p>Typography is the single biggest factor in perceived quality. Bad typography makes a site feel amateur. Good typography makes it feel trustworthy — even if the content is the same.</p>
+
+        <h3>Key Typography Decisions</h3>
+        <table>
+          <thead>
+            <tr><th>Decision</th><th>Guideline</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Font stack</td><td>Use system fonts (<code>-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto</code>) for performance. Use web fonts sparingly — each font file adds load time.</td></tr>
+            <tr><td>Font sizes</td><td>Use a type scale: 0.75rem, 0.875rem, 1rem, 1.25rem, 1.5rem, 2rem, 2.5rem, 3rem. Avoid arbitrary sizes.</td></tr>
+            <tr><td>Line height</td><td>Body text: 1.5-1.7. Headings: 1.1-1.3. Too tight = unreadable. Too loose = disconnected.</td></tr>
+            <tr><td>Line length</td><td>45-75 characters per line. Set <code>max-width: 65ch</code> on text containers.</td></tr>
+            <tr><td>Font pairing</td><td>One font for headings, one for body. Or use weights/italic of the same font family. Never use more than two fonts.</td></tr>
+          </tbody>
+        </table>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>A readable typography system in CSS</span></div>
+          <pre><code>body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #1a1a2e;
+}
+
+h1 { font-size: 2.5rem; line-height: 1.2; font-weight: 700; }
+h2 { font-size: 2rem;   line-height: 1.25; font-weight: 600; }
+h3 { font-size: 1.5rem; line-height: 1.3; font-weight: 600; }
+h4 { font-size: 1.25rem; line-height: 1.4; font-weight: 500; }
+
+p, li { max-width: 65ch; }  /* readable line length */</code></pre>
+        </div>
+      </section>
+
+      <section>
+        <h2>Design Systems</h2>
+        <p>A design system is a single source of truth for visual and functional patterns. It includes colors, typography, spacing, components, and guidelines. Every mature product has one — formal or informal.</p>
+
+        <h3>Design Tokens</h3>
+        <p>Design tokens are the atomic values that make up a design system. They bridge the gap between design tools and code:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Design tokens as CSS custom properties</span></div>
+          <pre><code>:root {
+  /* Color tokens */
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-text: #1a1a2e;
+  --color-text-secondary: #64748b;
+  --color-bg: #ffffff;
+  --color-bg-subtle: #f8fafc;
+
+  /* Spacing tokens */
+  --space-xs: 0.25rem;   /* 4px */
+  --space-sm: 0.5rem;    /* 8px */
+  --space-md: 1rem;      /* 16px */
+  --space-lg: 1.5rem;    /* 24px */
+  --space-xl: 2rem;      /* 32px */
+  --space-2xl: 3rem;     /* 48px */
+
+  /* Typography tokens */
+  --font-body: system-ui, sans-serif;
+  --font-heading: system-ui, sans-serif;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+
+  /* Border radius tokens */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* Shadow tokens */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+}</code></pre>
+        </div>
+
+        <h3>Component Library</h3>
+        <p>Above tokens sit components: Button, Input, Card, Modal, etc. Each component documents its states (default, hover, active, disabled, loading, error) and variations (primary, secondary, ghost, danger). A design system without a component library is a style guide. A component library without a design system is inconsistent.</p>
+
+        <div class="callout-tip">
+          <div class="callout-title">Start Small</div>
+          <p>Do not build a full design system on day one. Start with a color palette and spacing scale in CSS custom properties. Add components as you repeat patterns. A Button component after the third time you write <code>&lt;button class="btn btn-primary"&gt;</code> is justified. A Button component before you have a single page is premature abstraction.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Common UX Anti-Patterns</h2>
+        <table>
+          <thead>
+            <tr><th>Anti-Pattern</th><th>Why It Hurts</th><th>Fix</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Dark patterns (tricking users)</td><td>Destroy trust. Users will leave and never return.</td><td>Be transparent. Make unsubscribing as easy as subscribing.</td></tr>
+            <tr><td>Too many choices</td><td>Hick's Law: more choices = longer decision time.</td><td>Guide users. Recommend the best option. Progressive disclosure.</td></tr>
+            <tr><td>No feedback after actions</td><td>Users wonder if the system registered their click.</td><td>Show loading states, success messages, error messages. Every action needs a reaction.</td></tr>
+            <tr><td>Inconsistent patterns</td><td>Users must relearn how to use each page.</td><td>Define patterns once. Use them everywhere. Same button placement, same label style.</td></tr>
+            <tr><td>Hidden navigation</td><td>Users cannot find what they need.</td><td>Important actions should be visible. Do not bury primary navigation behind clicks.</td></tr>
+            <tr><td>Assuming mobile = less content</td><td>Mobile users need the same content, not less of it.</td><td>Responsive layout, not responsive content removal.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <div class="compare-box">
+        <div class="compare-col junior">
+          <div class="compare-label">Junior Developer</div>
+          <h4>How a Junior Might Think</h4>
+          <ul>
+            <li>Thinks UX is "making it look pretty"</li>
+            <li>Ships features without testing with anyone</li>
+            <li>Uses random colors and font sizes ("it looks fine to me")</li>
+            <li>Does not understand why users struggle with their UI</li>
+            <li>Skipped research — builds what they think users want</li>
+            <li>Treats a design system as "overhead" instead of a productivity tool</li>
+          </ul>
+        </div>
+        <div class="compare-col senior">
+          <div class="compare-label">Senior Developer</div>
+          <h4>How a Senior Thinks</h4>
+          <ul>
+            <li>Knows UX is about outcomes, not aesthetics</li>
+            <li>Tests early and often — watches real users interact</li>
+            <li>Uses a systematic approach to color, typography, and spacing</li>
+            <li>Designs for the user who is distracted, tired, and on a phone</li>
+            <li>Builds a design system incrementally as patterns emerge</li>
+            <li>Asks "what problem are we solving?" before writing any code</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="cheatsheet">
+        <div class="cheatsheet-title">Cheat Sheet</div>
+        <table>
+          <thead>
+            <tr><th>Concept</th><th>Key Takeaway</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>UX vs UI</td><td>UX is how it works. UI is how it looks. Both matter.</td></tr>
+            <tr><td>Design thinking</td><td>Empathize → Define → Ideate → Prototype → Test. Iterate.</td></tr>
+            <tr><td>Research</td><td>Three user tests reveal 80% of problems. Do not skip this.</td></tr>
+            <tr><td>Information architecture</td><td>Group related items. Clear labels. 5-7 top nav items max.</td></tr>
+            <tr><td>Wireframes</td><td>Lowest fidelity that answers your question. Polish is the last step.</td></tr>
+            <tr><td>Visual hierarchy</td><td>Size, color, spacing, position, weight — control what users see first.</td></tr>
+            <tr><td>Color</td><td>60-30-10 rule. Use semantic roles (primary, success, error). Never use color alone.</td></tr>
+            <tr><td>Typography</td><td>System fonts for perf. Type scale. Line height 1.5-1.7. Max-width 65ch.</td></tr>
+            <tr><td>Design system</td><td>Start with tokens (colors, spacing). Add components as patterns repeat.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <nav class="chapter-nav">
+  <a href="09-package-management.html"><span class="nav-label">Prev</span>Prev: Package Management &amp; npm</a>
+  <a href="11-accessibility.html"><span class="nav-label">Next</span>Next: Accessibility</a>
+</nav>
+    </main>
+  </div>
+
+  <script src="../../assets/js/sidebar.js"></script>
+  <script src="../../assets/js/navigation.js"></script>
+  <script src="../../assets/js/themes.js"></script>
+</body>
+</html>

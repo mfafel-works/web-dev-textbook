@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bonus: Debugging Your Project | M's Web Development Guide</title>
+  <meta name="description" content="Debugging techniques: browser DevTools, console, network inspection, and common error patterns.">
+  <link rel="stylesheet" href="../../assets/css/main.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/themes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+  <div class="site-wrapper">
+    <header class="site-header">
+      <div class="site-title"><a href="../../index.html"><i class="fa-solid fa-house"></i> M's Web Development Guide</a></div>
+      <div class="header-controls">
+        <button data-sidebar-toggle class="sidebar-toggle" aria-label="Toggle table of contents">&#9776; TOC</button>
+        <button data-theme-toggle aria-label="Switch theme"><span class="icon">☾</span>Dark</button>
+      </div>
+    </header>
+    <aside class="sidebar" aria-label="Table of Contents">
+      <div id="sidebar-toc"></div>
+    </aside>
+    <main class="main-content" id="main">
+      <span class="chapter-number">Bonus</span>
+      <h1>Debugging Your Project</h1>
+      <p class="chapter-subtitle">Console techniques, DevTools, and solving common issues in your capstone project</p>
+
+      <p>Bugs are inevitable. The difference between junior and senior developers is not who makes fewer mistakes — it's who finds and fixes them faster. This bonus covers the debugging toolkit you need for your project.</p>
+
+      <section>
+        <h2>The Console</h2>
+        <p>The browser console is your first line of defense. Open DevTools (F12 or Cmd+Option+I) and click Console.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Console logging</span></div>
+          <pre><code>// Basic logging
+console.log("User logged in:", user);
+
+// Warning - something might be wrong
+console.warn("API response took 3 seconds");
+
+// Error - something is wrong
+console.error("Failed to save:", error);
+
+// Table - for arrays/objects
+console.table(users);</code></pre>
+        </div>
+
+        <div class="callout-tip">
+          <div class="callout-title">Console Tips</div>
+          <p>Right-click in console → "Clear console" to start fresh. Filter by Errors/Warnings to focus. Click any log to see the full stack trace.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Reading Error Messages</h2>
+        <p>Errors tell you what's wrong — once you know how to read them:</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Example error</span></div>
+          <pre><code>TypeError: Cannot read property 'name' of undefined
+    at handleSubmit (app.js:45:5)
+    at HTMLFormElement.onclick (index.html:12:1)</code></pre>
+        </div>
+
+        <p>Break this down:</p>
+        <ul>
+          <li><strong>TypeError:</strong> What type of problem — type mismatch, function call on wrong type</li>
+          <li><strong>Cannot read property 'name' of undefined:</strong> What happened — you tried to access .name on something that's undefined</li>
+          <li><strong>at handleSubmit (app.js:45:5):</strong> Where it happened — line 45, column 5, in handleSubmit function</li>
+        </ul>
+
+        <p><strong>Fix:</strong> Check if the variable is defined before accessing its properties.</p>
+      </section>
+
+      <section>
+        <h2>Network Tab</h2>
+        <p>For API-related bugs, the Network tab shows every request your app makes:</p>
+
+        <ul>
+          <li><strong>Check request succeeded:</strong> Look for 200 status codes</li>
+          <li><strong>Check response body:</strong> Click a request → Response tab to see what the API returned</li>
+          <li><strong>Check request headers:</strong> See what's being sent to the API</li>
+          <li><strong>Timing:</strong> See how long each request took</li>
+        </ul>
+
+        <div class="callout-warning">
+          <div class="callout-title">Common API Issues</div>
+          <p><strong>CORS error:</strong> Your frontend is on a different domain than your API. Fix by adding CORS headers to your PHP backend.</p>
+          <p><strong>404 on API call:</strong> Check the URL path — maybe missing /api/ prefix or wrong endpoint.</p>
+          <p><strong>500 from API:</strong> Check your PHP error logs — syntax error, database issue, or missing file.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Breakpoints</h2>
+        <p>For complex bugs, pause execution and step through code:</p>
+
+        <ol>
+          <li>Open Sources tab in DevTools</li>
+          <li>Click a line number to add a breakpoint (red dot)</li>
+          <li>Trigger the action in your app</li>
+          <li>Browser pauses at the breakpoint</li>
+          <li>Use the right panel to inspect variables, step through lines</li>
+        </ol>
+
+        <div class="callout-info">
+          <div class="callout-title">When to Use Breakpoints</div>
+          <p>Use console.log for quick checks. Use breakpoints when: you don't know where the bug is, you need to inspect many variables, or the bug happens in a complex flow.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Debugging Your Capstone</h2>
+        <p>Common issues in the project and how to find them:</p>
+
+        <table>
+          <thead>
+            <tr><th>Issue</th><th>How to Debug</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Form not submitting</td><td>Check console for errors, check Network tab for request</td></tr>
+            <tr><td>Data not saving</td><td>Check PHP response in Network tab, check database</td></tr>
+            <tr><td>Page not loading</td><td>Check Console for JavaScript errors, check Sources for errors</td></tr>
+            <tr><td>API returning wrong data</td><td>Check request parameters, check database values</td></tr>
+            <tr><td>Deployment broken</td><td>Check CI logs in GitHub, check build output</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Systematic Debugging</h2>
+        <p>When stuck, follow this process:</p>
+
+        <div class="decision-tree">1. Reproduce — can you make the bug happen consistently?
+→ No: Might be race condition or environment-specific
+→ Yes: Continue
+2. Isolate — remove code until bug disappears
+3. Fix — make the change, test it works
+4. Verify — bug is gone, nothing else broke</div>
+
+        <div class="callout-tip">
+          <div class="callout-title">The Most Important Skill</div>
+          <p>Reading error messages is learnable. The key is: don't panic, read carefully, look at the line number, check what's undefined or null. Most bugs follow patterns — the more you debug, the faster you recognize them.</p>
+        </div>
+      </section>
+
+      <nav class="chapter-nav">
+        <a href="bonus-cicd.html"><span class="nav-label">Prev</span>Prev: CI/CD Fundamentals</a>
+        <a href="../resources.html"><span class="nav-label">Next</span>Next: Resources &amp; Links</a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../../assets/js/sidebar.js"></script>
+  <script src="../../assets/js/navigation.js"></script>
+  <script src="../../assets/js/themes.js"></script>
+</body>
+</html>

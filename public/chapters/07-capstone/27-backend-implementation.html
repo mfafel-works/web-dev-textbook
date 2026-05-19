@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>27 — Backend Implementation | M's Web Development Guide</title>
+  <meta name="description" content="Create API endpoints, design your database, handle forms, and add authentication.">
+  <link rel="stylesheet" href="../../assets/css/main.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/themes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+  <div class="site-wrapper">
+    <header class="site-header">
+      <div class="site-title"><a href="../../index.html"><i class="fa-solid fa-house"></i> M's Web Development Guide</a></div>
+      <div class="header-controls">
+        <button data-sidebar-toggle class="sidebar-toggle" aria-label="Toggle table of contents">&#9776; TOC</button>
+        <button data-theme-toggle aria-label="Switch theme"><span class="icon">☾</span>Dark</button>
+      </div>
+    </header>
+    <aside class="sidebar" aria-label="Table of Contents">
+      <div id="sidebar-toc"></div>
+    </aside>
+    <main class="main-content" id="main">
+      <span class="chapter-number">Chapter 27</span>
+      <h1>Backend Implementation</h1>
+      <p class="chapter-subtitle">Create API endpoints, design your database, handle forms, and add authentication — and understand why each decision matters.</p>
+
+      <p>This chapter builds the backend for your capstone project. We'll cover API structure, database design, form handling, and authentication basics. Each section explains the <em>why</em> behind our implementation choices.</p>
+
+      <section>
+        <h2>Project Structure</h2>
+        <p>A well-organized backend makes maintenance easier and helps others understand your code.</p>
+
+        <div class="file-tree">backend/
+├── public/              # Static files (if any)
+├── src/
+│   ├── config/         # Configuration (DB, env)
+│   ├── controllers/    # Request handling logic
+│   ├── models/         # Database models (if using ORM)
+│   ├── routes/         # Route definitions
+│   ├── middleware/     # Auth, logging, error handling
+│   ├── services/       # Business logic
+│   ├── index.php       # Entry point
+│   └── db.php          # Database connection
+├── .htaccess           # Apache routing (if applicable)
+├── composer.json       # PHP dependencies
+└── phpunit.xml         # Test configuration</div>
+
+        <div class="callout-tip">
+          <div class="callout-title">Why This Structure?</h3>
+          <p>Separation of concerns: routes handle URL routing, controllers handle request/response, services handle business logic. This makes testing easier, allows multiple controllers to share logic, and keeps files focused. As your project grows, this structure scales — unlike putting everything in one file.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Database Design</h2>
+        <p>A well-designed database is the foundation of a reliable application. Spend time here — fixing schema mistakes later is expensive.</p>
+
+        <h3>Designing Your Schema</h3>
+        <p>Start by identifying your entities. For a typical web app with user accounts, content, and contact forms, you might need:</p>
+        <ul>
+          <li><strong>Users:</strong> id, email, password_hash, name, created_at</li>
+          <li><strong>Posts/Content:</strong> id, title, content, author_id, status, created_at, updated_at</li>
+          <li><strong>Contact Submissions:</strong> id, name, email, message, created_at, status</li>
+        </ul>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>SQL schema example</span></div>
+          <pre><code>CREATE TABLE users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  name VARCHAR(255),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE posts (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  content TEXT,
+  author_id INT NOT NULL,
+  status ENUM('draft', 'published') DEFAULT 'draft',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (author_id) REFERENCES users(id)
+);
+
+CREATE TABLE contact_submissions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL,
+  message TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);</code></pre>
+        </div>
+      </section>
+
+      <section>
+        <h2>API Endpoints</h2>
+        <p>Your API is the contract between frontend and backend. Design it thoughtfully — changing it later breaks existing clients.</p>
+
+        <h3>RESTful Design</h3>
+        <table>
+          <thead>
+            <tr><th>Method</th><th>Endpoint</th><th>Action</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>GET</td><td>/api/posts</td><td>List all posts</td></tr>
+            <tr><td>GET</td><td>/api/posts/{id}</td><td>Get single post</td></tr>
+            <tr><td>POST</td><td>/api/posts</td><td>Create new post</td></tr>
+            <tr><td>PUT</td><td>/api/posts/{id}</td><td>Update post</td></tr>
+            <tr><td>DELETE</td><td>/api/posts/{id}</td><td>Delete post</td></tr>
+          </tbody>
+        </table>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>PHP endpoint example</span></div>
+          <pre><code>&lt;?php
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+
+$method = $_SERVER['REQUEST_METHOD'];
+$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+
+// Simple router
+if ($method === 'GET' && $uri === '/api/posts') {
+    $stmt = $pdo->query("SELECT * FROM posts WHERE status = 'published'");
+    echo json_encode($stmt->fetchAll());
+} elseif ($method === 'POST' && $uri === '/api/posts') {
+    $data = json_decode(file_get_contents('php://input'), true);
+    $stmt = $pdo->prepare("INSERT INTO posts (title, content, author_id) VALUES (?, ?, ?)");
+    $stmt->execute([$data['title'], $data['content'], $data['author_id']]);
+    echo json_encode(['id' => $pdo->lastInsertId()]);
+}</code></pre>
+        </div>
+      </section>
+
+      <section>
+        <h2>Form Handling</h2>
+        <p>The backend needs to validate and process data from forms. Never trust client-side validation alone.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Contact form endpoint</span></div>
+          <pre><code>&lt;?php
+header('Content-Type: application/json');
+
+$input = json_decode(file_get_contents('php://input'), true);
+
+// Validate
+$errors = [];
+if (empty($input['name'])) {
+    $errors[] = 'Name is required';
+}
+if (empty($input['email']) || !filter_var($input['email'], FILTER_VALIDATE_EMAIL)) {
+    $errors[] = 'Valid email is required';
+}
+if (empty($input['message'])) {
+    $errors[] = 'Message is required';
+}
+
+if ($errors) {
+    http_response_code(400);
+    echo json_encode(['errors' => $errors]);
+    exit;
+}
+
+// Store in database
+$stmt = $pdo->prepare("INSERT INTO contact_submissions (name, email, message) VALUES (?, ?, ?)");
+$stmt->execute([$input['name'], $input['email'], $input['message']]);
+
+http_response_code(201);
+echo json_encode(['message' => 'Submission received']);</code></pre>
+        </div>
+
+        <div class="callout-warning">
+          <div class="callout-title">Why Validate on the Backend?</div>
+          <p>Client-side validation improves UX (instant feedback), but malicious users can bypass it by sending requests directly to your API. Backend validation is your last line of defense — always validate there too.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Authentication</h2>
+        <p>If your app needs user accounts, authentication keeps unauthorized users out of protected areas.</p>
+
+        <h3>Password Security</h3>
+        <p>Never store plain-text passwords. Use PHP's password_hash for secure storage.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Password hashing</span></div>
+          <pre><code>// Creating hash (registration)
+$password = $_POST['password'];
+$hash = password_hash($password, PASSWORD_DEFAULT);
+$stmt = $pdo->prepare("INSERT INTO users (email, password_hash) VALUES (?, ?)");
+$stmt->execute([$email, $hash]);
+
+// Verifying (login)
+$stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
+$stmt->execute([$email]);
+$user = $stmt->fetch();
+
+if ($user && password_verify($password, $user['password_hash'])) {
+    // Valid login - create session
+    $_SESSION['user_id'] = $user['id'];
+}</code></pre>
+        </div>
+
+        <h3>Sessions</h3>
+        <p>Sessions store user state on the server. PHP handles this natively.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Session-based auth</span></div>
+          <pre><code>// Start session (at top of any file needing auth)
+session_start();
+
+// Check if logged in
+function requireAuth() {
+    if (empty($_SESSION['user_id'])) {
+        http_response_code(401);
+        echo json_encode(['error' => 'Unauthorized']);
+        exit;
+    }
+}
+
+// Protect routes
+requireAuth();
+
+// Now you can safely access $_SESSION['user_id']</code></pre>
+        </div>
+      </section>
+
+      <nav class="chapter-nav">
+        <a href="26-frontend-implementation.html"><span class="nav-label">Prev</span>Prev: Frontend Implementation</a>
+        <a href="28-final-considerations.html"><span class="nav-label">Next</span>Next: Final Considerations</a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../../assets/js/sidebar.js"></script>
+  <script src="../../assets/js/navigation.js"></script>
+  <script src="../../assets/js/themes.js"></script>
+</body>
+</html>

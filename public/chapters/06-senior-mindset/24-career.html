@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>23 — Career & Communication | M's Web Development Guide</title>
+  <meta name="description" content="Code review, commit messages, asking good questions, reading docs, estimating, portfolios, impostor syndrome, and using AI tools.">
+  <link rel="stylesheet" href="../../assets/css/main.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/themes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <div class="site-wrapper">
+    <header class="site-header">
+      <div class="site-title"><a href="../../index.html"><i class="fa-solid fa-house"></i> M's Web Development Guide</a></div>
+      <div class="header-controls">
+        <button data-sidebar-toggle class="sidebar-toggle" aria-label="Toggle table of contents">&#9776; TOC</button>
+        <button data-theme-toggle aria-label="Switch theme"><span class="icon">☾</span>Dark</button>
+      </div>
+    </header>
+
+    <aside class="sidebar" aria-label="Table of Contents">
+      <div id="sidebar-toc"></div>
+    </aside>
+
+    <main class="main-content" id="main">
+      <span class="chapter-number">Chapter 24</span>
+      <h1>Career &amp; Communication</h1>
+      <p class="chapter-subtitle">Code review, commit messages, asking questions, estimating, portfolios, impostor syndrome, and using AI effectively</p>
+
+      <p>Technical skill gets you in the door. Communication and professional habits determine how far you go. A brilliant engineer who cannot communicate is less valuable than a solid engineer who writes clear pull requests, asks for help at the right time, and makes their teammates better. This chapter covers the non-technical skills that define a senior engineer.</p>
+
+      <section>
+        <h2>Code Review</h2>
+        <p>Code review is the single highest-leverage practice for code quality and team growth. It catches bugs, spreads knowledge, and establishes standards.</p>
+
+        <h3>As the Reviewer</h3>
+        <ul>
+          <li><strong>Read the description first.</strong> Understand what the change is supposed to do before reading the code.</li>
+          <li><strong>Review the tests.</strong> If there are no tests, start there. Tests document expected behavior.</li>
+          <li><strong>Comment on the code, not the person.</strong> Say "This condition is inverted" not "You always get this wrong."</li>
+          <li><strong>Distinguish blocking vs non-blocking.</strong> Use labels: "blocking" (must fix before merge), "should fix" (important but not blocking), "nit" (style preference, author can ignore).</li>
+          <li><strong>Ask questions instead of making demands.</strong> "Why did you choose a loop here instead of <code>Array.map</code>?" invites discussion. "Use <code>Array.map</code> instead" shuts it down.</li>
+          <li><strong>Review in small batches.</strong> A 200-line PR gets thorough review. A 2000-line PR gets a skim. Encourage small, focused pull requests.</li>
+          <li><strong>Respond within 24 hours.</strong> Blocking someone's PR for days kills momentum. If you cannot review fully, leave a quick note: "I'll review this tomorrow."</li>
+        </ul>
+
+        <h3>As the Author</h3>
+        <ul>
+          <li><strong>Write a good description.</strong> What does this change do? Why? How was it tested? Include screenshots for UI changes.</li>
+          <li><strong>Keep PRs small.</strong> A PR should do one thing. If you find yourself describing multiple changes, split the PR.</li>
+          <li><strong>Respond to comments.</strong> Acknowledge every comment. Fix blocking issues. Explain why you disagree with non-blocking suggestions.</li>
+          <li><strong>Do not take feedback personally.</strong> Code review is about the code, not you. A critical review of your PR is not a critical review of your ability.</li>
+        </ul>
+
+        <div class="callout-tip">
+          <div class="callout-title">The Socratic Code Review</div>
+          <p>The most effective code review technique: ask questions instead of stating conclusions. "What happens if this API returns null?" is better than "You forgot to handle null." The question makes the author think and learn. The statement just makes them fix one instance.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Writing Good Commit Messages</h2>
+        <p>A commit message documents <em>why</em> a change was made. Six months from now, someone (probably you) will read the git log to understand why something is the way it is. The commit message is your message to that future person.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Good commit message format</span></div>
+          <pre><code># Conventional Commits format:
+type(scope): short summary (max 50 chars)
+
+Optional body with details (wrap at 72 chars).
+Explain WHAT and WHY, not HOW (the diff shows HOW).
+
+- Bullet points for multiple reasons
+- Reference issue numbers: Fixes #123
+
+Types: feat, fix, refactor, test, docs, chore, style, perf</code></pre>
+        </div>
+
+        <table>
+          <thead>
+            <tr><th></th><th>Bad commit message</th><th>Good commit message</th></tr>
+          </thead>
+          <tbody>
+            <tr><td></td><td><code>fix stuff</code></td><td><code>fix(auth): prevent infinite redirect when token expires</code></td></tr>
+            <tr><td></td><td><code>update button</code></td><td><code>feat(ui): add loading state to submit button</code></td></tr>
+            <tr><td></td><td><code>changes</code></td><td><code>refactor(api): extract validation logic into middleware</code></td></tr>
+          </tbody>
+        </table>
+
+        <p>Follow the <strong>Conventional Commits</strong> format. It is machine-readable (enables automated changelogs, version bumps) and human-readable (scan the log and instantly know what happened).</p>
+      </section>
+
+      <section>
+        <h2>Asking Good Questions</h2>
+        <p>The ability to ask a good question is one of the most underrated engineering skills. A good question gets answered quickly. A bad question wastes everyone's time.</p>
+
+        <h3>The Anatomy of a Good Technical Question</h3>
+        <div class="decision-tree">1. What are you trying to do? (the goal, not the attempted solution)
+2. What have you tried? (shows you did your homework)
+3. What happened? (full error message, stack trace, unexpected behavior)
+4. What did you expect? (be specific)
+5. What is the environment? (browser, Node version, OS, relevant versions)</div>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Bad vs good question</span></div>
+          <pre><code>// BAD:
+"React isn't working. Help!"
+
+// GOOD:
+"I'm trying to fetch data when a component mounts.
+I'm using useEffect with fetch(), but the component
+renders twice and makes two API calls.
+
+Here's the code: [link]
+DevTools console shows: [screenshot]
+Using React 18 with StrictMode enabled.
+
+Expected: one API call on mount.
+Actual: two API calls.
+I tried removing StrictMode which fixed the double-render
+but I'm told StrictMode is intentional in dev. Is this
+expected behavior or am I doing something wrong?"</code></pre>
+        </div>
+
+        <h3>Where to Ask</h3>
+        <ul>
+          <li><strong>Your team's chat</strong> — quick questions, context-specific</li>
+          <li><strong>Stack Overflow</strong> — well-scoped questions about specific tools or errors</li>
+          <li><strong>GitHub Issues/Discussions</strong> — library-specific questions, bug reports, feature requests</li>
+          <li><strong>AI assistants</strong> — exploratory questions, code generation, debugging help</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Reading Documentation</h2>
+        <p>The most important skill in software development is not writing code — it is reading documentation. Every tool, library, and framework you use is documented. Learning to read docs efficiently saves hours of trial and error.</p>
+
+        <h3>How to Approach a New Library</h3>
+        <ol>
+          <li><strong>Read the README.</strong> The README tells you what the library does, how to install it, and a minimal example. 90% of questions are answered in the README.</li>
+          <li><strong>Skim the API reference.</strong> You do not need to memorize everything. Know what exists so you can find it later.</li>
+          <li><strong>Look at examples.</strong> Most libraries have an examples folder or a "recipes" section. Examples show real usage patterns.</li>
+          <li><strong>Search for common patterns.</strong> "<library> + <problem>" is often faster than reading linearly.</li>
+        </ol>
+
+        <div class="callout-tip">
+          <div class="callout-title">Read the Source When the Docs Are Unclear</div>
+          <p>Documentation can be outdated, incomplete, or wrong. The source code is always the truth. When a function does not behave as documented, open the library's source and read the function. Modern editors (VS Code) make this easy — <code>Cmd+click</code> on any function to jump to its definition. The ability to read source code is a superpower.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Estimating Tasks</h2>
+        <p>Estimating is hard because you are predicting the future. No one is good at it. The goal is not perfect estimates — it is useful estimates that trends converge over time.</p>
+
+        <h3>Techniques</h3>
+        <ul>
+          <li><strong>Break it down.</strong> A 2-week feature cannot be estimated accurately. Twenty 2-hour tasks can. Break the work into small pieces, estimate each, sum them up.</li>
+          <li><strong>Use reference points.</strong> "I built something similar last week and it took 4 hours. This is slightly more complex, so 6 hours."</li>
+          <li><strong>Add uncertainty.</strong> Give a range: 4-8 hours instead of 6 hours. The range communicates uncertainty honestly.</li>
+          <li><strong>Multiply by a fudge factor.</strong> If you always estimate under, multiply your gut estimate by 1.5-2x. If you always overestimate, adjust down.</li>
+          <li><strong>Track actual vs estimated.</strong> After completing a task, note how long it actually took. Over time, this data calibrates your estimation sense.</li>
+        </ul>
+
+        <div class="callout-warning">
+          <div class="callout-title">The Planning Fallacy</div>
+          <p>Every human systematically underestimates how long tasks will take, especially unfamiliar ones. This is called the planning fallacy. The fix: (1) break the work into very small pieces (2-4 hours each), (2) double the total, (3) add 50% for unexpected issues. If the result seems too large, your gut is wrong — trust the math from past experience.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Building a Portfolio</h2>
+        <p>A portfolio is not a collection of tutorials you followed. It is evidence of problems you solved. Quality over quantity — one well-documented project is worth more than five half-finished clones.</p>
+
+        <h3>What Makes a Good Portfolio Project</h3>
+        <ul>
+          <li><strong>Real problem, real users.</strong> A tool your friends actually use. A website for a local business. An open-source contribution.</li>
+          <li><strong>Technical depth.</strong> Shows you can handle state management, API integration, authentication, responsive design, and deployment.</li>
+          <li><strong>Good README.</strong> What does it do? How do I run it? What decisions did you make? What would you do differently?</li>
+          <li><strong>Live demo.</strong> A link to a working version. Deploy it. Free hosting (Cloudflare Pages, Netlify, Vercel) removes all excuses.</li>
+          <li><strong>Clean code.</strong> Your GitHub repo is your resume. Use consistent formatting, meaningful names, and clear commit messages.</li>
+        </ul>
+
+        <div class="callout-tip">
+          <div class="callout-title">Contribute to Open Source</div>
+          <p>Open-source contributions are the most credible portfolio items. They show you can work with existing codebases, follow someone else's conventions, and collaborate asynchronously. Start with documentation fixes and small bug fixes. Every large project has a "good first issue" label.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Impostor Syndrome</h2>
+        <p>Impostor syndrome — the feeling that you are a fraud and will be found out — is nearly universal in software development. It affects junior and senior engineers alike. The difference is not whether you feel it, but how you respond.</p>
+
+        <ul>
+          <li><strong>It never fully goes away.</strong> Every time you level up (new job, new language, new domain), the feeling returns. This is normal.</li>
+          <li><strong>Compare yourself to your past self, not to others.</strong> You know more than you did six months ago. That is the only comparison that matters.</li>
+          <li><strong>Your job is not to know everything.</strong> Your job is to figure things out. "I don't know, but I can find out" is the most powerful phrase in engineering.</li>
+          <li><strong>Share your ignorance.</strong> When a senior engineer admits "I don't know how to do that yet," it creates psychological safety for everyone.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Using AI Tools Effectively</h2>
+        <p>AI coding assistants (GitHub Copilot, Claude, ChatGPT) are now a standard part of the engineering toolkit. Used well, they multiply productivity. Used poorly, they generate code you do not understand and cannot maintain.</p>
+
+        <h3>When to Use AI</h3>
+        <ul>
+          <li><strong>Boilerplate generation</strong> — repetitive patterns, CRUD endpoints, form components</li>
+          <li><strong>Exploration and learning</strong> — "Explain how this algorithm works" or "Show me examples of this pattern"</li>
+          <li><strong>Debugging assistance</strong> — paste the error and relevant code, get hypotheses</li>
+          <li><strong>Refactoring</strong> — "Convert this callback chain to async/await"</li>
+          <li><strong>Writing tests</strong> — generate test cases for edge conditions you might miss</li>
+        </ul>
+
+        <h3>When NOT to Use AI</h3>
+        <ul>
+          <li><strong>Code you do not understand.</strong> If you cannot explain what the generated code does, do not commit it.</li>
+          <li><strong>Security-critical logic.</strong> Authentication, authorization, encryption, input sanitization — these require human review.</li>
+          <li><strong>When you are learning fundamentals.</strong> Writing code yourself builds mental models. Using AI to skip the struggle skips the learning.</li>
+          <li><strong>Without verification.</strong> AI generates plausible-looking code that may be subtly wrong. Test it. Review it. Do not trust it.</li>
+        </ul>
+
+        <div class="callout-warning">
+          <div class="callout-title">AI Is an Intern, Not a Senior Developer</div>
+          <p>AI generates code that looks correct but may be wrong, insecure, or inefficient. Treat it like a smart intern: review everything it produces, understand why it made those choices, and do not ship code you cannot explain. The goal is to augment your skills, not replace your judgment.</p>
+        </div>
+      </section>
+
+      <div class="compare-box">
+        <div class="compare-col junior">
+          <div class="compare-label">Junior Developer</div>
+          <h4>How a Junior Might Think</h4>
+          <ul>
+            <li>Writes vague commit messages ("fix", "update", "changes")</li>
+            <li>Asks vague questions — does not include error messages or context</li>
+            <li>Does not read documentation — guesses until something works</li>
+            <li>Says "I don't know" with shame, then stays stuck</li>
+            <li>Does not estimate or consistently underestimates</li>
+            <li>Feels intense impostor syndrome and does not talk about it</li>
+            <li>Uses AI to generate code they do not fully understand</li>
+          </ul>
+        </div>
+        <div class="compare-col senior">
+          <div class="compare-label">Senior Developer</div>
+          <h4>How a Senior Thinks</h4>
+          <ul>
+            <li>Writes clear commit messages that explain the why</li>
+            <li>Asks precise questions with context, error messages, and reproduction steps</li>
+            <li>Reads documentation first, then source code when docs are unclear</li>
+            <li>Says "I don't know, but I'll find out" with confidence</li>
+            <li>Breaks work into small pieces and estimates based on past data</li>
+            <li>Acknowledges impostor feelings and uses them as motivation to learn</li>
+            <li>Uses AI for boilerplate and exploration, but reviews and understands every line</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="cheatsheet">
+        <div class="cheatsheet-title">Cheat Sheet</div>
+        <table>
+          <thead>
+            <tr><th>Concept</th><th>Key Takeaway</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Code review</td><td>Review the code, not the person. Small PRs. Respond within 24 hours.</td></tr>
+            <tr><td>Commit messages</td><td>Conventional Commits format: <code>type(scope): summary</code>. Explain why, not what.</td></tr>
+            <tr><td>Asking questions</td><td>Goal → what you tried → what happened → what you expected → environment.</td></tr>
+            <tr><td>Reading docs</td><td>README first, API reference second, source code when docs are wrong.</td></tr>
+            <tr><td>Estimating</td><td>Break into small pieces. Use range. Compare actual vs estimated. Fudge factor.</td></tr>
+            <tr><td>Portfolio</td><td>Real project, live demo, good README, clean code. Open source counts.</td></tr>
+            <tr><td>Impostor syndrome</td><td>Universal. Compare to past self. "I don't know, but I can find out."</td></tr>
+            <tr><td>AI tools</td><td>Use for boilerplate and exploration. Review everything. Never ship code you do not understand.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <nav class="chapter-nav">
+        <a href="23-junior-vs-senior.html"><span class="nav-label">Prev</span>Prev: Junior vs Senior Thinking</a>
+        <a href="25-project-overview.html"><span class="nav-label">Next</span>Next: Project Overview</a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../../assets/js/sidebar.js"></script>
+  <script src="../../assets/js/navigation.js"></script>
+  <script src="../../assets/js/themes.js"></script>
+</body>
+</html>

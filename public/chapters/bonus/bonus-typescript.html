@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bonus: TypeScript Basics | M's Web Development Guide</title>
+  <meta name="description" content="TypeScript basics: types, interfaces, and why type safety matters for better code.">
+  <link rel="stylesheet" href="../../assets/css/main.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/themes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+  <div class="site-wrapper">
+    <header class="site-header">
+      <div class="site-title"><a href="../../index.html"><i class="fa-solid fa-house"></i> M's Web Development Guide</a></div>
+      <div class="header-controls">
+        <button data-sidebar-toggle class="sidebar-toggle" aria-label="Toggle table of contents">&#9776; TOC</button>
+        <button data-theme-toggle aria-label="Switch theme"><span class="icon">☾</span>Dark</button>
+      </div>
+    </header>
+    <aside class="sidebar" aria-label="Table of Contents">
+      <div id="sidebar-toc"></div>
+    </aside>
+    <main class="main-content" id="main">
+      <span class="chapter-number">Bonus</span>
+      <h1>TypeScript Basics</h1>
+      <p class="chapter-subtitle">Why type safety matters, basic types, interfaces, and adding TS to your workflow</p>
+
+      <p>TypeScript is JavaScript with type annotations. It catches bugs before your code runs — instead of discovering a bug in production, you see it in your editor while writing. This bonus covers the TypeScript essentials you need to add type safety to your projects.</p>
+
+      <section>
+        <h2>Why TypeScript?</h2>
+        <p>JavaScript is dynamically typed — types are determined at runtime. This flexibility is powerful but leads to common errors:</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>JavaScript: runtime error</span></div>
+          <pre><code>// This looks fine but fails at runtime
+function greet(user) {
+  return "Hello, " + user.name.toUpperCase();
+}
+
+greet(42); // TypeError: Cannot read property 'name' of 42</code></pre>
+        </div>
+
+        <p>TypeScript catches this at compile time:</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>TypeScript: compile-time error</span></div>
+          <pre><code>function greet(user: { name: string }) {
+  return "Hello, " + user.name.toUpperCase();
+}
+
+greet(42); // Error: Argument of type 'number' is not assignable to parameter of type '{ name: string; }'</code></pre>
+        </div>
+
+        <div class="callout-info">
+          <div class="callout-title">Compile Time vs Runtime</div>
+          <p>Runtime errors happen when your code is already running — users see them. Compile-time errors happen when you build — you see them in your editor before deployment. TypeScript moves more errors to the "you see it immediately" category.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Basic Types</h2>
+        <p>TypeScript adds type annotations to JavaScript. Here are the core types:</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Basic type annotations</span></div>
+          <pre><code>// Primitive types
+let name: string = "Alice";
+let age: number = 30;
+let isActive: boolean = true;
+
+// Arrays
+let users: string[] = ["Alice", "Bob"];
+let scores: number[] = [95, 87, 92];
+
+// Objects
+let user: { name: string; age: number } = {
+  name: "Alice",
+  age: 30
+};
+
+// Arrays of objects
+let products: { id: number; name: string; price: number }[] = [
+  { id: 1, name: "Widget", price: 29.99 },
+  { id: 2, name: "Gadget", price: 49.99 }
+];</code></pre>
+        </div>
+      </section>
+
+      <section>
+        <h2>Type Inference</h2>
+        <p>TypeScript often figures out the type automatically — you don't always need to write annotations:</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Type inference</span></div>
+          <pre><code>// TypeScript knows this is a string
+let message = "Hello"; // type: string
+
+// TypeScript knows this is a string array
+const colors = ["red", "blue", "green"]; // type: string[]
+
+// Functions return types are inferred
+function add(a: number, b: number) {
+  return a + b; // return type: number
+}</code></pre>
+        </div>
+
+        <p><strong>When to use explicit types:</strong> function parameters, function returns, complex object shapes, API responses.</p>
+      </section>
+
+      <section>
+        <h2>Interfaces</h2>
+        <p>Interfaces define the shape of objects — reusable type definitions:</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Interfaces</span></div>
+          <pre><code>interface User {
+  id: number;
+  name: string;
+  email: string;
+  isAdmin?: boolean; // ? makes it optional
+}
+
+// Use the interface
+function greetUser(user: User) {
+  return `Hello, ${user.name}!`;
+}
+
+greetUser({ id: 1, name: "Alice", email: "alice@example.com" });
+greetUser({ id: 2, name: "Bob", isAdmin: true });</code></pre>
+        </div>
+      </section>
+
+      <section>
+        <h2>Utility Types</h2>
+        <p>TypeScript provides built-in utility types that transform types:</p>
+
+        <table>
+          <thead>
+            <tr><th>Utility Type</th><th>What It Does</th><th>Example</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>Partial&lt;T&gt;</code></td><td>All properties optional</td><td><code>Partial&lt;User&gt;</code></td></tr>
+            <tr><td><code>Required&lt;T&gt;</td><td>All properties required</td><td><code>Required&lt;User&gt;</code></td></tr>
+            <tr><td><code>Pick&lt;T, K&gt;</code></td><td>Select specific properties</td><td><code>Pick&lt;User, 'id' | 'name'&gt;</code></td></tr>
+            <tr><td><code>Omit&lt;T, K&gt;</code></td><td>Exclude specific properties</td><td><code>Omit&lt;User, 'email'&gt;</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Getting Started</h2>
+        <p>Add TypeScript to an existing project:</p>
+
+        <div class="code-block">
+          <div name="code-block-header"><span>Adding TypeScript to a project</span></div>
+          <pre><code># Install TypeScript
+npm install --save-dev typescript
+
+# Create tsconfig.json
+npx tsc --init
+
+# Check for errors
+npx tsc
+
+# Run in watch mode
+npx tsc --watch</code></pre>
+        </div>
+
+        <div class="callout-tip">
+          <div class="callout-title">Start Gradually</div>
+          <p>You don't need to convert everything at once. Start by adding <code>.ts</code> files alongside your <code>.js</code> files — TypeScript understands JavaScript, so you can migrate incrementally.</p>
+        </div>
+      </section>
+
+      <nav class="chapter-nav">
+        <a href="bonus-cicd.html"><span class="nav-label">Next</span>Next: CI/CD Fundamentals</a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../../assets/js/sidebar.js"></script>
+  <script src="../../assets/js/navigation.js"></script>
+  <script src="../../assets/js/themes.js"></script>
+</body>
+</html>

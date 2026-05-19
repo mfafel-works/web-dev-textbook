@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>21 — Folder Structure & Documentation | M's Web Development Guide</title>
+  <meta name="description" content="Project organization patterns and documentation standards — from small projects to enterprise monorepos.">
+  <link rel="stylesheet" href="../../assets/css/main.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/themes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <div class="site-wrapper">
+    <header class="site-header">
+      <div class="site-title"><a href="../../index.html"><i class="fa-solid fa-house"></i> M's Web Development Guide</a></div>
+      <div class="header-controls">
+        <button data-sidebar-toggle class="sidebar-toggle" aria-label="Toggle table of contents">&#9776; TOC</button>
+        <button data-theme-toggle aria-label="Switch theme"><span class="icon">☾</span>Dark</button>
+      </div>
+    </header>
+
+    <aside class="sidebar" aria-label="Table of Contents">
+      <div id="sidebar-toc"></div>
+    </aside>
+
+    <main class="main-content" id="main">
+      <span class="chapter-number">Chapter 5</span>
+      <h1>Folder Structure &amp; Documentation</h1>
+      <p class="chapter-subtitle">Project organization patterns, naming conventions, README standards, code comments, and API docs</p>
+
+      <p>A well-organized project communicates its architecture at a glance. Good documentation preserves knowledge and saves time. Together, they are the difference between a project that is a pleasure to work on and one that drains energy from everyone who touches it. This chapter covers both — because a perfect folder structure without documentation is still confusing, and perfect documentation without a clear structure is still hard to navigate.</p>
+
+      <section>
+        <h2>Why Structure and Documentation Matter</h2>
+        <p>The cost of neglect is invisible but real:</p>
+        <ul>
+          <li><strong>Duplicated code</strong> — without a clear structure, developers rewrite existing code because they cannot find it</li>
+          <li><strong>Onboarding friction</strong> — new developers spend their first week learning where things are instead of learning how the system works</li>
+          <li><strong>Lost knowledge</strong> — undocumented decisions live in people's heads. When they leave, the knowledge leaves with them</li>
+          <li><strong>Context-switch tax</strong> — every question answered by documentation is an interruption that did not happen</li>
+        </ul>
+        <div class="decision-tree">Rule: a new developer should find any file within 30 seconds and understand any function's purpose within 2 minutes.</div>
+      </section>
+
+      <section>
+        <h2>Small Project Structure (1-15 files)</h2>
+        <div class="file-tree">my-project/
+├── index.html
+├── about.html
+├── css/
+│   └── style.css
+├── js/
+│   └── main.js
+└── assets/
+    └── images/</div>
+        <p>Exacty one place for each file type. When the project grows, <code>js/</code> becomes <code>src/</code> with subdirectories. Grow the structure organically — add a folder only when the current one becomes crowded.</p>
+      </section>
+
+      <section>
+        <h2>Medium Project Structure (15-100 files)</h2>
+        <div class="file-tree">project/
+├── public/
+│   ├── index.html
+│   └── favicon.ico
+├── src/
+│   ├── components/
+│   │   ├── Header.jsx
+│   │   ├── Footer.jsx
+│   │   └── Button.jsx
+│   ├── pages/
+│   │   ├── Home.jsx
+│   │   └── About.jsx
+│   ├── styles/
+│   │   ├── global.css
+│   │   └── variables.css
+│   ├── utils/
+│   │   ├── formatDate.js
+│   │   └── validate.js
+│   └── services/
+│       └── api.js
+├── tests/
+│   └── components/
+└── package.json</div>
+        <p>This is the standard type-based organization. The <code>services/</code> directory isolates external system interactions (APIs, databases) — making it easy to test and swap implementations.</p>
+      </section>
+
+      <section>
+        <h2>Enterprise / Feature-Based Structure</h2>
+        <p>When <code>src/components/</code> exceeds 30 files, switch to feature-based organization. Each feature is self-contained:</p>
+        <div class="file-tree">project/
+├── apps/
+│   ├── web/
+│   ├── admin/
+│   └── api/
+├── packages/
+│   ├── shared-ui/
+│   └── shared-utils/
+└── features/
+    ├── auth/
+    │   ├── components/
+    │   ├── hooks/
+    │   ├── services/
+    │   └── tests/
+    └── dashboard/
+        ├── components/
+        ├── hooks/
+        └── tests/</div>
+        <p>Each feature team owns their directory. Shared code is deliberately extracted to <code>packages/</code>. This scales to hundreds of developers because features can be understood in isolation.</p>
+
+        <h3>Type-Based vs Feature-Based</h3>
+        <table>
+          <thead>
+            <tr><th>Factor</th><th>Type-Based</th><th>Feature-Based</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Size</td><td>&lt;100 files</td><td>100+ files</td></tr>
+            <tr><td>Team</td><td>1-5 developers</td><td>5-100+ developers</td></tr>
+            <tr><td>Code sharing</td><td>Easy — one utils folder</td><td>Requires explicit extraction</td></tr>
+            <tr><td>Feature isolation</td><td>Code spread across 6 folders</td><td>Everything in one directory</td></tr>
+          </tbody>
+        </table>
+        <p>Start type-based. Switch to feature-based when components/ exceeds 30 files or you have 3+ developers on different features.</p>
+      </section>
+
+      <section>
+        <h2>Naming Conventions</h2>
+        <table>
+          <thead>
+            <tr><th>Convention</th><th>When</th><th>Examples</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>kebab-case</strong></td><td>Files, folders, URLs, CSS classes</td><td><code>user-profile.js</code>, <code>style-guide.css</code></td></tr>
+            <tr><td><strong>PascalCase</strong></td><td>Components, classes</td><td><code>UserProfile.jsx</code>, <code>HttpClient.js</code></td></tr>
+            <tr><td><strong>camelCase</strong></td><td>Variables, functions, utilities</td><td><code>formatDate.js</code>, <code>apiClient.js</code></td></tr>
+            <tr><td><strong>UPPER_CASE</strong></td><td>Constants, env vars</td><td><code>API_URL</code>, <code>MAX_RETRY_COUNT</code></td></tr>
+          </tbody>
+        </table>
+        <p>A file name should tell you what it contains. If you have to open it to understand its purpose, the naming is wrong.</p>
+      </section>
+
+      <section>
+        <h2>Practical Rules for Any Project</h2>
+        <ul>
+          <li><strong>One thing per file.</strong> One component, one function, one class per file.</li>
+          <li><strong>Co-locate what changes together.</strong> Put a component and its test in the same folder.</li>
+          <li><strong>Max depth of 4.</strong> <code>src/features/auth/components/Button.jsx</code> is the deepest you should ever go.</li>
+          <li><strong>Avoid generic names.</strong> <code>utils/helpers.js</code> is a dumping ground. Name by domain.</li>
+          <li><strong>Index files for exports.</strong> Each folder re-exports its public API so consumers import from the folder, not individual files.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>The Anatomy of a Great README</h2>
+        <p>A README answers five questions, in order:</p>
+
+        <h3>1. What is this project?</h3>
+        <p>One sentence. Not "a web app for tasks" — "a collaborative task manager with real-time updates and offline support."</p>
+
+        <h3>2. Why does it exist?</h3>
+        <p>What problem does it solve? How is it different from alternatives?</p>
+
+        <h3>3. How do I set it up?</h3>
+        <p>Step-by-step from zero to running. Prerequisites, install commands, config steps. A new developer should produce visible output in under 2 minutes.</p>
+
+        <h3>4. How do I use it?</h3>
+        <p>Basic examples — most common commands, API calls, or configuration changes. Not every edge case — enough to be immediately productive.</p>
+
+        <h3>5. How do I contribute?</h3>
+        <p>Contribution guidelines, code style, PR process. This signals the project is maintained and welcoming.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>README template</span></div>
+          <pre><code># Project Name
+
+Short description: one paragraph about what this does and why.
+
+## Prerequisites
+- Node.js 18+
+- PostgreSQL 14+
+
+## Installation
+```bash
+git clone https://github.com/you/project.git
+cd project
+npm install
+cp .env.example .env
+npm run dev
+```
+
+## Usage
+### Create a page
+Add an entry to config.json:
+```json
+{ "route": "/blog", "page": "blog", "blocks": [...] }
+```
+
+### Deploy
+```bash
+npm run build && npm run deploy
+```
+
+## API Reference
+`GET /api/posts` — Returns paginated posts.
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| page  | number | 1 | Page number |
+
+## Contributing
+See CONTRIBUTING.md. PRs must include tests and docs.</code></pre>
+        </div>
+      </section>
+
+      <section>
+        <h2>Code Comments Done Right</h2>
+        <p>Comment the why, not the what. Code tells you what it does. Comments tell you why it does it that way.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Bad vs good comments</span></div>
+          <pre><code>// BAD: states the obvious
+counter += 1;  // Increment counter by 1
+
+// GOOD: explains intent
+// Add retry delay to avoid rate-limit backoff avalanche.
+// Without this, all retries fire simultaneously
+// and the server sees the same load as the original burst.
+await delay(1000 * attempt);</code></pre>
+        </div>
+
+        <h3>When to Comment</h3>
+        <ul>
+          <li><strong>Non-obvious tradeoffs</strong> — why a Set was chosen over an Array</li>
+          <li><strong>Business rules</strong> — "Orders over $500 require approval per policy FIN-401"</li>
+          <li><strong>Workarounds</strong> — "Safari does not fire load for cached images (WebKit bug #xyz)"</li>
+          <li><strong>Complex algorithms</strong> — a brief overview so the reader can study the details elsewhere</li>
+        </ul>
+
+        <h3>When NOT to Comment</h3>
+        <ul>
+          <li>Self-explanatory code</li>
+          <li>Dead code — delete it instead of commenting it out</li>
+          <li>TODO without a ticket number — "TODO: fix later" lives forever</li>
+        </ul>
+
+        <h3>JSDoc for Public APIs</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span>JSDoc example</span></div>
+          <pre><code>/**
+ * Formats a date for display.
+ * @param {Date|string} date
+ * @param {string} [locale='en-US']
+ * @returns {string} e.g., "Jan 15, 2026"
+ */
+function formatDate(date, locale = 'en-US') { ... }</code></pre>
+        </div>
+      </section>
+
+      <section>
+        <h2>Documentation-Driven Development</h2>
+        <p>Write the docs first, then implement. This forces precision before coding.</p>
+        <ol>
+          <li><strong>Define the contract</strong> — API spec, function signature, or component interface</li>
+          <li><strong>Review the contract</strong> — share with stakeholders before writing code</li>
+          <li><strong>Write the tests</strong> — against the contract (they will fail)</li>
+          <li><strong>Implement</strong> — write code until tests pass</li>
+          <li><strong>Document edge cases</strong> — update docs with anything discovered during implementation</li>
+        </ol>
+
+        <div class="callout-info">
+          <div class="callout-title">Documentation Is an Investment</div>
+          <p>Every hour spent writing good documentation saves at least three hours of future debugging, onboarding, and answering questions. The best time to write it is when the code is fresh — ideally in the same PR that introduces the feature. Documentation that is added later is documentation that is never added.</p>
+        </div>
+      </section>
+
+      <div class="compare-box">
+        <div class="compare-col junior">
+          <div class="compare-label">Junior Developer</div>
+          <h4>How a Junior Might Think</h4>
+          <ul>
+            <li>Creates files wherever is convenient — no consistent structure</li>
+            <li>Writes no README or a one-liner with just the project name</li>
+            <li>Comments restate the code ("increment counter by 1")</li>
+            <li>Does not refactor the structure as the project grows</li>
+            <li>Lets documentation become outdated immediately</li>
+          </ul>
+        </div>
+        <div class="compare-col senior">
+          <div class="compare-label">Senior Developer</div>
+          <h4>How a Senior Thinks</h4>
+          <ul>
+            <li>Plans structure around domain and team size — refactors proactively</li>
+            <li>Treats the README as the project's front door</li>
+            <li>Documents rationale, tradeoffs, and design decisions</li>
+            <li>Writes docs first, then implements</li>
+            <li>Keeps documentation in the same PR as code changes</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="cheatsheet">
+        <div class="cheatsheet-title">Cheat Sheet</div>
+        <table>
+          <thead>
+            <tr><th>Concept</th><th>Key Takeaway</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Small project</td><td>Flat: css/, js/, assets/</td></tr>
+            <tr><td>Medium project</td><td>Type-based: components/, pages/, utils/, services/</td></tr>
+            <tr><td>Enterprise</td><td>Feature-based: auth/, dashboard/, payments/</td></tr>
+            <tr><td>Naming</td><td>kebab-case files, PascalCase components, camelCase utilities</td></tr>
+            <tr><td>README</td><td>What? Why? Setup? Usage? Contribute?</td></tr>
+            <tr><td>Comments</td><td>Comment the why, not the what. Avoid TODOs without tickets.</td></tr>
+            <tr><td>DDD</td><td>Docs first → Review → Tests → Implement</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <nav class="chapter-nav">
+  <a href="04-git-and-version-control.html"><span class="nav-label">Prev</span>Prev: Git &amp; Version Control</a>
+  <a href="06-html.html"><span class="nav-label">Next</span>Next: HTML</a>
+</nav>
+    </main>
+  </div>
+
+  <script src="../../assets/js/sidebar.js"></script>
+  <script src="../../assets/js/navigation.js"></script>
+  <script src="../../assets/js/themes.js"></script>
+</body>
+</html>

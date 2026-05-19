@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>00 — The Command Line & Local Dev | M's Web Development Guide</title>
+  <meta name="description" content="Terminal basics, file paths, JSON syntax, error messages, and setting up your local development environment.">
+  <link rel="stylesheet" href="../../assets/css/main.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/themes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <div class="site-wrapper">
+    <header class="site-header">
+      <div class="site-title"><a href="../../index.html"><i class="fa-solid fa-house"></i> M's Web Development Guide</a></div>
+      <div class="header-controls">
+        <button data-sidebar-toggle class="sidebar-toggle" aria-label="Toggle table of contents">&#9776; TOC</button>
+        <button data-theme-toggle aria-label="Switch theme"><span class="icon">☾</span>Dark</button>
+      </div>
+    </header>
+
+    <aside class="sidebar" aria-label="Table of Contents">
+      <div id="sidebar-toc"></div>
+    </aside>
+
+    <main class="main-content" id="main">
+      <span class="chapter-number">Chapter 3</span>
+      <h1>The Command Line &amp; Local Dev</h1>
+      <p class="chapter-subtitle">Terminal basics, errors, JSON, and getting your development environment running</p>
+
+      <p>Before you write your first line of code, you need to know how to talk to your computer. The terminal (also called command line, shell, or console) is how developers navigate files, run programs, and control their environment through text commands instead of clicking. This chapter covers everything you need to get started: terminal commands, understanding errors, working with JSON, and setting up a local development server.</p>
+
+      <section>
+        <h2>What You'll Need First</h2>
+        <p>Before we start, make sure you have these two things installed on your computer:</p>
+
+        <h3>1. A Text Editor (Where You'll Write Code)</h3>
+        <p>You need a program to write and edit code. We recommend <strong>Visual Studio Code</strong> — it's free, beginner-friendly, and works on Windows, Mac, and Linux.</p>
+        <ul>
+          <li><strong>Download:</strong> <a href="https://code.visualstudio.com/">https://code.visualstudio.com/</a></li>
+          <li><strong>Why VS Code?</strong> It has a built-in terminal, syntax highlighting (colors that make code easier to read), and thousands of extensions for different programming languages.</li>
+        </ul>
+
+        <h3>2. Git (For Version Control — Chapter 01)</h3>
+        <p>Git tracks changes to your code. We'll use it in the next chapter, so install it now:</p>
+        <ul>
+          <li><strong>macOS:</strong> Open Terminal and run <code>xcode-select --install</code></li>
+          <li><strong>Windows:</strong> <a href="https://git-scm.com/downloads">Download from git-scm.com</a></li>
+          <li><strong>Linux:</strong> Run <code>sudo apt install git</code> in your terminal</li>
+        </ul>
+
+        <h3>3. How to Open Your Terminal</h3>
+        <p>This is the #1 question from complete beginners — here's how:</p>
+        <ul>
+          <li><strong>macOS:</strong> Press <code>Cmd + Space</code>, type "Terminal", and press Enter. Or go to Applications → Utilities → Terminal.</li>
+          <li><strong>Windows:</strong> Press <code>Windows key + R</code>, type "powershell", and press Enter. Or search for "PowerShell" in the Start menu.</li>
+          <li><strong>Linux:</strong> Press <code>Ctrl + Alt + T</code> — this opens the terminal on most Linux distributions.</li>
+        </ul>
+        <p><strong>Pro tip:</strong> Pin Terminal to your taskbar or dock so it's easy to find. You'll open it every day.</p>
+      </section>
+
+      <section>
+        <h2>Terminal Basics</h2>
+        <p>The terminal (also called command line, shell, or console) is a text-based way to control your computer. On macOS it is called Terminal. On Windows use PowerShell or <strong>Windows Terminal</strong>. On Linux it is whatever terminal emulator you have installed. They all work the same way: you type a command and press Enter.</p>
+        <p>There are about five commands that cover 90% of what you will do:</p>
+
+        <table>
+          <thead>
+            <tr><th>Command</th><th>What It Does</th><th>Example</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>pwd</code></td><td>Print working directory — shows where you are</td><td><code>/Users/you/projects</code></td></tr>
+            <tr><td><code>ls</code></td><td>List files in the current directory</td><td><code>index.html  style.css  js/</code></td></tr>
+            <tr><td><code>cd</code></td><td>Change directory — move into a folder</td><td><code>cd my-project</code></td></tr>
+            <tr><td><code>mkdir</code></td><td>Make a new directory (folder)</td><td><code>mkdir css</code> creates a css/ folder</td></tr>
+            <tr><td><code>rm</code></td><td>Remove a file (add <code>-r</code> for folders)</td><td><code>rm old.txt</code> deletes a file, <code>rm -r old-folder/</code> deletes a folder</td></tr>
+          </tbody>
+        </table>
+
+        <h3>File Paths</h3>
+        <p>Paths tell the computer where a file is. Two kinds:</p>
+        <ul>
+          <li><strong>Absolute path</strong> — starts from the root of your computer: <code>/Users/you/projects/my-site/index.html</code>. This always points to the same place regardless of where you are.</li>
+          <li><strong>Relative path</strong> — starts from where you are right now: <code>./css/style.css</code> means "the style.css inside the css folder next to me." The <code>./</code> means "current directory," <code>../</code> means "parent directory."</li>
+        </ul>
+        <p><strong>Tab completion:</strong> type the first few letters of a file or folder name and press <code>Tab</code> — the terminal will auto-complete it. If nothing happens, press Tab twice to see all options. This saves more time than any other terminal skill.</p>
+
+        <h3>What Are File Extensions? (.html, .css, .js)</h3>
+        <p>You've seen files like <code>index.html</code>, <code>style.css</code>, and <code>app.js</code>. The part after the dot (html, css, js) is the <strong>file extension</strong> — it tells your computer what type of file it is:</p>
+        <ul>
+          <li><code>.html</code> — an HTML web page</li>
+          <li><code>.css</code> — a CSS stylesheet (how the page looks)</li>
+          <li><code>.js</code> — a JavaScript file (how the page behaves)</li>
+          <li><code>.json</code> — a JSON data file</li>
+          <li><code>.txt</code> — plain text</li>
+        </ul>
+        <p><strong>Important:</strong> If you save a file as <code>mypage.txt</code> but the content is HTML, it won't render as a webpage when you open it in a browser. The extension tells the browser how to handle the file. Always use the correct extension!</p>
+
+        <h3>Folder = Directory</h3>
+        <p>You might see the words "folder" and "directory" used interchangeably. They mean the same thing — a container that holds files and other folders. In the terminal, "navigating to a directory" just means "going into that folder."</p>
+
+        <div class="callout-tip">
+          <div class="callout-title">The Terminal Is Your Friend</div>
+          <p>Every developer spends hours in the terminal every day. It feels foreign at first because there are no visual cues — but that is its strength. You can do in one command what takes ten clicks in a GUI. Learn these five commands well, and the rest (<code>cp</code>, <code>mv</code>, <code>grep</code>, <code>find</code>) will come naturally as you need them.</p>
+        </div>
+
+        <div class="callout-warning">
+          <div class="callout-title">"command not found" — You Are in the Wrong Folder</div>
+          <p>The most common terminal error. <code>npm install</code> fails with "command not found" because you are not in the project folder. <code>python manage.py</code> fails because you're in the wrong directory. Before running any command, always check <code>pwd</code> (where am I?) and <code>ls</code> (what's here?). If your project has a <code>package.json</code>, make sure you're in the same folder as it.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Reading Error Messages</h2>
+        <p>Errors are not failures — they are information. The computer is telling you exactly what went wrong. Learning to read error messages is the single most important debugging skill.</p>
+
+        <h3>The Anatomy of an Error</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span>A typical JavaScript error</span></div>
+          <pre><code>Uncaught TypeError: Cannot read properties of undefined (reading 'name')
+    at Object.&lt;anonymous&gt; (script.js:10:15)
+    at HTMLButtonElement.handleClick (script.js:22:5)</code></pre>
+        </div>
+        <ol>
+          <li><strong>Error type</strong> — <code>TypeError</code>, <code>ReferenceError</code>, <code>SyntaxError</code>. This tells you the category of problem.</li>
+          <li><strong>Error message</strong> — "Cannot read properties of undefined". You tried to access <code>.name</code> on something that is <code>undefined</code>.</li>
+          <li><strong>Stack trace</strong> — the list of files and line numbers showing the call chain. The top line is where the error happened. The lines below show what called what.</li>
+        </ol>
+
+        <table>
+          <thead>
+            <tr><th>Error Type</th><th>Meaning</th><th>Common Cause</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>ReferenceError: X is not defined</code></td><td>You used a variable name that does not exist</td><td>Typo in variable name, forgot to declare with <code>let</code>/<code>const</code>, or scope issue</td></tr>
+            <tr><td><code>TypeError: Cannot read property of null/undefined</code></td><td>You tried to access a property on a value that has none</td><td>An API returned null, or you selected a DOM element that does not exist</td></tr>
+            <tr><td><code>SyntaxError: Unexpected token</code></td><td>Your code has a typo in its structure</td><td>Missing comma, extra bracket, unclosed string, using <code>=</code> instead of <code>==</code> or <code>===</code></td></tr>
+            <tr><td><code>404 Not Found</code></td><td>The file or URL does not exist on the server</td><td>Wrong file path, missing file, broken link</td></tr>
+            <tr><td><code>500 Internal Server Error</code></td><td>The server code crashed</td><td>Backend error — check your server logs</td></tr>
+          </tbody>
+        </table>
+
+        <h3>The Debugging Workflow</h3>
+        <ol>
+          <li><strong>Read the error message</strong> — do not panic. Read it word by word. It tells you the file, the line number, and what went wrong.</li>
+          <li><strong>Look at the file and line</strong> — go to the line number mentioned. Look at what is on that line and the lines right before it.</li>
+          <li><strong>Add <code>console.log()</code></strong> — log the values of variables right before the error. Is the variable what you expect?</li>
+          <li><strong>Search the error</strong> — copy the exact error message into Google (or your search engine of choice). Chances are thousands of people have had the exact same error. Stack Overflow will have an answer.</li>
+          <li><strong>Make one change</strong> — fix what you think is wrong, save, and reload. If it still errors, you eliminated one possibility. Try the next.</li>
+        </ol>
+
+        <div class="callout-info">
+          <div class="callout-title">Every Error Is a Lesson</div>
+          <p>The first time you see "Cannot read property of undefined" it is confusing. The 50th time, you recognize it instantly. Experienced developers are not people who avoid errors — they are people who have seen every error a hundred times and know the fix without thinking. Make friends with your error messages. They are the most honest teachers you have.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>JSON Syntax</h2>
+        <p>JSON (JavaScript Object Notation) is the most common data format on the web. APIs return JSON. Configuration files use JSON. The SPA project in Chapter 09 is entirely driven by a <code>config.json</code> file. Understanding JSON syntax is essential — and the rules are strict.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Valid JSON — structure rules</span></div>
+          <pre><code>{
+  "name": "Alice",           // ✅ Keys MUST be double-quoted
+  "age": 30,                 // ✅ Valid types: string, number, boolean, null, object, array
+  "isAdmin": false,          // ✅ Booleans are lowercase true/false
+  "bio": null,               // ✅ null is lowercase
+  "tags": ["html", "css"],   // ✅ Arrays use square brackets
+  "address": {               // ✅ Objects nested with curly braces
+    "city": "New York"
+  }                          // ❌ No trailing comma after last property!
+}</code></pre>
+        </div>
+
+        <table>
+          <thead>
+            <tr><th>Rule</th><th>Why It Catches Beginners</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Keys must be double-quoted</td><td>JavaScript objects don't need quotes on keys. JSON does. This is the #1 JSON mistake.</td></tr>
+            <tr><td>No trailing commas</td><td><code>[1, 2, 3,]</code> is invalid. JavaScript allows trailing commas in arrays/objects. JSON does not.</td></tr>
+            <tr><td>Strings must use double quotes</td><td><code>'hello'</code> is not valid JSON. Only <code>"hello"</code>.</td></tr>
+            <tr><td>No comments</td><td>Unlike code, JSON does not support <code>//</code> or <code>/* */</code> comments. Use a separate README or schema file.</td></tr>
+            <tr><td>Only six valid types</td><td>string, number, boolean, null, object, array. No dates, no undefined, no functions.</td></tr>
+          </tbody>
+        </table>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Testing your JSON</span></div>
+          <pre><code># Validate a JSON file from the terminal
+python -m json.tool config.json
+
+# If the JSON is valid, it prints it neatly formatted.
+# If it is invalid, it shows an error with the exact line and character.</code></pre>
+        </div>
+
+        <div class="callout-tip">
+          <div class="callout-title">JSON Is Everywhere</div>
+          <p>API responses, configuration files, database exports, and this textbook's content system — all use JSON. The rules are simple but unforgiving. A missing comma or an extra quote breaks the entire file. Use a JSON validator (jsonlint.com) whenever you get an error you can't find visually.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Setting Up Your Local Development Environment</h2>
+        <p>Before you write your first line of code, you need to know how to run your work locally. There are two common scenarios:</p>
+
+        <h3>Scenario 1: Static Site (No <code>package.json</code>)</h3>
+        <p>A static site is just HTML, CSS, and JavaScript files. It needs no build tools. You can serve it with any simple HTTP server:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Start a static server</span></div>
+          <pre><code># Python (comes with most systems — try python or python3)
+python -m http.server 8080
+
+# Node.js (if you have it installed)
+npx serve .
+
+# Then open in your browser:
+# http://localhost:8080</code></pre>
+        </div>
+        <p><code>package.json</code> is <strong>not required</strong> for static sites. It is only needed when you use Node.js tooling — bundlers (Vite, Webpack), frameworks (React, Next.js), or build scripts. If you don't have a <code>package.json</code>, you have a static site.</p>
+
+        <div class="callout-tip">
+          <div class="callout-title">What Is localhost and :8080?</div>
+          <p><code>localhost</code> means "this computer" — it's a special word for your own machine. When you see <code>http://localhost:8080</code>, it means "a website running on my computer, on port 8080." The <code>:8080</code> is the <strong>port number</strong> — think of it as "which door" the server is using. Your computer can run many servers at once, each on a different port.</p>
+        </div>
+
+        <h3>Scenario 2: Node Project (Has <code>package.json</code>)</h3>
+        <p>When you start a new project from scratch, you create the <code>package.json</code> yourself:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Creating a new Node project</span></div>
+          <pre><code># Create a folder and enter it
+mkdir my-project
+cd my-project
+
+# Create a package.json (answer the prompts or use --yes to skip them)
+npm init
+# or
+npm init --yes    # skips all questions, uses defaults
+
+# Your project now has a package.json — install dependencies:
+npm install
+# or install a specific package:
+npm install express
+
+# Start the dev server (command varies — check package.json "scripts")
+npm run dev</code></pre>
+        </div>
+        <p>When you clone an existing project (download from GitHub), it already has a <code>package.json</code>. You skip the <code>npm init</code> step and go straight to <code>npm install</code>:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Joining an existing Node project</span></div>
+          <pre><code># Install everything the project needs
+npm install
+
+# The node_modules/ folder appears automatically
+# Start developing
+npm run dev</code></pre>
+        </div>
+
+        <h3>Project Type Quick Decision</h3>
+        <div class="decision-tree">Look in your project folder.
+├── Does it have a package.json?
+│   ├── YES → Node project. Run `npm install` then `npm run dev`.
+│   │         The dev server is already configured for you.
+│   └── NO  → Static site. Use `python -m http.server 8080`
+│               or `npx serve .`.
+└── Not sure? Run `ls` and look for index.html.
+    No package.json? It's a static site.</div>
+
+        <h3>SPA Routing Fallback (Common Pitfall)</h3>
+        <p>Single-page applications use client-side routing — the URL changes but the server always serves the same <code>index.html</code>. If you refresh a page like <code>/about</code>, the server looks for a file named <code>about.html</code>, doesn't find it, and returns a 404. The fix depends on your server:</p>
+        <ul>
+          <li><strong>Dev servers</strong> (Vite, Webpack Dev Server): configure history API fallback</li>
+          <li><strong>Hash routing</strong>: use <code>/#/about</code> instead of <code>/about</code>. The hash portion is never sent to the server — the browser handles it client-side. This is the simplest fix and works everywhere.</li>
+          <li><strong>Static hosting</strong> (Cloudflare Pages, Netlify, Vercel): configure redirect rules to serve <code>index.html</code> for all routes</li>
+        </ul>
+
+        <div class="callout-warning">
+          <div class="callout-title">Common Mistake</div>
+          <p>If your SPA works on <code>npm run dev</code> but breaks with a 404 after deploying, or breaks when you refresh a non-root page, this is almost always the SPA routing fallback problem. The solution is either hash routing or a server rewrite rule.</p>
+        </div>
+
+        <div class="callout-warning">
+          <div class="callout-title">rm -rf Has No Undo — There Is No Trash Bin</div>
+          <p>When you run <code>rm -rf foldername</code>, the files are deleted immediately. There is no "undo." There is no "trash can." They are gone forever unless you have a backup or Git commit. The <code>-rf</code> flags mean "recursive" (delete everything inside) and "force" (don't ask for confirmation).</p>
+          <p>Beginner mistake: <code>rm -rf *</code> inside the wrong directory wipes everything. Always double-check <code>pwd</code> (print working directory) before any <code>rm</code> command. Tip: use <code>rm -ri</code> (interactive) to confirm each deletion, or test with <code>ls</code> first.</p>
+        </div>
+
+        <div class="callout-warning">
+          <div class="callout-title">Case Sensitivity — File.txt Is Not file.txt</div>
+          <p>Linux/macOS file systems are case-sensitive. <code>File.txt</code>, <code>file.txt</code>, and <code>FILE.txt</code> are three different files. This trips up beginners who name a file <code>MyFile.txt</code> in their code but try to open <code>myfile.txt</code>.</p>
+          <p>Windows is case-insensitive (by default), so code that works on your machine breaks on deployment. Always match the exact case. Type <code>ls</code> to see what's actually there — the terminal won't guess what you meant.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Dev Environment Recovery</h2>
+        <p>When you come back to a project after a break (or after cloning from GitHub), or when things stop working, follow this checklist:</p>
+
+        <h3>Starting Fresh (Cloned from GitHub)</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span>First time setting up a project</span></div>
+          <pre><code># 1. Clone the repository
+git clone https://github.com/username/project.git
+cd project
+
+# 2. Install dependencies
+npm install
+
+# 3. Copy environment variables (if .env.example exists)
+cp .env.example .env
+
+# 4. Start the dev server
+npm run dev</code></pre>
+        </div>
+
+        <h3>Returning to a Project</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span>Quick restart</span></div>
+          <pre><code># 1. Navigate to your project
+cd ~/path/to/project
+
+# 2. Pull latest changes from GitHub (if working with a team)
+git pull
+
+# 3. What kind of project is it?
+ls                      # look for index.html or package.json
+
+# 4a. Static site — just serve it
+python -m http.server 8080
+
+# 4b. Node project — install and start
+npm install             # dependencies may have changed
+npm run dev</code></pre>
+        </div>
+
+        <h3>Restart Order (If Your System Has Multiple Parts)</h3>
+        <ol>
+          <li><strong>Backend / API</strong> — start any server first (Express, PHP, database)</li>
+          <li><strong>Frontend dev server</strong> — start your frontend server second</li>
+          <li><strong>Browser cache refresh</strong> — hard refresh (<code>Ctrl+Shift+R</code> / <code>Cmd+Shift+R</code>) to clear cached files</li>
+        </ol>
+        <p>If things still don't work: <code>Ctrl+C</code> to stop the server, restart it, then hard refresh the browser. This solves the majority of "it was working yesterday" problems.</p>
+
+        <div class="callout-warning">
+          <div class="callout-title">"It Worked on My Machine"</div>
+          <p>The most famous phrase in software development. Environment differences cause real bugs: different Node versions, missing dependencies, OS-specific paths. Use <code>node --version</code> to check your Node version, use <code>nvm</code> to manage multiple Node versions, and always commit your <code>package-lock.json</code> to ensure everyone gets the same dependency versions.</p>
+        </div>
+      </section>
+
+      <div class="compare-box">
+        <div class="compare-col junior">
+          <div class="compare-label">Junior Developer</div>
+          <h4>How a Junior Might Think</h4>
+          <ul>
+            <li>Afraid of the terminal — prefers clicking in a GUI</li>
+            <li>Panics when an error appears instead of reading it</li>
+            <li>Doesn't know how to start a local server — reaches for a complex tool when <code>python -m http.server</code> would do</li>
+            <li>Ignores the stack trace and guesses at the fix</li>
+            <li>Doesn't understand the difference between <code>npm install</code> and <code>npm ci</code></li>
+          </ul>
+        </div>
+        <div class="compare-col senior">
+          <div class="compare-label">Senior Developer</div>
+          <h4>How a Senior Thinks</h4>
+          <ul>
+            <li>Lives in the terminal — uses it for everything from git to file operations</li>
+            <li>Reads the full error message and stack trace before touching code</li>
+            <li>Can start a local dev server without thinking — chooses the right tool based on project type</li>
+            <li>Uses <code>npm ci</code> in CI and <code>npm install</code> for local development</li>
+            <li>Checks Node version and lockfile state when "it worked on my machine" strikes</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="cheatsheet">
+        <div class="cheatsheet-title">Cheat Sheet</div>
+        <table>
+          <thead>
+            <tr><th>Concept</th><th>Key Takeaway</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Terminal</td><td><code>pwd</code> (where am I), <code>ls</code> (what's here), <code>cd</code> (go there), <code>mkdir</code> (new folder). Tab to auto-complete.</td></tr>
+            <tr><td>Error Messages</td><td>Read the type + message + stack trace. Search the error. <code>console.log()</code> before the crash.</td></tr>
+            <tr><td>JSON</td><td>Keys double-quoted, no trailing commas, no comments, six types: string/number/boolean/null/object/array.</td></tr>
+            <tr><td>Local Dev</td><td>No <code>package.json</code>? Static site: <code>python -m http.server 8080</code>. Has <code>package.json</code>? Node project: <code>npm install && npm run dev</code>.</td></tr>
+            <tr><td>SPA Routing</td><td>Hash routing (<code>/#/about</code>) avoids 404 on refresh. History mode needs server fallback config.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+<nav class="chapter-nav">
+  <a href="02-browser-internals.html"><span class="nav-label">Prev</span>Prev: How the Browser Works</a>
+  <a href="04-git-and-version-control.html"><span class="nav-label">Next</span>Next: Git &amp; Version Control</a>
+</nav>
+    </main>
+  </div>
+
+  <script src="../../assets/js/sidebar.js"></script>
+  <script src="../../assets/js/navigation.js"></script>
+  <script src="../../assets/js/themes.js"></script>
+</body>
+</html>

@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>12 — API Design & REST | M's Web Development Guide</title>
+  <meta name="description" content="URL design, request/response formats, error handling, pagination, versioning, CORS, rate limiting, and OpenAPI specs.">
+  <link rel="stylesheet" href="../../assets/css/main.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/themes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <div class="site-wrapper">
+    <header class="site-header">
+      <div class="site-title"><a href="../../index.html"><i class="fa-solid fa-house"></i> M's Web Development Guide</a></div>
+      <div class="header-controls">
+        <button data-sidebar-toggle class="sidebar-toggle" aria-label="Toggle table of contents">&#9776; TOC</button>
+        <button data-theme-toggle aria-label="Switch theme"><span class="icon">☾</span>Dark</button>
+      </div>
+    </header>
+
+    <aside class="sidebar" aria-label="Table of Contents">
+      <div id="sidebar-toc"></div>
+    </aside>
+
+    <main class="main-content" id="main">
+      <span class="chapter-number">Chapter 17</span>
+      <h1>API Design &amp; REST</h1>
+      <p class="chapter-subtitle">URL design, request/response patterns, error handling, pagination, versioning, CORS, rate limiting, and OpenAPI</p>
+
+      <p>An API (Application Programming Interface) is how two systems communicate over HTTP. A well-designed API is intuitive to use, consistent across endpoints, and handles errors gracefully. A poorly designed API creates confusion, bugs, and integration nightmares. This chapter covers REST API design principles that apply to any backend language.</p>
+
+      <section>
+        <h2>REST Fundamentals</h2>
+        <p>REST (Representational State Transfer) is an architectural style for APIs. It uses HTTP methods as verbs and URLs as nouns:</p>
+        <table>
+          <thead>
+            <tr><th>HTTP Method</th><th>Action</th><th>Example</th><th>Result</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>GET</code></td><td>Retrieve</td><td><code>GET /api/users</code></td><td>Returns a list of users</td></tr>
+            <tr><td><code>POST</code></td><td>Create</td><td><code>POST /api/users</code></td><td>Creates a new user</td></tr>
+            <tr><td><code>PUT</code></td><td>Replace</td><td><code>PUT /api/users/42</code></td><td>Replaces user 42 entirely</td></tr>
+            <tr><td><code>PATCH</code></td><td>Partial update</td><td><code>PATCH /api/users/42</code></td><td>Updates only specified fields of user 42</td></tr>
+            <tr><td><code>DELETE</code></td><td>Remove</td><td><code>DELETE /api/users/42</code></td><td>Deletes user 42</td></tr>
+          </tbody>
+        </table>
+
+        <h3>URL Conventions</h3>
+        <ul>
+          <li><strong>Plural nouns:</strong> <code>/api/users</code>, not <code>/api/user</code></li>
+          <li><strong>Nested resources:</strong> <code>/api/users/42/posts</code> (posts belonging to user 42)</li>
+          <li><strong>Actions as verbs only when necessary:</strong> <code>POST /api/users/42/activate</code> (non-CRUD action)</li>
+          <li><strong>Version prefix:</strong> <code>/api/v1/users</code> — enables breaking changes without breaking existing clients</li>
+          <li><strong>Consistent casing:</strong> <code>snake_case</code> or <code>camelCase</code> — pick one and use it everywhere</li>
+        </ul>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>RESTful URL design — good vs bad</span></div>
+          <pre><code>// GOOD — clear, consistent, RESTful
+GET    /api/v1/users              // list users
+POST   /api/v1/users              // create user
+GET    /api/v1/users/42           // get user 42
+PUT    /api/v1/users/42           // replace user 42
+PATCH  /api/v1/users/42           // update user 42
+DELETE /api/v1/users/42           // delete user 42
+GET    /api/v1/users/42/posts     // user 42's posts
+
+// BAD — inconsistent, confusing
+GET    /api/getUsers              // verb in URL
+POST   /api/createUser            // verb in URL
+GET    /api/userInfo?uid=42       // inconsistent naming</code></pre>
+        </div>
+      </section>
+
+      <section>
+        <h2>Request and Response Formats</h2>
+        <p>Standardize on JSON for both requests and responses. Set <code>Content-Type: application/json</code> and <code>Accept: application/json</code> headers.</p>
+
+        <h3>Response Envelope</h3>
+        <p>Wrap responses in a consistent structure that includes metadata:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Consistent response envelope</span></div>
+          <pre><code>// Success response
+{
+  "data": { ... },           // the payload
+  "meta": {                  // metadata (pagination, etc.)
+    "page": 1,
+    "totalPages": 5,
+    "totalCount": 98
+  }
+}
+
+// Success — list response
+{
+  "data": [ ... ],
+  "meta": {
+    "page": 1,
+    "limit": 10,
+    "total": 98,
+    "hasMore": true
+  }
+}
+
+// Error response
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Email is required",
+    "details": [
+      { "field": "email", "message": "must not be blank" }
+    ],
+    "requestId": "req_abc123"
+  }
+}</code></pre>
+        </div>
+      </section>
+
+      <section>
+        <h2>Error Handling</h2>
+        <p>Use HTTP status codes correctly and consistently. Every endpoint should return appropriate error codes with descriptive messages.</p>
+
+        <table>
+          <thead>
+            <tr><th>Scenario</th><th>Status Code</th><th>Response</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Validation failed</td><td><code>400 Bad Request</code></td><td>List of which fields failed and why</td></tr>
+            <tr><td>Unauthenticated</td><td><code>401 Unauthorized</code></td><td>Missing or invalid auth credentials</td></tr>
+            <tr><td>Forbidden</td><td><code>403 Forbidden</code></td><td>Authenticated but lacks permission</td></tr>
+            <tr><td>Not found</td><td><code>404 Not Found</code></td><td>Resource does not exist</td></tr>
+            <tr><td>Conflict</td><td><code>409 Conflict</code></td><td>Duplicate resource, stale version</td></tr>
+            <tr><td>Rate limited</td><td><code>429 Too Many Requests</code></td><td>Include <code>Retry-After</code> header</td></tr>
+            <tr><td>Server error</td><td><code>500 Internal Server Error</code></td><td>Generic message, log the details internally</td></tr>
+          </tbody>
+        </table>
+
+        <p><strong>Never expose stack traces or internal details in error responses.</strong> Log them server-side and return a generic message. Include a <code>requestId</code> so you can correlate client reports with server logs.</p>
+      </section>
+
+      <section>
+        <h2>Pagination</h2>
+        <p>Any endpoint that returns a list must support pagination. Without it, a user with 100,000 records would crash the server and the client.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Cursor-based pagination (recommended)</span></div>
+          <pre><code>// Request
+GET /api/v1/posts?cursor=eyJpZCI6NDJ9&limit=20
+
+// Response
+{
+  "data": [ ... ],
+  "meta": {
+    "nextCursor": "eyJpZCI6NjJ9",    // pass this for the next page
+    "hasMore": true,
+    "limit": 20
+  }
+}
+
+// Cursor-based pagination is preferred over page/offset because:
+// - Stable: new items inserted at the start don't shift page boundaries
+// - Fast: WHERE id &gt; cursor queries use indexes efficiently
+// - The cursor is opaque (base64-encoded JSON or similar)</code></pre>
+        </div>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Offset-based pagination (simpler, use for small datasets)</span></div>
+          <pre><code>// Request
+GET /api/v1/users?page=2&limit=20
+
+// Response
+{
+  "data": [ ... ],
+  "meta": {
+    "page": 2,
+    "limit": 20,
+    "total": 98,
+    "totalPages": 5,
+    "hasMore": true
+  }
+}</code></pre>
+        </div>
+      </section>
+
+      <section>
+        <h2>API Versioning</h2>
+        <p>APIs change. Clients depend on them. Versioning lets you make breaking changes without breaking existing clients.</p>
+
+        <h3>URL Prefix Versioning (Recommended)</h3>
+        <p><code>/api/v1/users</code>, <code>/api/v2/users</code>. The version is in the URL, making it explicit and cache-friendly. Maintain old versions for a deprecation period (6-12 months) with clear sunset headers.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Deprecation headers</span></div>
+          <pre><code>// Response header when using a deprecated API version
+Sunset: Sat, 01 Nov 2026 23:59:59 GMT
+Deprecation: true
+
+// This tells clients: "this version is going away, migrate now"</code></pre>
+        </div>
+
+        <div class="callout-tip">
+          <div class="callout-title">Prefer Additive Changes</div>
+          <p>A well-designed API rarely needs breaking changes. Adding a new field to a response does not break existing clients. Adding a new endpoint does not break anything. Only change behavior when you must — and when you do, version it. Most "version 2" APIs could have been additive changes on version 1.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>CORS</h2>
+        <p>CORS (Cross-Origin Resource Sharing) is a browser security mechanism. When your frontend at <code>yoursite.com</code> calls your API at <code>api.yoursite.com</code>, the browser sends a preflight <code>OPTIONS</code> request and checks the response headers.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>CORS headers your server must send</span></div>
+          <pre><code>Access-Control-Allow-Origin: https://yoursite.com
+Access-Control-Allow-Methods: GET, POST, PUT, DELETE, PATCH, OPTIONS
+Access-Control-Allow-Headers: Content-Type, Authorization
+Access-Control-Max-Age: 86400          // cache preflight for 24 hours
+
+// For simple requests (GET, POST with Content-Type:
+// application/x-www-form-urlencoded, text/plain, or multipart/form-data),
+// no preflight is needed. All other requests trigger OPTIONS first.</code></pre>
+        </div>
+
+        <div class="callout-warning">
+          <div class="callout-title">CORS Is a Server-Side Configuration, Not a Client Fix</div>
+          <p>You cannot fix CORS from the frontend. No JavaScript library, no proxy can bypass CORS. The server must send the correct <code>Access-Control-Allow-Origin</code> header. During development, use <code>*</code> (allow any origin). In production, restrict to your specific domain.</p>
+        </div>
+
+        <div class="callout-warning">
+          <div class="callout-title">fetch() Does Not Throw on HTTP Errors — 404 Is Not an Exception</div>
+          <p>The most common beginner bug: <code>fetch()</code> does not reject on HTTP errors. A 404 or 500 response is a successful network request — <code>.then()</code> runs, not <code>.catch()</code>. You must check <code>response.ok</code> or <code>response.status</code> and throw manually:</p>
+          <pre><code>const response = await fetch('/api/users');
+if (!response.ok) {
+  throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+}
+const data = await response.json();</code></pre>
+          <p>Without this check, your code proceeds as if the data is valid, and <code>await response.json()</code> on a 404 error page returns garbage or throws.</p>
+        </div>
+
+        <div class="callout-warning">
+          <div class="callout-title">Always Await response.json() — Never Assume the Body Exists</div>
+          <p>Even on a successful response, the body might be empty. Calling <code>response.json()</code> on an empty response throws "Unexpected end of JSON input." Always handle the empty case:</p>
+          <pre><code>const response = await fetch('/api/data');
+const text = await response.text();
+if (!text) return null;  // empty response
+const data = JSON.parse(text);</code></pre>
+          <p>Or use a helper that checks for empty bodies automatically.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Rate Limiting</h2>
+        <p>Rate limiting protects your API from abuse and ensures fair usage. Communicate limits through response headers:</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Rate limit headers</span></div>
+          <pre><code>// Every response includes your current rate limit status
+X-RateLimit-Limit: 100         // requests allowed per window
+X-RateLimit-Remaining: 42      // requests remaining in current window
+X-RateLimit-Reset: 1680000000  // unix timestamp when the limit resets
+
+// When exceeded — 429 Too Many Requests
+Retry-After: 30                // seconds until you can retry</code></pre>
+        </div>
+
+        <p>Common rate limiting strategies:</p>
+        <ul>
+          <li><strong>IP-based</strong> — limit by client IP. Simplest but unfair (office NAT shares one IP)</li>
+          <li><strong>User-based</strong> — limit by authenticated user ID. Fairer, requires auth</li>
+          <li><strong>Token bucket</strong> — each user gets a bucket of tokens that refills over time. Allows bursts</li>
+          <li><strong>Sliding window</strong> — count requests in the last N minutes. More accurate than fixed window</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>OpenAPI Specification</h2>
+        <p>OpenAPI (formerly Swagger) is the industry standard for documenting REST APIs. Write a YAML/JSON spec that describes every endpoint, and tools generate interactive documentation, client SDKs, and server stubs.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>OpenAPI 3.0 example</span></div>
+          <pre><code>openapi: 3.0.0
+info:
+  title: Blog API
+  version: 1.0.0
+paths:
+  /posts:
+    get:
+      summary: Returns paginated posts
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+      responses:
+        '200':
+          description: A list of posts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Post'
+                  meta:
+                    type: object
+                    properties:
+                      total: { type: integer }
+    post:
+      summary: Creates a new post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePost'
+      responses:
+        '201':
+          description: Post created
+          headers:
+            Location:
+              schema: { type: string }
+              description: URL of the new post</code></pre>
+        </div>
+      </section>
+
+      <div class="compare-box">
+        <div class="compare-col junior">
+          <div class="compare-label">Junior Developer</div>
+          <h4>How a Junior Designs APIs</h4>
+          <ul>
+            <li>Inconsistent URL naming — verbs, mixed case, weird abbreviations</li>
+            <li>No error response format — each endpoint returns different error shapes</li>
+            <li>Does not version the API — breaks all clients with every change</li>
+            <li>Exposes stack traces in error responses</li>
+            <li>Ignores CORS until it blocks the frontend, then tries to fix it client-side</li>
+          </ul>
+        </div>
+        <div class="compare-col senior">
+          <div class="compare-label">Senior Developer</div>
+          <h4>How a Senior Designs APIs</h4>
+          <ul>
+            <li>Consistent RESTful URL design with version prefix</li>
+            <li>Standard error envelope with codes, messages, and request IDs</li>
+            <li>Adds pagination, rate limiting, and deprecation headers from day one</li>
+            <li>Uses OpenAPI spec to document and validate the contract</li>
+            <li>Designs additive APIs that rarely need breaking changes</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="cheatsheet">
+        <div class="cheatsheet-title">Cheat Sheet</div>
+        <table>
+          <thead>
+            <tr><th>Concept</th><th>Key Takeaway</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>REST</td><td>Nouns in URLs, verbs in HTTP methods. Plural, consistent, versioned.</td></tr>
+            <tr><td>Response envelope</td><td><code>{ data, meta }</code> for success, <code>{ error: { code, message, details } }</code> for errors.</td></tr>
+            <tr><td>Status codes</td><td>400 (validation), 401 (unauthenticated), 403 (forbidden), 404 (not found), 409 (conflict), 429 (rate limit).</td></tr>
+            <tr><td>Pagination</td><td>Cursor-based for large datasets. Always include <code>hasMore</code>.</td></tr>
+            <tr><td>Versioning</td><td>URL prefix (<code>/api/v1/</code>). Additive changes preferred. Sunset headers for deprecation.</td></tr>
+            <tr><td>CORS</td><td>Server-side headers. Cannot be fixed from the client.</td></tr>
+            <tr><td>Rate limiting</td><td>Always include <code>X-RateLimit-*</code> headers. 429 + <code>Retry-After</code> when exceeded.</td></tr>
+            <tr><td>OpenAPI</td><td>Document every endpoint. Generates docs, SDKs, and validation.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+<nav class="chapter-nav">
+        <a href="16-react.html"><span class="nav-label">Prev</span>Prev: React</a>
+        <a href="18-security-by-design.html"><span class="nav-label">Next</span>Next: Security by Design</a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../../assets/js/sidebar.js"></script>
+  <script src="../../assets/js/navigation.js"></script>
+  <script src="../../assets/js/themes.js"></script>
+</body>
+</html>

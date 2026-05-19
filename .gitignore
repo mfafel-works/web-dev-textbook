@@ -1,0 +1,18 @@
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Python HTTP server cache
+__pycache__/
+*.pyc
+
+# Environment / secrets
+.env
+.env.local
+
+# Editor/IDE
+.vscode/
+.idea/
+*.sublime-*

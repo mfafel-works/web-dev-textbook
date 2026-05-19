@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hash Router Explorer — Interactive Example</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/themes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .demo-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 1.5rem 0; }
+    .demo-panel { border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden; }
+    .demo-panel h3 { margin: 0; padding: 0.75rem 1rem; background: var(--bg-secondary); border-bottom: 1px solid var(--border-color); font-size: 0.9rem; }
+    .demo-content { padding: 1rem; }
+    #demo-nav { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    #demo-nav a { padding: 0.4rem 0.8rem; border: 1px solid var(--border-color); border-radius: 4px; text-decoration: none; color: var(--text-primary); font-size: 0.85rem; }
+    #demo-nav a.active { background: #e94560; color: #fff; border-color: #e94560; }
+    #demo-view { min-height: 100px; padding: 1rem; background: var(--bg-secondary); border-radius: 4px; }
+    #route-display { font-family: monospace; background: var(--bg-code); padding: 0.75rem; border-radius: 4px; margin-top: 0.5rem; }
+    .route-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .route-table th, .route-table td { padding: 0.4rem 0.6rem; text-align: left; border-bottom: 1px solid var(--border-color); }
+    .route-table th { background: var(--bg-secondary); font-weight: 600; }
+    .controls { display: flex; gap: 0.5rem; margin: 1rem 0; flex-wrap: wrap; }
+    .controls input { flex: 1; min-width: 200px; padding: 0.4rem 0.6rem; border: 1px solid var(--border-color); border-radius: 4px; font-family: monospace; }
+    .controls button { padding: 0.4rem 1rem; background: #e94560; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+    .controls button:hover { opacity: 0.9; }
+    #history-log { max-height: 200px; overflow-y: auto; font-family: monospace; font-size: 0.8rem; }
+    #history-log div { padding: 0.2rem 0; border-bottom: 1px solid var(--border-color); }
+  </style>
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+  <div class="site-wrapper">
+    <header class="site-header" style="justify-content:space-between;">
+      <div class="site-title"><a href="../index.html"><i class="fa-solid fa-house"></i> M's Web Development Guide</a></div>
+      <a href="../chapters/11-project-walkthrough.html" style="font-size:0.85rem;">Back to Chapter 11</a>
+    </header>
+    <main class="main-content" id="main">
+      <h1>Hash Router Explorer</h1>
+      <p class="chapter-subtitle">Interactively explore how hash-based routing works in an SPA</p>
+
+      <div class="callout-info">
+        <div class="callout-title">How Hash Routing Works</div>
+        <p>Hash routing uses the fragment identifier (<code>#/path</code>) in the URL. The browser never sends the hash fragment to the server, so the server always serves <code>index.html</code>. JavaScript reads <code>window.location.hash</code> and renders the corresponding page. Try clicking links or typing a path below.</p>
+      </div>
+
+      <div class="demo-layout">
+        <div class="demo-panel">
+          <h3>Live SPA Demo</h3>
+          <div class="demo-content">
+            <div id="demo-nav"></div>
+            <div id="demo-view"><p>Select a page above or type a route.</p></div>
+          </div>
+        </div>
+        <div class="demo-panel">
+          <h3>Router State</h3>
+          <div class="demo-content">
+            <p><strong>Current hash:</strong> <code id="current-hash">(none)</code></p>
+            <p><strong>Resolved page:</strong> <code id="resolved-page">(none)</code></p>
+            <div id="route-display">
+              <strong>Route table:</strong>
+              <table class="route-table">
+                <thead><tr><th>Hash</th><th>Page Key</th></tr></thead>
+                <tbody id="route-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <input type="text" id="route-input" placeholder="Type a path like /about or /unknown" value="/">
+        <button id="navigate-btn">Navigate</button>
+        <button id="reset-btn">Reset to /</button>
+      </div>
+
+      <div class="demo-panel">
+        <h3>Navigation History (window.onhashchange events)</h3>
+        <div class="demo-content">
+          <div id="history-log"><em>Waiting for navigation...</em></div>
+        </div>
+      </div>
+
+      <div class="compare-box">
+        <div class="compare-col junior">
+          <div class="compare-label">Without Hash Routing</div>
+          <p>Each page is a separate HTML file. The user sees real URLs like <code>/about.html</code>, but navigation causes a full page reload. Animations break, state is lost.</p>
+        </div>
+        <div class="compare-col senior">
+          <div class="compare-label">With Hash Routing</div>
+          <p>A single HTML file serves all pages. URLs like <code>/#/about</code> never hit the server. Navigation is instant — no reload, no state loss. The tradeoff: URLs are slightly uglier, but deployment is trivial (no server config needed).</p>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script>
+    const routes = {
+      '/': 'home',
+      '/about': 'about',
+      '/contact': 'contact',
+      '/blog': 'blog',
+      '/projects': 'projects',
+      '/faq': 'faq'
+    };
+
+    const pages = {
+      home: { title: 'Home', content: '<h2>Welcome!</h2><p>This is the home page rendered by the hash router.</p>' },
+      about: { title: 'About', content: '<h2>About</h2><p>Hash routing reads <code>window.location.hash</code> and maps it to content. No page reload ever occurs.</p>' },
+      contact: { title: 'Contact', content: '<h2>Contact</h2><p>Hash routing demo — try navigating to <code>#/unknown</code> to see the 404 handler.</p>' },
+      blog: { title: 'Blog', content: '<h2>Blog</h2><p>Each navigation triggers a <code>hashchange</code> event. The router resolves the path and renders the page.</p>' },
+      projects: { title: 'Projects', content: '<h2>Projects</h2><p>New pages require zero server configuration — just add an entry to the routes map.</p>' },
+      faq: { title: 'FAQ', content: '<h2>FAQ</h2><p><strong>Q: Does the server see the hash?</strong> No. The hash fragment is client-side only.</p>' }
+    };
+
+    const pageKeys = Object.keys(routes);
+
+    function getHash() {
+      return window.location.hash.slice(1) || '/';
+    }
+
+    function navigate(path) {
+      window.location.hash = path;
+    }
+
+    function render() {
+      const hash = getHash();
+      const pageKey = routes[hash];
+      const nav = document.getElementById('demo-nav');
+      const view = document.getElementById('demo-view');
+      const currentHash = document.getElementById('current-hash');
+      const resolvedPage = document.getElementById('resolved-page');
+
+      currentHash.textContent = hash;
+
+      nav.innerHTML = pageKeys.map(p => {
+        const active = p === hash ? ' class="active"' : '';
+        return '<a href="#' + p + '"' + active + '>' + pages[routes[p]].title + '</a>';
+      }).join('');
+
+      if (pageKey) {
+        resolvedPage.textContent = pageKey + ' (' + pages[pageKey].title + ')';
+        view.innerHTML = pages[pageKey].content;
+      } else {
+        resolvedPage.textContent = '(not found — 404)';
+        view.innerHTML = '<h2>404</h2><p>No page mapped for hash <code>#' + hash + '</code>. <a href="#/">Go home</a></p>';
+      }
+
+      // Log to history
+      const log = document.getElementById('history-log');
+      const time = new Date().toLocaleTimeString();
+      const entry = document.createElement('div');
+      entry.textContent = '[' + time + '] hashchange → "' + hash + '" → ' + (pageKey || '404');
+      if (log.firstElementChild?.tagName === 'EM') log.innerHTML = '';
+      log.prepend(entry);
+    }
+
+    // Build route table
+    const tableBody = document.getElementById('route-table-body');
+    pageKeys.forEach(p => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td><code>#' + p + '</code></td><td>' + routes[p] + '</td>';
+      tableBody.appendChild(tr);
+    });
+
+    document.getElementById('navigate-btn').addEventListener('click', function() {
+      const input = document.getElementById('route-input');
+      let path = input.value.trim();
+      if (!path.startsWith('/')) path = '/' + path;
+      navigate(path);
+    });
+
+    document.getElementById('route-input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') document.getElementById('navigate-btn').click();
+    });
+
+    document.getElementById('reset-btn').addEventListener('click', function() {
+      navigate('/');
+    });
+
+    window.addEventListener('hashchange', render);
+    render();
+  </script>
+  <script src="../js/themes.js"></script>
+</body>
+</html>

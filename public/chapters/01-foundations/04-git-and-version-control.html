@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>01 — Git & Version Control | M's Web Development Guide</title>
+  <meta name="description" content="Git fundamentals, branching, merging, pull requests, merge conflicts, and collaborative workflows.">
+  <link rel="stylesheet" href="../../assets/css/main.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/themes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <div class="site-wrapper">
+    <header class="site-header">
+      <div class="site-title"><a href="../../index.html"><i class="fa-solid fa-house"></i> M's Web Development Guide</a></div>
+      <div class="header-controls">
+        <button data-sidebar-toggle class="sidebar-toggle" aria-label="Toggle table of contents">&#9776; TOC</button>
+        <button data-theme-toggle aria-label="Switch theme"><span class="icon">☾</span>Dark</button>
+      </div>
+    </header>
+
+    <aside class="sidebar" aria-label="Table of Contents">
+      <div id="sidebar-toc"></div>
+    </aside>
+
+    <main class="main-content" id="main">
+      <span class="chapter-number">Chapter 4</span>
+      <h1>Git &amp; Version Control</h1>
+      <p class="chapter-subtitle">Tracking changes, branching, collaborating, and undoing mistakes</p>
+
+      <p>Git is a version control system. It tracks changes to your files, lets you save snapshots (called <strong>commits</strong>), and makes it possible to collaborate with other developers without overwriting each other's work. <strong>This is not optional.</strong> Every developer uses Git from day one. This chapter covers everything from your first commit to collaborating on a team.</p>
+
+      <section>
+        <h2>What Is Version Control?</h2>
+        <p>Imagine writing a document without "undo." Every change is permanent. If you delete something, it is gone. If you want to try a different approach, you have to duplicate the file. That is what coding without Git is like.</p>
+        <p>Git gives you:</p>
+        <ul>
+          <li><strong>Snapshots</strong> — every commit is a save point you can return to</li>
+          <li><strong>History</strong> — see who changed what and when</li>
+          <li><strong>Branches</strong> — work on multiple features simultaneously without interference</li>
+          <li><strong>Collaboration</strong> — merge changes from different people without losing work</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Installing and Configuring Git</h2>
+        <p>Check if Git is installed:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Check and install Git</span></div>
+          <pre><code># Check if Git is installed
+git --version
+
+# If not installed:
+# macOS:  xcode-select --install
+# Ubuntu: sudo apt install git
+# Windows: https://git-scm.com/downloads</code></pre>
+        </div>
+
+        <p>Configure your name and email — this is how your commits will be identified:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>First-time Git setup</span></div>
+          <pre><code>git config --global user.name "Your Name"
+git config --global user.email "you@example.com"
+
+# Check your configuration
+git config --list</code></pre>
+        </div>
+        <p>This is a one-time setup. The <code>--global</code> flag applies to all projects on your computer. You only need to change this if you use different identities for work and personal projects.</p>
+      </section>
+
+      <section>
+        <h2>Your First Git Workflow</h2>
+        <p>The basic cycle for any project:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Starting a new project with Git</span></div>
+          <pre><code># 1. Create and enter your project folder
+mkdir my-first-site
+cd my-first-site
+
+# 2. Initialize Git (creates a hidden .git folder)
+git init
+
+# 3. Create some files (index.html, style.css, etc.)
+# ...
+
+# 4. See what Git notices has changed
+git status
+
+# 5. Stage files — tell Git "I want to save these"
+git add index.html
+git add .                  # add everything in the folder
+
+# 6. Commit — save a snapshot with a message
+git commit -m "Initial commit: basic HTML structure"</code></pre>
+        </div>
+
+        <h3>The Three States of Git</h3>
+        <p>Every file in a Git repository is in one of three states:</p>
+        <div class="decision-tree">Working Directory (files on your computer)
+    ↓ git add
+Staging Area (files ready to be committed)
+    ↓ git commit
+Local Repository (committed to history)</div>
+        <ul>
+          <li><strong>Modified</strong> — you changed the file but haven't staged it yet</li>
+          <li><strong>Staged</strong> — you marked the file to be included in the next commit</li>
+          <li><strong>Committed</strong> — the file is safely stored in Git's history</li>
+        </ul>
+        <p>This three-stage system gives you control over what goes into each commit. You might edit three files but only commit two — the third is not ready yet.</p>
+      </section>
+
+      <section>
+        <h2>Everyday Git Commands</h2>
+        <table>
+          <thead>
+            <tr><th>Command</th><th>What It Does</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>git status</code></td><td>Show what files are changed, staged, or untracked</td></tr>
+            <tr><td><code>git add &lt;file&gt;</code></td><td>Stage a file for commit</td></tr>
+            <tr><td><code>git commit -m "message"</code></td><td>Commit staged files with a description</td></tr>
+            <tr><td><code>git push</code></td><td>Send commits to GitHub</td></tr>
+            <tr><td><code>git pull</code></td><td>Get latest changes from GitHub</td></tr>
+            <tr><td><code>git log</code></td><td>Show commit history</td></tr>
+            <tr><td><code>git diff</code></td><td>Show unstaged changes (what you haven't added yet)</td></tr>
+            <tr><td><code>git diff --staged</code></td><td>Show staged changes (what will be in the next commit)</td></tr>
+          </tbody>
+        </table>
+
+        <div class="callout-warning">
+          <div class="callout-title">Commit Early, Commit Often</div>
+          <p>Each commit is a save point you can return to. Made a mess? <code>git checkout -- .</code> reverts to the last commit. Deleted something? Restore it from a previous commit. The safety net of Git is what lets you experiment without fear. Commit every time you get something working — even if it is not finished. A good commit message is present tense, imperative: "Add footer section," not "Added footer section" or "I added the footer."</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Connecting to GitHub</h2>
+        <p>Git runs on your computer. To back up your code and collaborate, you push it to a remote hosting service like GitHub, GitLab, or Bitbucket:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Push to GitHub</span></div>
+          <pre><code># 1. Create a new repository on github.com (don't add README — you have one)
+# 2. Link your local repo to the remote:
+git remote add origin https://github.com/your-username/my-first-site.git
+
+# 3. Push your commits:
+git push -u origin main    # -u sets the upstream, so next time just "git push"</code></pre>
+        </div>
+
+        <h3>Cloning an Existing Repository</h3>
+        <p>To get a copy of someone else's project (or your own from another computer):</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Clone a repository</span></div>
+          <pre><code>git clone https://github.com/username/project.git
+cd project
+# You now have a full copy of the entire project and its history</code></pre>
+        </div>
+        <p>Cloning automatically sets up the remote as <code>origin</code>, so you can push and pull immediately.</p>
+      </section>
+
+      <section>
+        <h2>Branching and Merging</h2>
+        <p>Branches let you work on multiple things at the same time without interfering. The default branch is <code>main</code> (or <code>master</code> on older repos). You create a new branch for each feature or bug fix.</p>
+
+        <h3>Creating and Switching Branches</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span>Branch workflow</span></div>
+          <pre><code># Create a new branch and switch to it
+git checkout -b feature-navbar
+
+# Make changes and commit them
+git add .
+git commit -m "Add responsive navbar"
+
+# Switch back to main
+git checkout main
+
+# Merge the feature branch into main
+git merge feature-navbar
+
+# Delete the branch (cleanup after merging)
+git branch -d feature-navbar</code></pre>
+        </div>
+
+        <h3>Why Branches Matter</h3>
+        <p>Without branches, everyone on a team commits to <code>main</code>. If you are working on a feature that takes three days, your half-finished code is on main — breaking things for everyone. With branches, you work in isolation. When the feature is complete and tested, you merge it back. Branches are cheap and fast — create them liberally.</p>
+
+        <div class="callout-tip">
+          <div class="callout-title">Branch Naming Conventions</div>
+          <p>Teams use naming patterns to keep branches organized: <code>feature/add-login</code>, <code>bugfix/fix-header-overlap</code>, <code>chore/update-deps</code>. This makes it clear what each branch does without reading the code. Some teams use ticket numbers: <code>feature/PROJ-123-user-auth</code>.</p>
+        </div>
+
+        <h3>Merge Conflicts</h3>
+        <p>When two branches modify the same line of the same file, Git cannot automatically merge. This is called a <strong>merge conflict</strong>. It is not a disaster — it is a normal part of collaboration.</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Resolving a merge conflict</span></div>
+          <pre><code># Git tells you which files have conflicts
+git status
+# both modified:   index.html
+
+# Open the file — you'll see conflict markers:
+&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
+&lt;h1&gt;Welcome to my site&lt;/h1&gt;
+=======
+&lt;h1&gt;Welcome to our site&lt;/h1&gt;
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; feature-branding
+
+# Edit the file to keep the correct version, remove the markers:
+&lt;h1&gt;Welcome to our site&lt;/h1&gt;
+
+# Stage the resolved file and commit
+git add index.html
+git commit -m "Resolve merge conflict in heading"</code></pre>
+        </div>
+        <p>The <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code> and <code>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</code> markers show you both versions. <code>HEAD</code> is your current branch. The other section is the branch being merged in. Edit, remove the markers, and commit.</p>
+      </section>
+
+      <section>
+        <h2>Undoing Changes</h2>
+        <p>Everyone makes mistakes. Git gives you several ways to undo, depending on what you need:</p>
+
+        <table>
+          <thead>
+            <tr><th>Scenario</th><th>Command</th><th>What It Does</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Unstaged changes (haven't run <code>git add</code>)</td><td><code>git checkout -- &lt;file&gt;</code></td><td>Revert file to last committed version</td></tr>
+            <tr><td>Staged changes (ran <code>git add</code> but not commit)</td><td><code>git reset HEAD &lt;file&gt;</code></td><td>Unstage the file (changes remain in working directory)</td></tr>
+            <tr><td>Committed but not pushed</td><td><code>git commit --amend -m "new message"</code></td><td>Change the last commit message or add forgotten files</td></tr>
+            <tr><td>Committed and pushed</td><td><code>git revert &lt;commit-hash&gt;</code></td><td>Create a new commit that undoes the old one (safe — does not rewrite history)</td></tr>
+            <tr><td>Need to go back to an old state</td><td><code>git reset --hard &lt;commit-hash&gt;</code></td><td>Discard all changes after that commit. <strong>Dangerous</strong> — only use locally</td></tr>
+          </tbody>
+        </table>
+
+        <div class="callout-warning">
+          <div class="callout-title">Never Rewrite Pushed History on Shared Branches</div>
+          <p>Commands like <code>git reset --hard</code> and <code>git commit --amend</code> rewrite Git history. If you have pushed your commits and someone else has pulled them, rewriting history creates chaos. Use <code>git revert</code> instead — it creates a new commit that undoes the old one without destroying history.</p>
+        </div>
+
+        <div class="callout-warning">
+          <div class="callout-title">I Added node_modules to .gitignore But It's Still Committing</div>
+          <p>The <code>.gitignore</code> file only prevents untracked files from being added. If you already committed <code>node_modules</code> before adding it to <code>.gitignore</code>, Git keeps tracking it. The file was already in the history.</p>
+          <p>Fix: remove it from Git's tracking (but keep the files locally):</p>
+          <pre><code>git rm -r --cached node_modules/</code></pre>
+          <p>Then commit. The <code>--cached</code> flag removes files from tracking without deleting them from your folder. After this, <code>.gitignore</code> will work.</p>
+        </div>
+
+        <div class="callout-warning">
+          <div class="callout-title">I Pushed and Got "Updates Were Rejected"</div>
+          <p>Git rejects your push when the remote has commits you don't have locally. This happens when: (1) you didn't pull before pushing, or (2) someone else pushed while you were working.</p>
+          <p>The fix is always:</p>
+          <pre><code>git pull --rebase origin main
+git push origin main</code></pre>
+          <p>The <code>--rebase</code> flag puts your commits on top of the remote's, creating a clean linear history. If there are conflicts, Git will pause and ask you to resolve them — edit the files, then <code>git add .</code> and <code>git rebase --continue</code>.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>The .gitignore File</h2>
+        <p>Not everything in your project folder should be tracked by Git. The <code>node_modules</code> folder, compiled files, environment variables with secrets, and operating system files (.DS_Store on macOS) should be excluded:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Example .gitignore</span></div>
+          <pre><code># Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Environment variables with secrets
+.env
+.env.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Logs
+*.log</code></pre>
+        </div>
+        <p>Create a <code>.gitignore</code> file at the root of your project and commit it. The files listed in it will be ignored by Git — they won't appear in <code>git status</code> or be included in commits.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Check if a file is being ignored</span></div>
+          <pre><code># See why a file is being ignored
+git check-ignore -v node_modules/package.json</code></pre>
+        </div>
+
+        <div class="callout-tip">
+          <div class="callout-title">The node_modules Golden Rule</div>
+          <p><strong>Never commit <code>node_modules/</code>.</strong> It is huge (hundreds of megabytes), platform-specific, and entirely reproducible from <code>package.json</code> and <code>package-lock.json</code>. If you accidentally commit it, add it to <code>.gitignore</code> and remove it from tracking with <code>git rm -r --cached node_modules</code>.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Collaboration Workflows</h2>
+
+        <h3>GitHub Flow</h3>
+        <p>The simplest and most common collaboration pattern:</p>
+        <ol>
+          <li>Create a branch off <code>main</code> for your feature or fix</li>
+          <li>Make changes and commit on that branch</li>
+          <li>Push the branch to GitHub</li>
+          <li>Open a <strong>pull request</strong> (PR) — a request to merge your branch into <code>main</code></li>
+          <li>Team members review your code, leave comments, and request changes</li>
+          <li>Make additional commits addressing feedback</li>
+          <li>Merge the pull request</li>
+          <li>Delete the feature branch</li>
+        </ol>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Full GitHub Flow example</span></div>
+          <pre><code># 1. Start from an up-to-date main
+git checkout main
+git pull
+
+# 2. Create a feature branch
+git checkout -b feature-add-search
+
+# 3. Make changes and commit
+git add .
+git commit -m "Add search bar to header"
+
+# 4. Push branch to GitHub
+git push -u origin feature-add-search
+
+# 5. Open a pull request on GitHub.com
+# 6. Address review feedback
+git add .
+git commit -m "Fix search input width per review"
+git push
+
+# 7. Merge PR on GitHub, then delete branch
+# 8. Update local main
+git checkout main
+git pull</code></pre>
+        </div>
+
+        <h3>Pull Request Etiquette</h3>
+        <ul>
+          <li>Keep PRs small — one feature or fix per PR. A 500-line PR is hard to review</li>
+          <li>Write a clear title and description explaining what and why</li>
+          <li>Reference the issue number if applicable: "Closes #42"</li>
+          <li>Reviewers: be constructive, not critical. Suggest, don't demand</li>
+          <li>Authors: don't take feedback personally — code review is about the code, not you</li>
+        </ul>
+      </section>
+
+      <div class="compare-box">
+        <div class="compare-col junior">
+          <div class="compare-label">Junior Developer</div>
+          <h4>How a Junior Might Think</h4>
+          <ul>
+            <li>Only knows <code>git add</code>, <code>git commit</code>, <code>git push</code> — panic-Googles everything else</li>
+            <li>Commits to <code>main</code> directly without branching</li>
+            <li>Writes vague commit messages like "fix stuff" or "update"</li>
+            <li>Panics at merge conflicts and asks for help instead of resolving them</li>
+            <li>Commits <code>node_modules</code> or <code>.env</code> by accident</li>
+            <li>Does not understand the difference between <code>git pull</code> and <code>git fetch</code></li>
+          </ul>
+        </div>
+        <div class="compare-col senior">
+          <div class="compare-label">Senior Developer</div>
+          <h4>How a Senior Thinks</h4>
+          <ul>
+            <li>Uses branches liberally — every feature, fix, or experiment gets its own branch</li>
+            <li>Writes descriptive commit messages in present tense: "Add validation to contact form"</li>
+            <li>Resolves merge conflicts confidently by reading the conflicting code</li>
+            <li>Maintains a clean <code>.gitignore</code> and never commits generated files</li>
+            <li>Uses <code>git revert</code> for safe undo, never rewrites shared history</li>
+            <li>Reviews pull requests with constructive feedback and a collaborative tone</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="cheatsheet">
+        <div class="cheatsheet-title">Cheat Sheet</div>
+        <table>
+          <thead>
+            <tr><th>Concept</th><th>Key Takeaway</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Setup</td><td><code>git config --global user.name "Name"</code> and <code>user.email</code> — one-time setup.</td></tr>
+            <tr><td>Basic Cycle</td><td><code>git init</code> → <code>git add .</code> → <code>git commit -m "message"</code> → <code>git push</code>.</td></tr>
+            <tr><td>Branches</td><td><code>git checkout -b feature-name</code> to create and switch. <code>git merge</code> to combine.</td></tr>
+            <tr><td>Merge Conflicts</td><td>Edit the file to resolve markers, then <code>git add</code> and <code>git commit</code>.</td></tr>
+            <tr><td>Undoing</td><td><code>git revert</code> for pushed commits (safe). <code>git reset</code> for local only (careful).</td></tr>
+            <tr><td>.gitignore</td><td>Never commit <code>node_modules/</code>, <code>.env</code>, <code>dist/</code>, or OS files.</td></tr>
+            <tr><td>Team Work</td><td>GitHub Flow: branch → commit → push → PR → review → merge → delete branch.</td></tr>
+            <tr><td>Commit Messages</td><td>Present tense, imperative: "Add feature" not "Added feature" or "I added."</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <nav class="chapter-nav">
+  <a href="03-terminal-and-tools.html"><span class="nav-label">Prev</span>Prev: The Command Line &amp; Local Dev</a>
+  <a href="05-folder-structure-and-docs.html"><span class="nav-label">Next</span>Next: Folder Structure &amp; Docs</a>
+</nav>
+    </main>
+  </div>
+
+  <script src="../../assets/js/sidebar.js"></script>
+  <script src="../../assets/js/navigation.js"></script>
+  <script src="../../assets/js/themes.js"></script>
+</body>
+</html>

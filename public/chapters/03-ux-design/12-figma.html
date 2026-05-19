@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>13 — Figma for Web | M's Web Development Guide</title>
+  <meta name="description" content="Frames, auto layout, components, design systems, prototyping, and developer handoff in Figma.">
+  <link rel="stylesheet" href="../../assets/css/main.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/themes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <div class="site-wrapper">
+    <header class="site-header">
+      <div class="site-title"><a href="../../index.html"><i class="fa-solid fa-house"></i> M's Web Development Guide</a></div>
+      <div class="header-controls">
+        <button data-sidebar-toggle class="sidebar-toggle" aria-label="Toggle table of contents">&#9776; TOC</button>
+        <button data-theme-toggle aria-label="Switch theme"><span class="icon">☾</span>Dark</button>
+      </div>
+    </header>
+
+    <aside class="sidebar" aria-label="Table of Contents">
+      <div id="sidebar-toc"></div>
+    </aside>
+
+    <main class="main-content" id="main">
+      <span class="chapter-number">Chapter 12</span>
+      <h1>Figma for Web</h1>
+      <p class="chapter-subtitle">Frames, auto layout, components, prototyping, and developer handoff</p>
+
+      <p>Figma is the industry-standard design tool for web interfaces. It runs in the browser, supports real-time collaboration, and produces output that developers can inspect directly. This chapter covers the subset of Figma you need to design and hand off web interfaces — not every feature, but every feature a web developer will encounter.</p>
+
+      <section>
+        <h2>Frames vs Groups</h2>
+        <p>This is the most fundamental concept in Figma and the source of most confusion for new users.</p>
+
+        <table>
+          <thead>
+            <tr><th></th><th>Frame</th><th>Group</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>What it is</td><td>A container with its own layout space</td><td>A selection of objects bundled together</td></tr>
+            <tr><td>Shortcut</td><td><code>F</code> or <code>A</code></td><td><code>Ctrl+G</code></td></tr>
+            <tr><td>Auto layout</td><td>Supported</td><td>Not supported</td></tr>
+            <tr><td>Constraints</td><td>Children can have constraints relative to frame edges</td><td>Not supported</td></tr>
+            <tr><td>Export</td><td>Can have its own export settings</td><td>Exports as merged image</td></tr>
+            <tr><td>When to use</td><td>Always. Frames are the building blocks of UI design.</td><td>Rarely. Only for temporary grouping during editing.</td></tr>
+          </tbody>
+        </table>
+
+        <p><strong>Rule: use frames, not groups.</strong> Groups are static. Frames are structural. Every screen, every component, every card should be a frame. This is the single habit that separates organized Figma files from chaotic ones.</p>
+
+        <div class="callout-info">
+          <div class="callout-title">Frames Are Like HTML Elements</div>
+          <p>Think of frames as <code>&lt;div&gt;</code>s. A group is like wrapping elements in a <code>&lt;span&gt;</code> — visually grouping them without structural meaning. Frames let you control layout (auto layout = flexbox), clipping, and constraints. If you want to build a page, you should almost never use the Group command.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Auto Layout</h2>
+        <p>Auto Layout is Figma's equivalent of CSS Flexbox. It makes frames automatically adjust to their content — buttons grow with text, cards resize with content, spacing is consistent.</p>
+
+        <h3>How Auto Layout Works</h3>
+        <p>Select a frame and press <code>Shift+A</code> to apply auto layout. You get three controls:</p>
+        <ul>
+          <li><strong>Direction</strong> — horizontal (row) or vertical (column). Matches <code>flex-direction</code>.</li>
+          <li><strong>Spacing between items</strong> — the gap between children. Matches CSS <code>gap</code>.</li>
+          <li><strong>Padding</strong> — inner space on all four sides. Matches CSS <code>padding</code>.</li>
+        </ul>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Auto layout → CSS mapping</span></div>
+          <pre><code>/* Figma auto layout: horizontal, gap 16, padding 24 */
+/* maps to: */
+.container {
+  display: flex;           /* auto layout on */
+  flex-direction: row;    /* horizontal */
+  gap: 16px;              /* spacing between items */
+  padding: 24px;          /* inner padding */
+}
+
+/* Figma: auto layout with "Wrap" enabled */
+/* maps to: */
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}</code></pre>
+        </div>
+
+        <h3>Alignment and Distribution</h3>
+        <p>Auto layout frames have alignment options that map directly to CSS:</p>
+        <table>
+          <thead>
+            <tr><th>Figma Setting</th><th>CSS Equivalent</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Align: center (cross axis)</td><td><code>align-items: center</code></td></tr>
+            <tr><td>Align: top / left</td><td><code>align-items: flex-start</code></td></tr>
+            <tr><td>Align: bottom / right</td><td><code>align-items: flex-end</code></td></tr>
+            <tr><td>Align: stretch</td><td><code>align-items: stretch</code></td></tr>
+            <tr><td>Space between</td><td><code>justify-content: space-between</code></td></tr>
+            <tr><td>Packed to center</td><td><code>justify-content: center</code></td></tr>
+          </tbody>
+        </table>
+
+        <div class="callout-tip">
+          <div class="callout-title">Design in Auto Layout from the Start</div>
+          <p>Manually positioning elements in Figma (click-drag placement) is like using <code>position: absolute</code> for everything. It works initially but breaks the moment anything changes. Auto layout keeps your design flexible — add a new button, and everything shifts automatically. Design with auto layout first, manually position only when necessary.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Components and Variants</h2>
+        <p>Components are reusable design elements. A button designed once as a component can be used hundreds of times. Change the master component, and all instances update.</p>
+
+        <h3>Component Workflow</h3>
+        <ol>
+          <li>Create a frame with your element (e.g., a button)</li>
+          <li>Select it and press <code>Ctrl+Alt+K</code> (or click the diamond icon in the toolbar) to create a component</li>
+          <li>Use the Assets panel to drag instances of your component onto other frames</li>
+          <li>Edit the master — all instances reflect the change</li>
+        </ol>
+
+        <h3>Overrides</h3>
+        <p>Instances can override specific properties (text, fill, size) without detaching from the master. Changing the text of a button instance to "Submit" does not affect other instances. This is the power of components: shared structure, instance-specific content.</p>
+
+        <h3>Variants</h3>
+        <p>Variants group related components into a single component set. A button might have variants: Primary, Secondary, Ghost, Danger. Each variant can have different fills, border, and text styles, but they are all the same component.</p>
+        <div class="decision-tree">Button component set:
+├── Variant: Primary   (blue bg, white text)
+├── Variant: Secondary (white bg, blue border)
+├── Variant: Ghost     (transparent, blue text)
+└── Variant: Danger    (red bg, white text)
+
+Each variant also has states: Default, Hover, Pressed, Disabled.</div>
+
+        <p>To create variants: select multiple components → right-click → "Combine as variants". Define variant properties in the right panel (e.g., "Type", "Size", "State").</p>
+      </section>
+
+      <section>
+        <h2>Constraints and Resizing</h2>
+        <p>Constraints determine how a child element behaves when its parent frame resizes. In the right panel, each layer has horizontal and vertical constraint controls.</p>
+
+        <table>
+          <thead>
+            <tr><th>Constraint</th><th>Behavior</th><th>CSS Equivalent</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Left + Top (default)</td><td>Stays fixed relative to top-left</td><td><code>position: static</code></td></tr>
+            <tr><td>Right + Bottom</td><td>Stays fixed relative to bottom-right</td><td><code>position: absolute; right: 0; bottom: 0</code></td></tr>
+            <tr><td>Left + Right</td><td>Stretch horizontally with parent</td><td><code>width: 100%</code></td></tr>
+            <tr><td>Top + Bottom</td><td>Stretch vertically with parent</td><td><code>height: 100%</code></td></tr>
+            <tr><td>Center</td><td>Stay centered as parent resizes</td><td><code>margin: 0 auto</code> or flex centering</td></tr>
+          </tbody>
+        </table>
+
+        <p>For children inside auto layout frames, constraints are replaced by resizing settings: "Fill container" (width/height 100%) or "Hug contents" (shrink-wrap). Auto layout's resizing is more powerful and predictable than manual constraints.</p>
+      </section>
+
+      <section>
+        <h2>Prototyping</h2>
+        <p>Figma's prototyping mode connects frames to simulate user flows. Select an element, click the "Prototype" tab in the right panel, and drag the arrow to the destination frame.</p>
+
+        <h3>Common Prototype Interactions</h3>
+        <table>
+          <thead>
+            <tr><th>Trigger</th><th>Action</th><th>Use Case</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>On click</td><td>Navigate to</td><td>Button goes to next page</td></tr>
+            <tr><td>On drag</td><td>Navigate to</td><td>Swipe between screens</td></tr>
+            <tr><td>While hovering</td><td>Change to</td><td>Show tooltip on hover</td></tr>
+            <tr><td>Mouse enter</td><td>Change to</td><td>Hover state on a button</td></tr>
+            <tr><td>After delay</td><td>Navigate to</td><td>Auto-advancing carousel</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Smart Animate</h3>
+        <p>When two frames share layers with the same name, Figma's Smart Animate interpolates the transition. Use this for list item reordering, menu transitions, and page state changes. Set the animation to "Smart Animate" with a 200-300ms ease-out transition for natural-feeling motion.</p>
+
+        <div class="callout-warning">
+          <div class="callout-title">Prototypes Are Not Production</div>
+          <p>A Figma prototype simulates interactions, but the actual implementation may differ. Scroll behavior, real data loading, keyboard navigation, and edge cases do not exist in prototypes. Use prototypes to validate flows and get sign-off — not as a pixel-perfect specification for every interaction state.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Styles and Design Tokens</h2>
+        <p>Figma styles are reusable design values — exactly like CSS custom properties. Define colors, text styles, effects, and grid styles once, apply them everywhere.</p>
+
+        <h3>Creating Styles</h3>
+        <ul>
+          <li><strong>Color styles</strong> — Select a layer → Click the color fill → "Create style". Name it <code>Primary/Default</code>, <code>Neutral/100</code>, etc.</li>
+          <li><strong>Text styles</strong> — Select a text layer → Click "Create style" in the text section. Name it <code>Heading/H1</code>, <code>Body/Default</code>, etc.</li>
+          <li><strong>Effect styles</strong> — Save shadow or blur configurations as reusable effects.</li>
+        </ul>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Figma style naming → CSS token mapping</span></div>
+          <pre><code>/* Figma style: "Primary/Default"       → --color-primary: #2563eb */
+/* Figma style: "Primary/Hover"        → --color-primary-hover: #1d4ed8 */
+/* Figma style: "Neutral/100"          → --color-neutral-100: #f1f5f9 */
+/* Figma style: "Neutral/700"          → --color-neutral-700: #334155 */
+/* Figma style: "Heading/H1"           → --text-h1: 2.5rem/700 */
+/* Figma style: "Body/Default"         → --text-body: 1rem/400 */</code></pre>
+        </div>
+
+        <p>Naming conventions matter. Use a slash-separated hierarchy: <code>Category/Property/Variant</code>. This creates organized menus in the style picker.</p>
+
+        <div class="callout-tip">
+          <div class="callout-title">Sync Styles with Code</div>
+          <p>Your Figma color palette should match your <code>:root</code> CSS custom properties exactly. When the designer updates "Primary/Default" in Figma, you should update <code>--color-primary</code> in CSS. Discrepancies between design and code are a leading source of "it doesn't match the mockup" bugs. Some teams use plugins (Design Tokens, Figma Tokens) to export tokens directly.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Developer Handoff</h2>
+        <p>Figma's developer handoff features let developers inspect designs without asking designers for specs.</p>
+
+        <h3>The Inspect Panel</h3>
+        <p>Select any layer in a Figma file shared with you as a developer. The right panel shows an "Inspect" tab with:</p>
+        <ul>
+          <li><strong>Dimensions and position</strong> — width, height, x, y coordinates</li>
+          <li><strong>CSS properties</strong> — auto-detected CSS including flexbox, fonts, colors, shadows</li>
+          <li><strong>Assets</strong> — export SVG or PNG at different resolutions</li>
+          <li><strong>Spacing</strong> — margin and padding measurements</li>
+        </ul>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Figma Inspect panel output</span></div>
+          <pre><code>/* Auto-detected CSS from Figma */
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  gap: 8px;
+  background: #2563eb;
+  border-radius: 8px;
+  color: #ffffff;
+  font-family: Inter, sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.5;
+}</code></pre>
+        </div>
+
+        <p><strong>Important:</strong> Figma's auto-generated CSS is a starting point, not production code. It may use absolute positioning where you should use flexbox, or miss responsive considerations. Use it as reference, not a copy-paste source.</p>
+
+        <h3>Exporting Assets</h3>
+        <p>For images and icons that are not CSS-reproducible:</p>
+        <ol>
+          <li>Select the layer</li>
+          <li>In the right panel, click "+" in the Export section</li>
+          <li>Choose format: <strong>SVG</strong> for vectors/icons, <strong>PNG</strong> for raster images (2x for Retina)</li>
+          <li>Set suffix: <code>@2x</code> for 2x exports</li>
+        </ol>
+
+        <div class="callout-warning">
+          <div class="callout-title">Export at the Right Resolution</div>
+          <p>Always export critical UI elements (icons, logos) as SVG — they are resolution-independent and small. For raster images, export at 2x (e.g., 200x200 image exported at 400x400) and use <code>width: 100px</code> in CSS. This ensures clarity on Retina displays.</p>
+        </div>
+      </section>
+
+      <div class="compare-box">
+        <div class="compare-col junior">
+          <div class="compare-label">Junior Developer</div>
+          <h4>How a Junior Might Think</h4>
+          <ul>
+            <li>Uses groups instead of frames — file becomes unmanageable</li>
+            <li>Positions everything manually — moves break when anything changes</li>
+            <li>Does not use components — changes need to be repeated 20 times</li>
+            <li>Does not use styles — colors and fonts are inconsistent</li>
+            <li>Relies entirely on Figma's auto-generated CSS instead of reasoning about layout</li>
+            <li>Does not use the Inspect panel — asks designer for measurements</li>
+          </ul>
+        </div>
+        <div class="compare-col senior">
+          <div class="compare-label">Senior Developer</div>
+          <h4>How a Senior Thinks</h4>
+          <ul>
+            <li>Uses frames with auto layout for everything — designs are flexible and maintainable</li>
+            <li>Creates components for repeated patterns — updates propagate automatically</li>
+            <li>Defines color and text styles — keeps the design consistent</li>
+            <li>Understands that Figma's auto-generated CSS is a hint, not a spec</li>
+            <li>Uses the Inspect panel to check spacing, colors, and fonts efficiently</li>
+            <li>Keeps Figma styles and CSS tokens in sync</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="cheatsheet">
+        <div class="cheatsheet-title">Cheat Sheet</div>
+        <table>
+          <thead>
+            <tr><th>Concept</th><th>Key Takeaway</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Frames vs Groups</td><td>Use frames. Groups are for temporary selection only.</td></tr>
+            <tr><td>Auto Layout</td><td><code>Shift+A</code>. Like CSS flexbox — direction, gap, padding.</td></tr>
+            <tr><td>Components</td><td><code>Ctrl+Alt+K</code>. Master + instances. Variants group related components.</td></tr>
+            <tr><td>Constraints</td><td>How children respond to parent resizing. Auto layout overrides constraints.</td></tr>
+            <tr><td>Prototyping</td><td>Connect frames with interactions. Smart Animate for smooth transitions.</td></tr>
+            <tr><td>Styles</td><td>Reusable color, text, and effect definitions. Match to CSS tokens.</td></tr>
+            <tr><td>Handoff</td><td>Inspect panel shows CSS, spacing, assets. Export SVG for vectors, 2x PNG for rasters.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <nav class="chapter-nav">
+        <a href="11-accessibility.html"><span class="nav-label">Prev</span>Prev: Accessibility</a>
+        <a href="13-photoshop-for-web.html"><span class="nav-label">Next</span>Next: Photoshop for Web</a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../../assets/js/sidebar.js"></script>
+  <script src="../../assets/js/navigation.js"></script>
+  <script src="../../assets/js/themes.js"></script>
+</body>
+</html>

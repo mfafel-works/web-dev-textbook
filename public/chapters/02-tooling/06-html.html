@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>02 — HTML | M's Web Development Guide</title>
+  <meta name="description" content="Semantic structure, forms, accessibility, and building the content layer of the web.">
+  <link rel="stylesheet" href="../../assets/css/main.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/themes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <div class="site-wrapper">
+    <header class="site-header">
+      <div class="site-title"><a href="../../index.html"><i class="fa-solid fa-house"></i> M's Web Development Guide</a></div>
+      <div class="header-controls">
+        <button data-sidebar-toggle class="sidebar-toggle" aria-label="Toggle table of contents">&#9776; TOC</button>
+        <button data-theme-toggle aria-label="Switch theme"><span class="icon">☾</span>Dark</button>
+      </div>
+    </header>
+
+    <aside class="sidebar" aria-label="Table of Contents">
+      <div id="sidebar-toc"></div>
+    </aside>
+
+    <main class="main-content" id="main">
+      <span class="chapter-number">Chapter 6</span>
+      <h1>HTML</h1>
+      <p class="chapter-subtitle">Semantic structure, forms, accessibility, and building the content layer of the web</p>
+
+      <p>HTML is not a programming language. It is a markup language — a way of structuring content so that browsers, search engines, and assistive technologies all understand what matters. CSS handles appearance. JavaScript handles behavior. <strong>HTML handles meaning.</strong> Get the meaning right and everything else follows.</p>
+
+      <section>
+        <h2>HTML Fundamentals</h2>
+        <p>Before we build a full document, there are two HTML concepts that trip up every beginner: <strong>void elements</strong> (tags that don't need a closing tag) and <strong>HTML entities</strong> (how to type special characters).</p>
+
+        <h3>Void Elements (Self-Closing Tags)</h3>
+        <p>Most HTML tags come in pairs: <code>&lt;p&gt;...&lt;/p&gt;</code>, <code>&lt;div&gt;...&lt;/div&gt;</code>, <code>&lt;h1&gt;...&lt;/h1&gt;</code>. But some elements have no content — they are a single tag that does not need a closing counterpart. These are called <strong>void elements</strong>:</p>
+        <table>
+          <thead>
+            <tr><th>Tag</th><th>Purpose</th><th>Example</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>&lt;meta&gt;</code></td><td>Metadata about the page</td><td><code>&lt;meta charset="UTF-8"&gt;</code></td></tr>
+            <tr><td><code>&lt;link&gt;</code></td><td>Link to external resources (CSS, favicon)</td><td><code>&lt;link rel="stylesheet" href="style.css"&gt;</code></td></tr>
+            <tr><td><code>&lt;img&gt;</code></td><td>Image</td><td><code>&lt;img src="photo.jpg" alt="Description"&gt;</code></td></tr>
+            <tr><td><code>&lt;br&gt;</code></td><td>Line break</td><td><code>Line one&lt;br&gt;Line two</code></td></tr>
+            <tr><td><code>&lt;hr&gt;</code></td><td>Thematic break (horizontal rule)</td><td><code>&lt;hr&gt;</code></td></tr>
+            <tr><td><code>&lt;input&gt;</code></td><td>Form input field</td><td><code>&lt;input type="email"&gt;</code></td></tr>
+            <tr><td><code>&lt;source&gt;</code></td><td>Media source (for video/audio)</td><td><code>&lt;source src="video.mp4" type="video/mp4"&gt;</code></td></tr>
+          </tbody>
+        </table>
+        <p>Writing <code>&lt;img&gt;&lt;/img&gt;</code> is valid but pointless — the closing tag does nothing. Writing <code>&lt;img /&gt;</code> (with a self-closing slash) is also valid but unnecessary in HTML (it is required in JSX/React). In HTML, just write <code>&lt;img ...&gt;</code>.</p>
+
+        <h3>HTML Entities (Special Characters)</h3>
+        <p>Some characters have special meaning in HTML. The angle brackets <code>&lt;</code> and <code>&gt;</code> are used for tags. The ampersand <code>&amp;</code> starts an entity. To display these characters literally, you use <strong>named entities</strong> — codes that begin with <code>&amp;</code> and end with <code>;</code>:</p>
+        <table>
+          <thead>
+            <tr><th>Character</th><th>Entity</th><th>Why You Need It</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>&lt;</code></td><td><code>&amp;lt;</code></td><td>Without it, the browser thinks you are starting a tag</td></tr>
+            <tr><td><code>&gt;</code></td><td><code>&amp;gt;</code></td><td>Without it, the browser thinks you are ending a tag</td></tr>
+            <tr><td><code>&amp;</code></td><td><code>&amp;amp;</code></td><td>Without it, the browser thinks you are starting an entity</td></tr>
+            <tr><td><code>"</code></td><td><code>&amp;quot;</code></td><td>When inside a double-quoted attribute value</td></tr>
+            <tr><td><code>'</code></td><td><code>&amp;apos;</code></td><td>When inside a single-quoted attribute value</td></tr>
+            <tr><td><code>&nbsp;</code></td><td><code>&amp;nbsp;</code></td><td>Non-breaking space — prevents line break between words</td></tr>
+          </tbody>
+        </table>
+        <div class="code-block">
+          <div class="code-block-header"><span>Entities in action</span></div>
+          <pre><code>&lt;p&gt;Use &amp;lt;h1&amp;gt; for the main heading.&lt;/p&gt;
+&lt;p&gt;The &amp;amp; sign means "and".&lt;/p&gt;
+&lt;p&gt;Copyright &amp;copy; 2026&lt;/p&gt;</code></pre>
+        </div>
+        <div class="code-block">
+          <div class="code-block-header"><span>Renders as</span></div>
+          <pre><code>Use &lt;h1&gt; for the main heading.
+The &amp; sign means "and".
+Copyright © 2026</code></pre>
+        </div>
+        <p>The most common mistake: writing <code>&amp;amp;</code> in an HTML file and seeing it display as "&amp;amp;" instead of "&amp;". This happens because the browser decodes entities. When you write <code>&amp;amp;</code> in your HTML, the browser decodes it as <code>&amp;</code>. If you want to show the literal text <code>&amp;amp;</code>, you need <code>&amp;amp;amp;</code>. This is confusing at first — if your entity is not rendering correctly, check whether the browser is decoding it twice.</p>
+
+        <div class="callout-tip">
+          <div class="callout-title">Void + Entity = Two Things Beginners Don't Know They Don't Know</div>
+          <p>The #1 support question in every beginner HTML forum: "Why is my image not showing?" — often because they wrote <code>&lt;img&gt;&lt;/img&gt;</code> with content inside, or forgot the <code>src</code> attribute. And the #2 question: "Why is my whole page in italics?" — because they used a bare <code>&amp;</code> in text and the browser interpreted <code>&lt;i&gt;</code> as an italic tag. These two concepts alone prevent hours of confusion.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Document Structure</h2>
+        <p>Every HTML document follows the same skeleton. Learn this skeleton once and you have the foundation for every page you will ever build:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Minimal valid HTML document</span></div>
+          <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;title&gt;Page Title&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;!-- visible content goes here --&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+        </div>
+
+        <h3>Line-by-Line Breakdown</h3>
+        <table>
+          <thead>
+            <tr><th>Line</th><th>Purpose</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>&lt;!DOCTYPE html&gt;</code></td><td>Tells the browser to render in standards mode. Without this, browsers fall back to "quirks mode" which emulates ancient, broken rendering. Always start with this.</td></tr>
+            <tr><td><code>&lt;html lang="en"&gt;</code></td><td>The root element. The <code>lang</code> attribute is critical for screen readers (pronunciation), search engines (language targeting), and browser translation features.</td></tr>
+            <tr><td><code>&lt;meta charset="UTF-8"&gt;</code></td><td>Declares the character encoding. UTF-8 supports every character in every language. Without this, some browsers will guess the encoding and display garbled text.</td></tr>
+            <tr><td><code>&lt;meta name="viewport" ...&gt;</code></td><td>Controls how the page scales on mobile devices. This line is why your page does not render as a zoomed-out desktop version on phones. Always include it.</td></tr>
+            <tr><td><code>&lt;title&gt;Page Title&lt;/title&gt;</code></td><td>The only required head element. It appears in the browser tab, search results, and social share previews. Every page needs a unique, descriptive title.</td></tr>
+          </tbody>
+        </table>
+
+        <div class="callout-info">
+          <div class="callout-title">Why the Skeleton Matters</div>
+          <p>Every HTML page ever written shares this exact structure. It is the first thing a browser looks for and the first thing that breaks when missing. A missing <code>&lt;!DOCTYPE&gt;</code> causes layout bugs that are nearly impossible to diagnose because the browser silently switches rendering modes. Memorize this skeleton.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Semantic Elements</h2>
+        <p>Before HTML5, pages were built with <code>&lt;div&gt;</code> elements and CSS classes. A page looked like: <code>&lt;div class="header"&gt;</code>, <code>&lt;div class="nav"&gt;</code>, <code>&lt;div class="main"&gt;</code>. This worked visually but communicated nothing to browsers, screen readers, or search engines. HTML5 introduced semantic elements that encode meaning directly:</p>
+
+        <table>
+          <thead>
+            <tr><th>Element</th><th>Meaning</th><th>Replaces</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>&lt;header&gt;</code></td><td>Introductory content, logo, site title</td><td><code>&lt;div class="header"&gt;</code></td></tr>
+            <tr><td><code>&lt;nav&gt;</code></td><td>Navigation links</td><td><code>&lt;div class="nav"&gt;</code></td></tr>
+            <tr><td><code>&lt;main&gt;</code></td><td>Primary page content (one per page)</td><td><code>&lt;div class="main"&gt;</code></td></tr>
+            <tr><td><code>&lt;section&gt;</code></td><td>Thematic group of content</td><td><code>&lt;div class="section"&gt;</code></td></tr>
+            <tr><td><code>&lt;article&gt;</code></td><td>Self-contained content (blog post, comment)</td><td><code>&lt;div class="post"&gt;</code></td></tr>
+            <tr><td><code>&lt;aside&gt;</code></td><td>Tangentially related content (sidebar)</td><td><code>&lt;div class="sidebar"&gt;</code></td></tr>
+            <tr><td><code>&lt;footer&gt;</code></td><td>Closing content, copyright, links</td><td><code>&lt;div class="footer"&gt;</code></td></tr>
+          </tbody>
+        </table>
+
+        <p>The practical benefit: a screen reader can jump directly to <code>&lt;nav&gt;</code> or <code>&lt;main&gt;</code>. Search engines give more weight to content inside <code>&lt;main&gt;</code>. The page communicates its structure even without CSS. And your code is shorter and clearer.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Semantic vs non-semantic layout</span></div>
+          <pre><code>&lt;!-- Non-semantic: structure only visible to humans --&gt;
+&lt;div class="header"&gt;&lt;h1&gt;My Site&lt;/h1&gt;&lt;/div&gt;
+&lt;div class="nav"&gt;&lt;a href="/"&gt;Home&lt;/a&gt;&lt;/div&gt;
+&lt;div class="main"&gt;&lt;p&gt;Content...&lt;/p&gt;&lt;/div&gt;
+&lt;div class="footer"&gt;&lt;p&gt;Copyright 2026&lt;/p&gt;&lt;/div&gt;
+
+&lt;!-- Semantic: structure visible to everyone --&gt;
+&lt;header&gt;&lt;h1&gt;My Site&lt;/h1&gt;&lt;/header&gt;
+&lt;nav&gt;&lt;a href="/"&gt;Home&lt;/a&gt;&lt;/nav&gt;
+&lt;main&gt;&lt;p&gt;Content...&lt;/p&gt;&lt;/main&gt;
+&lt;footer&gt;&lt;p&gt;Copyright 2026&lt;/p&gt;&lt;/footer&gt;</code></pre>
+        </div>
+
+        <div class="callout-warning">
+          <div class="callout-title">Semantic Is Not Visual</div>
+          <p>Semantic elements do not change the visual appearance. <code>&lt;nav&gt;</code> does not make a nav bar. <code>&lt;button&gt;</code> does not style a button. They communicate meaning, not appearance. You still need CSS for layout and styling. The gain is in how the page is understood — by browsers, search engines, and assistive technology — not in how it looks.</p>
+        </div>
+
+        <div class="callout-warning">
+          <div class="callout-title">Why Can't I Put a &lt;div&gt; Inside a &lt;span&gt;?</div>
+          <p><code>&lt;div&gt;</code> is a <strong>block-level</strong> element — it takes up its own line. <code>&lt;span&gt;</code> is an <strong>inline</strong> element — it flows with text. Putting a block inside an inline is invalid HTML. The browser will "fix" it by closing the <code>&lt;span&gt;</code> before the <code>&lt;div&gt;</code>, then reopening after — which breaks your layout.</p>
+          <p>The rule: block elements can go inside block or inline elements. Inline elements can only go inside other inline elements. Use <code>&lt;div&gt;</code> for layout sections, <code>&lt;span&gt;</code> for styling text within paragraphs.</p>
+        </div>
+
+        <div class="callout-warning">
+          <div class="callout-title">Duplicate IDs Break JavaScript and CSS</div>
+          <p>An <code>id</code> must be unique on a page. Using the same ID twice is invalid HTML and causes unpredictable behavior: <code>document.getElementById('header')</code> returns only the first element, CSS <code>#header</code> styles only the first, and links to <code>#header</code> scroll to the first match.</p>
+          <p>If you need multiple elements with the same behavior, use <strong>class</strong> instead — classes can repeat freely. Only use IDs when you need a single, unique reference (like a form label's <code>for</code> attribute).</p>
+        </div>
+
+        <div class="callout-warning">
+          <div class="callout-title">My Form Does Nothing When I Click Submit</div>
+          <p>The most common beginner form mistake: no <code>action</code> attribute. Without it, the form submits to the current URL (which usually just reloads the page with no data). Always include:</p>
+          <pre><code>&lt;form action="/your-endpoint" method="POST"&gt;</code></pre>
+          <p>Also common: the submit button is <em>outside</em> the <code>&lt;form&gt;</code> tag — then clicking it does nothing useful. Keep your <code>&lt;button&gt;</code> inside the <code>&lt;form&gt;</code>.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Forms and Inputs</h2>
+        <p>Forms are the primary way users send data to a server. A form without proper structure confuses users, breaks screen readers, and sends malformed data to the backend.</p>
+
+        <h3>Form Structure</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span>Accessible form pattern</span></div>
+          <pre><code>&lt;form action="/submit" method="POST"&gt;
+  &lt;fieldset&gt;
+    &lt;legend&gt;Contact Information&lt;/legend&gt;
+
+    &lt;label for="name"&gt;Full Name&lt;/label&gt;
+    &lt;input type="text" id="name" name="name" required&gt;
+
+    &lt;label for="email"&gt;Email Address&lt;/label&gt;
+    &lt;input type="email" id="email" name="email" required&gt;
+
+    &lt;label for="message"&gt;Message&lt;/label&gt;
+    &lt;textarea id="message" name="message" rows="4"&gt;&lt;/textarea&gt;
+
+    &lt;button type="submit"&gt;Send&lt;/button&gt;
+  &lt;/fieldset&gt;
+&lt;/form&gt;</code></pre>
+        </div>
+
+        <h3>Input Types (HTML5)</h3>
+        <p>HTML5 introduced typed input fields that trigger specialized keyboards on mobile and built-in browser validation:</p>
+        <table>
+          <thead>
+            <tr><th>Type</th><th>Use Case</th><th>Mobile Keyboard</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>text</code></td><td>General text input</td><td>Standard</td></tr>
+            <tr><td><code>email</code></td><td>Email addresses</td><td>Shows @ and .com keys</td></tr>
+            <tr><td><code>tel</code></td><td>Phone numbers</td><td>Numeric keypad</td></tr>
+            <tr><td><code>url</code></td><td>Website URLs</td><td>Shows / and .com keys</td></tr>
+            <tr><td><code>number</code></td><td>Numeric values</td><td>Numeric keypad</td></tr>
+            <tr><td><code>password</code></td><td>Hidden text input</td><td>Standard (characters masked)</td></tr>
+            <tr><td><code>date</code></td><td>Date picker</td><td>Date picker UI</td></tr>
+            <tr><td><code>file</code></td><td>File upload</td><td>File picker</td></tr>
+          </tbody>
+        </table>
+        <p>Using the correct input type is free UX improvement. An <code>type="email"</code> field on iPhone shows the @ key on the keyboard. A <code>type="number"</code> field shows a numeric keypad. These are small wins that compound across every user, every day.</p>
+
+        <h3>Validation: Built-in vs Custom</h3>
+        <p>HTML5 provides built-in validation through attributes like <code>required</code>, <code>minlength</code>, <code>pattern</code>, and <code>type</code>. The browser displays native error messages when validation fails. This is a good start, but:</p>
+        <ul>
+          <li>Native error styles vary by browser and cannot be customized consistently</li>
+          <li>Native messages are generic ("Please fill out this field")</li>
+          <li>Screen reader support for native validation is inconsistent</li>
+        </ul>
+        <p>For production forms, use the <code>Constraint Validation API</code> for custom feedback:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Custom validation with Constraint Validation API</span></div>
+          <pre><code>const email = document.getElementById('email');
+email.addEventListener('blur', () =&gt; {
+  if (email.validity.typeMismatch) {
+    showError(email, 'Please enter a valid email address');
+  } else if (email.validity.valueMissing) {
+    showError(email, 'Email is required');
+  } else {
+    clearError(email);
+  }
+});</code></pre>
+        </div>
+
+        <h3>GET vs POST</h3>
+        <p><code>method="GET"</code> appends form data to the URL as query parameters. Use for search forms and data retrieval (bookmarkable, shareable URLs). <code>method="POST"</code> sends data in the request body. Use for mutations: creating, updating, deleting data, or sending sensitive information like passwords.</p>
+      </section>
+
+      <section>
+        <h2>Accessibility Foundations</h2>
+        <p>Accessibility (a11y) is not a feature — it is a property of your code. A page is either accessible or it is not, and the difference is almost always in the HTML.</p>
+
+        <h3>WCAG at a Glance</h3>
+        <p>The Web Content Accessibility Guidelines define four principles — summarized as <strong>POUR</strong>:</p>
+        <ul>
+          <li><strong>Perceivable</strong> — information must be presentable to users in ways they can sense (text alternatives for images, captions for video, color not the only differentiator)</li>
+          <li><strong>Operable</strong> — interface must be usable by everyone (keyboard-only navigation, enough time to read content, no seizure-inducing flashing)</li>
+          <li><strong>Understandable</strong> — content and interface must be predictable (clear labels, consistent navigation, helpful error messages)</li>
+          <li><strong>Robust</strong> — content must work across current and future user agents (valid HTML, proper ARIA usage)</li>
+        </ul>
+
+        <h3>Practical Checklist</h3>
+        <table>
+          <thead>
+            <tr><th>Check</th><th>Why</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Every <code>&lt;img&gt;</code> has meaningful <code>alt</code> text</td><td>Screen readers describe images via alt text. Decorative images should use <code>alt=""</code> (empty) to be ignored.</td></tr>
+            <tr><td>Every <code>&lt;input&gt;</code> has a matching <code>&lt;label&gt;</code></td><td>Labels make inputs clickable (clicking the label focuses the input) and identify the field to screen readers.</td></tr>
+            <tr><td>Heading hierarchy is sequential (<code>h1</code> → <code>h2</code> → <code>h3</code>)</td><td>Screen reader users navigate by heading levels. Skipping from <code>h1</code> to <code>h4</code> breaks the navigation.</td></tr>
+            <tr><td>Color contrast meets WCAG AA (4.5:1 for text)</td><td>Low contrast text is invisible to users with visual impairments. Use tools like WebAIM Contrast Checker.</td></tr>
+            <tr><td>Focus indicators are visible</td><td>Keyboard users need to see where they are. Never use <code>outline: none</code> without providing an alternative focus style.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>ARIA: When HTML Is Not Enough</h3>
+        <p>ARIA (Accessible Rich Internet Applications) attributes supplement HTML semantics when native elements do not exist. The first rule of ARIA: <strong>do not use it if a native HTML element works</strong>. A <code>&lt;button&gt;</code> is inherently focusable and clickable. A <code>&lt;div role="button"&gt;</code> is not — you must add tabindex, keyboard handlers, and ARIA state attributes manually.</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>ARIA: only when needed</span></div>
+          <pre><code>&lt;!-- Good: native button, zero ARIA needed --&gt;
+&lt;button&gt;Submit&lt;/button&gt;
+
+&lt;!-- Bad: div pretending to be a button, lots of ARIA needed --&gt;
+&lt;div role="button" tabindex="0" aria-pressed="false"
+     onclick="submit()" onkeydown="if(event.key==='Enter')submit()"&gt;
+  Submit
+&lt;/div&gt;</code></pre>
+        </div>
+      </section>
+
+      <section>
+        <h2>SEO Basics</h2>
+        <p>Search engine optimization starts with HTML. Before Google indexes your content, it parses your markup. Clean, semantic HTML is the single best technical SEO investment you can make.</p>
+
+        <h3>The Meta Tag Trio</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span>Essential meta tags</span></div>
+          <pre><code>&lt;meta name="description" content="A clear, 150-160 character description of this page"&gt;
+&lt;meta name="robots" content="index, follow"&gt;
+&lt;meta property="og:title" content="Page Title — Site Name"&gt;
+&lt;meta property="og:description" content="Description shown in social shares"&gt;
+&lt;meta property="og:image" content="https://yoursite.com/preview.png"&gt;</code></pre>
+        </div>
+        <ul>
+          <li><strong>description</strong> — Appears in search results below the title. Write for humans, not search engines. A good description increases click-through rate, which is a ranking signal.</li>
+          <li><strong>robots</strong> — Controls whether search engines index and follow links on this page. Use <code>noindex</code> for admin pages, thank-you pages, or duplicate content.</li>
+          <li><strong>Open Graph (og:)</strong> — Controls how the page appears when shared on social media (Facebook, Twitter, Discord, Slack). Without these, social platforms guess the preview image and description — often badly.</li>
+        </ul>
+
+        <h3>Heading Hierarchy</h3>
+        <p>Search engines use headings to understand document structure. Think of it as an outline:</p>
+        <div class="decision-tree">h1: Page title (one per page)<br>
+├── h2: Major section<br>
+│   ├── h3: Sub-section<br>
+│   └── h3: Sub-section<br>
+└── h2: Major section<br>
+    └── h3: Sub-section</div>
+        <p>Never skip levels (<code>h1</code> → <code>h4</code>). Never use <code>h1</code> for styling — there should be exactly one per page. Heading hierarchy is the most commonly broken SEO rule, and also the easiest to fix.</p>
+
+        <div class="callout-warning">
+          <div class="callout-title">There Is No &lt;h7&gt; — Headings Only Go H1 to H6</div>
+          <p>Every beginner tries to use <code>&lt;h7&gt;</code> or <code>&lt;h8&gt;</code> at some point. They do not exist. HTML defines only six heading levels: <code>&lt;h1&gt;</code> through <code>&lt;h6&gt;</code>. If you write <code>&lt;h7&gt;</code>, the browser treats it as plain text, not a heading. If you need more than six levels, use <code>&lt;h4&gt;</code> with CSS classes to create sub-sections, or restructure your content.</p>
+        </div>
+
+        <h3>Structured Data with JSON-LD</h3>
+        <p>JSON-LD (JavaScript Object Notation for Linked Data) is a format for embedding structured data in a <code>&lt;script&gt;</code> tag. It tells search engines explicit facts about your content: "this is a recipe with these ingredients," "this is an event on this date," "this is an article by this author."</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>JSON-LD example for an article</span></div>
+          <pre><code>&lt;script type="application/ld+json"&gt;
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "How the Web Works",
+  "author": { "@type": "Person", "name": "Author Name" },
+  "datePublished": "2026-01-15",
+  "description": "A beginner-friendly guide to how the internet works."
+}
+&lt;/script&gt;</code></pre>
+        </div>
+        <p>JSON-LD does not affect ranking directly, but it enables rich search results (star ratings, recipe cards, event listings) that dramatically improve click-through rate. Use Google's Rich Results Test to verify your structured data.</p>
+
+        <div class="callout-tip">
+          <div class="callout-title">SEO Is Not Magic</div>
+          <p>There is no secret trick to ranking first on Google. The fundamentals are: write useful content, structure it with semantic HTML, use descriptive titles and headings, ensure your site loads fast and works on mobile, and get other reputable sites to link to you. That is 90% of SEO. Everything else is marginal gains.</p>
+        </div>
+      </section>
+
+      <div class="compare-box">
+        <div class="compare-col junior">
+          <div class="compare-label">Junior Developer</div>
+          <h4>How a Junior Might Think</h4>
+          <ul>
+            <li>Uses <code>&lt;div&gt;</code> for everything and only adds classes for styling</li>
+            <li>Writes forms without <code>&lt;label&gt;</code> elements or proper validation</li>
+            <li>Ignores alt text or uses it incorrectly</li>
+            <li>Doesn't think about heading hierarchy or document outline</li>
+          </ul>
+        </div>
+        <div class="compare-col senior">
+          <div class="compare-label">Senior Developer</div>
+          <h4>How a Senior Thinks</h4>
+          <ul>
+            <li>Chooses semantic elements based on content meaning, not appearance</li>
+            <li>Builds forms with proper labels, fieldset grouping, and accessible validation</li>
+            <li>Writes meaningful alt text and considers screen reader flow</li>
+            <li>Plans heading structure before writing content</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="cheatsheet">
+        <div class="cheatsheet-title">Cheat Sheet</div>
+        <table>
+          <thead>
+            <tr><th>Concept</th><th>Key Takeaway</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Document Structure</td><td><code>&lt;!DOCTYPE html&gt;</code>, <code>&lt;html&gt;</code>, <code>&lt;head&gt;</code>, <code>&lt;body&gt;</code> — every page needs these.</td></tr>
+            <tr><td>Semantic Elements</td><td>Use <code>&lt;header&gt;</code>, <code>&lt;main&gt;</code>, <code>&lt;section&gt;</code>, <code>&lt;article&gt;</code>, <code>&lt;footer&gt;</code> instead of <code>&lt;div&gt;</code>.</td></tr>
+            <tr><td>Forms</td><td>Always pair inputs with <code>&lt;label&gt;</code>. Use built-in validation attributes (<code>required</code>, <code>type</code>, <code>pattern</code>).</td></tr>
+            <tr><td>Accessibility</td><td>Use ARIA roles sparingly. Native semantic elements are usually better.</td></tr>
+            <tr><td>SEO</td><td>One <code>&lt;h1&gt;</code> per page. Use descriptive link text. Add meta descriptions.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <nav class="chapter-nav">
+  <a href="05-folder-structure-and-docs.html"><span class="nav-label">Prev</span>Prev: Folder Structure &amp; Docs</a>
+  <a href="07-css.html"><span class="nav-label">Next</span>Next: CSS</a>
+</nav>
+    </main>
+  </div>
+
+  <script src="../../assets/js/sidebar.js"></script>
+  <script src="../../assets/js/navigation.js"></script>
+  <script src="../../assets/js/themes.js"></script>
+</body>
+</html>

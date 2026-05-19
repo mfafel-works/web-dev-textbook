@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>02 — How the Web Works | M's Web Development Guide</title>
+  <meta name="description" content="Browsers, servers, HTTP, DNS, and what happens when you type a URL and press Enter.">
+  <link rel="stylesheet" href="../../assets/css/main.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/themes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <div class="site-wrapper">
+    <header class="site-header">
+      <div class="site-title"><a href="../../index.html"><i class="fa-solid fa-house"></i> M's Web Development Guide</a></div>
+      <div class="header-controls">
+        <button data-sidebar-toggle class="sidebar-toggle" aria-label="Toggle table of contents">&#9776; TOC</button>
+        <button data-theme-toggle aria-label="Switch theme"><span class="icon">☾</span>Dark</button>
+      </div>
+    </header>
+
+    <aside class="sidebar" aria-label="Table of Contents">
+      <div id="sidebar-toc"></div>
+    </aside>
+
+    <main class="main-content" id="main">
+      <span class="chapter-number">Chapter 1</span>
+      <h1>How the Web Works</h1>
+      <p class="chapter-subtitle">Browsers, servers, HTTP, DNS, and what happens when you type a URL and press Enter</p>
+
+      <div class="callout-tip">
+        <div class="callout-title">What Is a Browser?</div>
+        <p>A <strong>browser</strong> is the program you use to visit websites — like Chrome, Safari, Firefox, or Edge. It's the app on your computer that fetches web pages from servers and displays them. That's it! When we say "open in your browser," we mean "open with Chrome/Safari/etc."</p>
+      </div>
+
+      <section>
+        <h2>Client vs Server — Simply Explained</h2>
+        <p>Think of it like a restaurant:</p>
+        <ul>
+          <li><strong>Client</strong> = You (the customer). You look at a menu, order food, and eat it.</li>
+          <li><strong>Server</strong> = The kitchen. It receives your order, prepares the food, and sends it back to your table.</li>
+        </ul>
+        <p>In web terms: your browser is the client. It asks the server for something (a web page), and the server sends it back. The client is on <em>your computer</em>. The server is on <em>another computer somewhere else</em>.</p>
+
+        <h3>What Is a Server?</h3>
+        <p>A "server" is just a computer that's always on and always connected to the internet, running special software that waits for requests and responds with data. That's it — it's not magic, it's just a computer. When you deploy a website, you're putting your files on one of these computers.</p>
+      </section>
+
+      <section>
+        <h2>What Is a URL?</h2>
+        <p>A URL (Uniform Resource Locator) is an address for something on the internet. Here's what the parts mean:</p>
+
+        <pre><code>https://example.com:8080/path/to/page</code></pre>
+
+        <ul>
+          <li><strong>https://</strong> — The protocol (how to communicate). https means secure, encrypted.</li>
+          <li><strong>example.com</strong> — The domain name (the address of the server). This maps to an IP address via DNS.</li>
+          <li><strong>:8080</strong> — The port (which "door" on the server). If omitted, defaults to 80 for HTTP, 443 for HTTPS.</li>
+          <li><strong>/path/to/page</strong> — The path (what specific resource you want on that server).</li>
+        </ul>
+
+        <div class="callout-tip">
+          <div class="callout-title">What Is localhost?</div>
+          <p><code>localhost</code> means "this computer" — it's a special word that always refers to your own machine. When you run a local server and visit <code>http://localhost:8080</code>, you're connecting to a server running on your own computer, not reaching out to the internet. <code>127.0.0.1</code> is the numeric IP address for localhost — they mean the same thing.</p>
+        </div>
+
+        <div class="callout-tip">
+          <div class="callout-title">What Is a Port?</div>
+          <p>A <strong>port</strong> is like an apartment number. A single computer can run many "services" (websites, databases, email servers). Each one has a unique port number so requests go to the right place. When you see <code>localhost:8080</code>, the <code>:8080</code> is the port number telling your computer "use the service running on door 8080." Common ports: 80 (HTTP), 443 (HTTPS), 3000 (dev servers), 5173 (Vite), 8080 (Python server).</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>The Client-Server Model</h2>
+        <p>The web is built on a simple relationship: one computer asks for something, another computer provides it. The asker is called the <strong>client</strong> (usually a browser). The provider is called the <strong>server</strong> (a computer somewhere on the internet running web server software like Nginx or Apache).</p>
+        <p>When you open a browser and navigate to a website, your browser acts as the client. It sends a <strong>request</strong> across the network to a server. The server processes that request and sends back a <strong>response</strong> — typically an HTML page, an image, JSON data, or some other resource. This back-and-forth is the fundamental unit of the web.</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Client-server flow (simplified)</span></div>
+          <pre><code>Your Browser (Client)
+       ↓  GET /index.html
+       ↓
+  [Internet]
+       ↓
+Web Server (Server)
+       ↓  sends index.html content
+       ↓
+Your Browser (Client)
+       ↓  renders the page</code></pre>
+        </div>
+        <p>A single server can serve thousands or millions of clients. To manage this, servers use <strong>ports</strong> (port 80 for HTTP, port 443 for HTTPS), <strong>virtual hosts</strong> to serve multiple domains from one machine, and <strong>load balancers</strong> to distribute traffic across many servers.</p>
+      </section>
+
+      <section>
+        <h2>HTTP and HTTPS</h2>
+        <p><strong>HTTP</strong> (Hypertext Transfer Protocol) is the language that clients and servers use to communicate. It is a text-based protocol — you can read HTTP messages directly. Every HTTP message has a <strong>method</strong>, a <strong>path</strong>, <strong>headers</strong>, and optionally a <strong>body</strong>.</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>An HTTP request looks like this</span></div>
+          <pre><code>GET /index.html HTTP/1.1
+Host: example.com
+User-Agent: Mozilla/5.0
+Accept: text/html</code></pre>
+        </div>
+        <div class="code-block">
+          <div class="code-block-header"><span>An HTTP response looks like this</span></div>
+          <pre><code>HTTP/1.1 200 OK
+Content-Type: text/html
+Content-Length: 1234
+
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;...&lt;/html&gt;</code></pre>
+        </div>
+        <h3>HTTP Methods</h3>
+        <p>There are four common methods you will use constantly:</p>
+        <div class="cheatsheet" style="margin-top:0.5em;">
+          <table>
+            <thead>
+              <tr><th>Method</th><th>Purpose</th><th>Example</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>GET</code></td><td>Retrieve data</td><td>Loading a page, fetching JSON</td></tr>
+              <tr><td><code>POST</code></td><td>Send new data</td><td>Submitting a form, creating a record</td></tr>
+              <tr><td><code>PUT</code></td><td>Replace existing data</td><td>Updating a user profile</td></tr>
+              <tr><td><code>DELETE</code></td><td>Remove data</td><td>Deleting a post</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>HTTPS — The Secure Version</h3>
+        <p><strong>HTTPS</strong> is HTTP encrypted with TLS (Transport Layer Security). The encryption ensures three things: <strong>privacy</strong> (no one can read the data in transit), <strong>integrity</strong> (no one can modify the data), and <strong>authentication</strong> (you are talking to the real server, not an impersonator). Modern browsers mark HTTP sites as "Not Secure" and may block features like geolocation and service workers. <strong>There is no excuse for shipping an HTTP site in 2026.</strong></p>
+        <div class="callout callout-tip">
+          <div class="callout-title">Why HTTPS Matters</div>
+          <p>Beyond security, some browser APIs (like Service Workers and the Geolocation API) require HTTPS. Search engines rank HTTPS sites higher. And if you ever need to accept payments or passwords, HTTPS is legally required (PCI-DSS).</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>DNS Resolution</h2>
+        <p>Computers communicate using IP addresses — numbers like <code>93.184.216.34</code>. Humans use domain names like <code>example.com</code>. The <strong>Domain Name System (DNS)</strong> is the phonebook that translates one to the other.</p>
+        <p>When you type <code>example.com</code> into your browser, the following happens in milliseconds:</p>
+        <ol>
+          <li><strong>Browser cache check</strong> — your browser checks if it already knows the IP for this domain</li>
+          <li><strong>OS cache check</strong> — if not found, your operating system's DNS cache is checked</li>
+          <li><strong>Recursive resolver</strong> — your request goes to your ISP's DNS server (or Cloudflare's <code>1.1.1.1</code>, Google's <code>8.8.8.8</code>)</li>
+          <li><strong>Root server</strong> — the resolver asks one of 13 root servers where to find the <code>.com</code> TLD server</li>
+          <li><strong>TLD server</strong> — the <code>.com</code> server points to the authoritative nameserver for <code>example.com</code></li>
+          <li><strong>Authoritative nameserver</strong> — this returns the actual IP address (<code>93.184.216.34</code>)</li>
+          <li><strong>Response</strong> — the IP is passed back up the chain and cached at each level</li>
+        </ol>
+        <p>DNS results are <strong>cached</strong> at every level (your browser, your OS, your router, your ISP) to speed up subsequent lookups. This is why DNS changes can take hours to propagate — old cached entries must expire first. The time-to-live (TTL) value on a DNS record controls how long it is cached.</p>
+      </section>
+
+      <section>
+        <h2>The Request-Response Cycle</h2>
+        <p>Now let's trace the complete journey from the moment you press Enter to the moment the page renders:</p>
+        <ol>
+          <li><strong>URL parsing</strong> — browser identifies the protocol (<code>https</code>), domain (<code>example.com</code>), path (<code>/page</code>), and query parameters</li>
+          <li><strong>DNS lookup</strong> — browser resolves the domain to an IP address (see DNS section above)</li>
+          <li><strong>TCP connection</strong> — browser opens a TCP connection to the server on port 443 (HTTPS). This is a three-way handshake (SYN, SYN-ACK, ACK)</li>
+          <li><strong>TLS handshake</strong> — if HTTPS, the browser and server negotiate encryption keys and verify the server's certificate</li>
+          <li><strong>HTTP request</strong> — browser sends an HTTP GET request for <code>/page</code></li>
+          <li><strong>Server processing</strong> — the server receives the request, processes it (running backend code, querying a database, etc.), and prepares a response</li>
+          <li><strong>HTTP response</strong> — server sends back HTML, CSS, JavaScript, images, or JSON with a status code</li>
+          <li><strong>Browser rendering</strong> — browser parses the HTML, fetches additional resources (CSS, JS, images), constructs the DOM, applies styles, executes scripts, and paints the page</li>
+        </ol>
+
+        <div class="decision-tree" style="white-space:normal;overflow:visible;">
+          <svg viewBox="0 0 760 195" style="width:100%;max-width:760px;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="arrow02" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="var(--color-accent, #2563eb)"/></marker>
+            </defs>
+            <rect x="2" y="2" width="756" height="191" rx="8" fill="none" stroke="var(--color-border, #d4d0ca)" stroke-width="1"/>
+            <text x="380" y="24" text-anchor="middle" font-size="16" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">Request-Response Cycle</text>
+
+            <rect x="15" y="40" width="160" height="44" rx="4" fill="var(--color-accent, #2563eb)" opacity="0.15" stroke="var(--color-accent, #2563eb)" stroke-width="1"/>
+            <text x="95" y="58" text-anchor="middle" font-size="13" font-family="var(--font-code, monospace)" fill="var(--color-text, #1a1a1a)" font-weight="bold">1. URL Parse</text>
+            <text x="95" y="70" text-anchor="middle" font-size="12" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">/page?q=1</text>
+            <line x1="175" y1="62" x2="195" y2="62" stroke="var(--color-accent, #2563eb)" stroke-width="1.5" marker-end="url(#arrow02)"/>
+
+            <rect x="195" y="40" width="160" height="44" rx="4" fill="var(--color-accent, #2563eb)" opacity="0.15" stroke="var(--color-accent, #2563eb)" stroke-width="1"/>
+            <text x="275" y="58" text-anchor="middle" font-size="13" font-family="var(--font-code, monospace)" fill="var(--color-text, #1a1a1a)" font-weight="bold">2. DNS Lookup</text>
+            <text x="275" y="70" text-anchor="middle" font-size="12" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">example.com → IP</text>
+            <line x1="355" y1="62" x2="375" y2="62" stroke="var(--color-accent, #2563eb)" stroke-width="1.5" marker-end="url(#arrow02)"/>
+
+            <rect x="375" y="40" width="160" height="44" rx="4" fill="var(--color-accent, #2563eb)" opacity="0.15" stroke="var(--color-accent, #2563eb)" stroke-width="1"/>
+            <text x="455" y="58" text-anchor="middle" font-size="13" font-family="var(--font-code, monospace)" fill="var(--color-text, #1a1a1a)" font-weight="bold">3. TCP Connect</text>
+            <text x="455" y="70" text-anchor="middle" font-size="12" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">SYN → SYN-ACK → ACK</text>
+            <line x1="535" y1="62" x2="555" y2="62" stroke="var(--color-accent, #2563eb)" stroke-width="1.5" marker-end="url(#arrow02)"/>
+
+            <rect x="555" y="40" width="160" height="44" rx="4" fill="var(--color-accent, #2563eb)" opacity="0.15" stroke="var(--color-accent, #2563eb)" stroke-width="1"/>
+            <text x="635" y="58" text-anchor="middle" font-size="13" font-family="var(--font-code, monospace)" fill="var(--color-text, #1a1a1a)" font-weight="bold">4. TLS Handshake</text>
+            <text x="635" y="70" text-anchor="middle" font-size="12" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">encrypt keys</text>
+
+            <line x1="635" y1="84" x2="635" y2="120" stroke="var(--color-accent, #2563eb)" stroke-width="1.5"/>
+            <line x1="635" y1="120" x2="95" y2="120" stroke="var(--color-accent, #2563eb)" stroke-width="1.5"/>
+            <line x1="95" y1="120" x2="95" y2="135" stroke="var(--color-accent, #2563eb)" stroke-width="1.5" marker-end="url(#arrow02)"/>
+
+            <rect x="15" y="135" width="160" height="44" rx="4" fill="var(--color-accent, #2563eb)" opacity="0.15" stroke="var(--color-accent, #2563eb)" stroke-width="1"/>
+            <text x="95" y="153" text-anchor="middle" font-size="13" font-family="var(--font-code, monospace)" fill="var(--color-text, #1a1a1a)" font-weight="bold">5. HTTP Request</text>
+            <text x="95" y="165" text-anchor="middle" font-size="12" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">GET /page</text>
+            <line x1="175" y1="157" x2="195" y2="157" stroke="var(--color-accent, #2563eb)" stroke-width="1.5" marker-end="url(#arrow02)"/>
+
+            <rect x="195" y="135" width="160" height="44" rx="4" fill="var(--color-accent, #2563eb)" opacity="0.15" stroke="var(--color-accent, #2563eb)" stroke-width="1"/>
+            <text x="275" y="153" text-anchor="middle" font-size="13" font-family="var(--font-code, monospace)" fill="var(--color-text, #1a1a1a)" font-weight="bold">6. Server Process</text>
+            <text x="275" y="165" text-anchor="middle" font-size="12" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">DB query, logic</text>
+            <line x1="355" y1="157" x2="375" y2="157" stroke="var(--color-accent, #2563eb)" stroke-width="1.5" marker-end="url(#arrow02)"/>
+
+            <rect x="375" y="135" width="160" height="44" rx="4" fill="var(--color-accent, #2563eb)" opacity="0.15" stroke="var(--color-accent, #2563eb)" stroke-width="1"/>
+            <text x="455" y="153" text-anchor="middle" font-size="13" font-family="var(--font-code, monospace)" fill="var(--color-text, #1a1a1a)" font-weight="bold">7. HTTP Response</text>
+            <text x="455" y="165" text-anchor="middle" font-size="12" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">200 OK</text>
+            <line x1="535" y1="157" x2="555" y2="157" stroke="var(--color-accent, #2563eb)" stroke-width="1.5" marker-end="url(#arrow02)"/>
+
+            <rect x="555" y="135" width="160" height="44" rx="4" fill="var(--color-accent, #2563eb)" opacity="0.15" stroke="var(--color-accent, #2563eb)" stroke-width="1"/>
+            <text x="635" y="153" text-anchor="middle" font-size="13" font-family="var(--font-code, monospace)" fill="var(--color-text, #1a1a1a)" font-weight="bold">8. Browser Render</text>
+            <text x="635" y="165" text-anchor="middle" font-size="12" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">DOM → Paint</text>
+
+          </svg>
+        </div>
+        <div class="callout">
+          <div class="callout-title">Why This Matters</div>
+          <p>Every performance optimization you will ever learn targets one of these steps. CDNs cache at step 7. Minification reduces step 8. Keep-alive connections reuse step 3. Knowing this cycle gives you a mental model for debugging: "Is the problem at DNS? The server? The browser rendering?"</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Status Codes and Headers</h2>
+        <p>HTTP status codes are three-digit numbers that tell you what happened with your request. They are grouped into five categories:</p>
+        <div class="cheatsheet" style="margin-top:0.5em;">
+          <table>
+            <thead>
+              <tr><th>Code</th><th>Meaning</th><th>When You'll See It</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>200</code></td><td>OK</td><td>Request succeeded. Page loaded normally.</td></tr>
+              <tr><td><code>301</code></td><td>Moved Permanently</td><td>The URL has changed permanently. Browser redirects automatically.</td></tr>
+              <tr><td><code>302</code></td><td>Found (temporary redirect)</td><td>URL temporarily moved. Used for things like post-login redirects.</td></tr>
+              <tr><td><code>304</code></td><td>Not Modified</td><td>Browser cache is fresh — use the cached version (saves bandwidth).</td></tr>
+              <tr><td><code>400</code></td><td>Bad Request</td><td>Server couldn't understand the request (malformed syntax).</td></tr>
+              <tr><td><code>401</code></td><td>Unauthorized</td><td>You need to log in first.</td></tr>
+              <tr><td><code>403</code></td><td>Forbidden</td><td>You're logged in but don't have permission.</td></tr>
+              <tr><td><code>404</code></td><td>Not Found</td><td>The resource doesn't exist. Classic "page not found".</td></tr>
+              <tr><td><code>429</code></td><td>Too Many Requests</td><td>You hit a rate limit — slow down.</td></tr>
+              <tr><td><code>500</code></td><td>Internal Server Error</td><td>Something broke on the server. Not your problem, but you need to fix it.</td></tr>
+              <tr><td><code>503</code></td><td>Service Unavailable</td><td>Server is overloaded or down for maintenance.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p><strong>Headers</strong> are key-value pairs sent with every HTTP request and response. They control caching (<code>Cache-Control</code>), content type (<code>Content-Type</code>), authentication (<code>Authorization</code>), security (<code>Content-Security-Policy</code>), and much more. You rarely need to set them manually in early projects, but you will see them constantly in browser DevTools.</p>
+      </section>
+
+      <section>
+        <h2>Why Caching Matters</h2>
+        <p>Browsers cache responses to avoid re-downloading the same files. The server controls caching via the <code>Cache-Control</code> header. A cached page loads nearly instantly on repeat visits. Understanding caching is essential — it is the single biggest performance lever available to every developer, and misconfiguring it causes the most common "it worked before" bugs.</p>
+      </section>
+
+      <section>
+        <h2>Gotcha: SPA Routing and 404 on Refresh</h2>
+        <div class="callout-warning">
+          <div class="callout-title">SPA Routing: 404 on Refresh</div>
+          <p>Single-page applications use client-side routing. When a user refreshes at <code>yoursite.com/about</code>, the browser sends a real HTTP request for <code>/about</code>. If the server has no file at that path, it returns a 404. Fix: configure your server to serve <code>index.html</code> for all routes. On Cloudflare Pages, this is "SPA mode" — a one-click setting. The alternative is hash routing (<code>yoursite.com/#/about</code>), which needs no server config but produces uglier URLs.</p>
+        </div>
+        <div class="code-block">
+          <div class="code-block-header"><span>Nginx SPA fallback config</span></div>
+          <pre><code>location / {
+  try_files $uri $uri/ /index.html;  # try real file, then fall back to index.html
+}</code></pre>
+        </div>
+        <p>If you forget this, every deep link to your SPA will break on refresh. This is the most common deployment bug for first-time SPA developers.</p>
+      </section>
+
+      <div class="compare-box">
+        <div class="compare-col junior">
+          <div class="compare-label">Junior Developer</div>
+          <h4>How a Junior Might Think</h4>
+          <ul>
+            <li>Knows that typing a URL "just works" but can't explain the steps</li>
+            <li>May confuse HTTP methods or use them incorrectly</li>
+            <li>Doesn't check the Network tab when debugging</li>
+            <li>Thinks DNS is just "some setting in cPanel"</li>
+            <li>Does not understand status codes beyond 200 and 404</li>
+          </ul>
+        </div>
+        <div class="compare-col senior">
+          <div class="compare-label">Senior Developer</div>
+          <h4>How a Senior Thinks</h4>
+          <ul>
+            <li>Can trace the full request cycle from URL entry to page render</li>
+            <li>Understands when to use each HTTP method and why</li>
+            <li>Regularly uses the Network tab to diagnose performance and errors</li>
+            <li>Configures DNS records directly and understands propagation</li>
+            <li>Uses status codes and headers to debug server issues without guessing</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="cheatsheet">
+        <div class="cheatsheet-title">Cheat Sheet</div>
+        <table>
+          <thead>
+            <tr><th>Concept</th><th>Key Takeaway</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Client-Server</td><td>The browser (client) sends requests; the server sends responses.</td></tr>
+            <tr><td>HTTP Methods</td><td>GET (retrieve), POST (create), PUT (update), DELETE (remove).</td></tr>
+            <tr><td>HTTPS</td><td>HTTP over TLS — encrypts all data between client and server.</td></tr>
+            <tr><td>DNS</td><td>Translates domain names to IP addresses via a hierarchy of servers.</td></tr>
+            <tr><td>Status Codes</td><td>200 (OK), 301 (redirect), 404 (not found), 500 (server error).</td></tr>
+            <tr><td>Request Cycle</td><td>URL parse → DNS → TCP → TLS → HTTP request → server → response → render</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <nav class="chapter-nav">
+  <span class="nav-prev-disabled"><span class="nav-label">Prev</span>Prev: (start)</span>
+  <a href="02-browser-internals.html"><span class="nav-label">Next</span>Next: How the Browser Works</a>
+</nav>
+    </main>
+  </div>
+
+  <script src="../../assets/js/sidebar.js"></script>
+  <script src="../../assets/js/navigation.js"></script>
+  <script src="../../assets/js/themes.js"></script>
+</body>
+</html>

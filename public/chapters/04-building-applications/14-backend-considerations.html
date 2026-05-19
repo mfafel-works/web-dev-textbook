@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>05 — Backend Considerations | M's Web Development Guide</title>
+  <meta name="description" content="API design, databases, auth models, and understanding when and why you need a backend.">
+  <link rel="stylesheet" href="../../assets/css/main.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/themes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <div class="site-wrapper">
+    <header class="site-header">
+      <div class="site-title"><a href="../../index.html"><i class="fa-solid fa-house"></i> M's Web Development Guide</a></div>
+      <div class="header-controls">
+        <button data-sidebar-toggle class="sidebar-toggle" aria-label="Toggle table of contents">&#9776; TOC</button>
+        <button data-theme-toggle aria-label="Switch theme"><span class="icon">☾</span>Dark</button>
+      </div>
+    </header>
+
+    <aside class="sidebar" aria-label="Table of Contents">
+      <div id="sidebar-toc"></div>
+    </aside>
+
+    <main class="main-content" id="main">
+      <span class="chapter-number">Chapter 14</span>
+      <h1>Backend Considerations</h1>
+      <p class="chapter-subtitle">API design, databases, auth models, and understanding when and why you need a backend</p>
+
+      <p>The most important backend decision is whether you need one at all. Many projects start with a backend because "that is how the web works" — and many of those projects add months of complexity for features that could have been handled by static files, a form service, or a serverless function. This chapter helps you decide, then shows you how to build what you need.</p>
+
+      <section>
+        <h2>What Is a Backend?</h2>
+        <p>A backend is code that runs on a server, not in the browser. Its responsibilities include:</p>
+        <ul>
+          <li><strong>Data storage and retrieval</strong> — reading and writing to a database</li>
+          <li><strong>Business logic</strong> — operations that must not be visible to or tampered with by the client</li>
+          <li><strong>Authentication and authorization</strong> — verifying identity and controlling access</li>
+          <li><strong>API serving</strong> — delivering data to frontend clients (your SPA, mobile app, third-party integrations)</li>
+          <li><strong>Background jobs</strong> — email sending, image processing, data cleanup</li>
+        </ul>
+        <p><strong>The key insight:</strong> a frontend can do many of these things (store data in localStorage, run business logic in JavaScript, check user roles in the client). But anything done in the browser is visible to and controllable by the user. The backend exists because there are operations you must keep <em>out of the user's control</em> — validating purchases, processing payments, enforcing access rules.</p>
+        <div class="callout-info">
+          <div class="callout-title">The Backend Is a Trust Boundary</div>
+          <p>Think of the backend as the line between what the user can control and what they cannot. If a malicious user can manipulate a value to get something for free, that value belongs on the backend. If a user can read data they should not see, that check belongs on the backend. The frontend is for user experience. The backend is for truth.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>API Design Principles</h2>
+        <p>An API is a contract between your backend and its consumers (frontend, mobile app, other services). Good API design makes consumers productive. Bad API design creates confusion, bugs, and versioning nightmares.</p>
+
+        <h3>RESTful Resource Naming</h3>
+        <p>REST organizes APIs around resources (nouns), not actions (verbs). Actions are expressed via HTTP methods:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>RESTful endpoint patterns</span></div>
+          <pre><code>GET    /api/users          # List users
+POST   /api/users          # Create a user
+GET    /api/users/:id      # Get a specific user
+PUT    /api/users/:id      # Replace a user
+PATCH  /api/users/:id      # Update fields of a user
+DELETE /api/users/:id      # Delete a user
+
+GET    /api/users/:id/posts       # List user's posts (nested resource)
+POST   /api/users/:id/posts       # Create a post for a user</code></pre>
+        </div>
+        <p>Notice: no verbs in URLs. No <code>/api/getUser</code>, no <code>/api/createPost</code>. The HTTP method encodes the action, the URL encodes the resource.</p>
+
+        <h3>Status Codes</h3>
+        <p>Use the right HTTP status code for every response. This lets consumers write generic error handling:</p>
+        <table>
+          <thead>
+            <tr><th>Code</th><th>Meaning</th><th>When</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>200</td><td>OK</td><td>Successful GET, PUT, PATCH</td></tr>
+            <tr><td>201</td><td>Created</td><td>Successful POST (new resource created)</td></tr>
+            <tr><td>204</td><td>No Content</td><td>Successful DELETE (no body needed)</td></tr>
+            <tr><td>400</td><td>Bad Request</td><td>Invalid input, missing fields, validation failure</td></tr>
+            <tr><td>401</td><td>Unauthorized</td><td>Missing or invalid authentication</td></tr>
+            <tr><td>403</td><td>Forbidden</td><td>Authenticated but not allowed (different from 401)</td></tr>
+            <tr><td>404</td><td>Not Found</td><td>Resource does not exist</td></tr>
+            <tr><td>409</td><td>Conflict</td><td>Duplicate resource, conflicting state</td></tr>
+            <tr><td>429</td><td>Too Many Requests</td><td>Rate limit exceeded</td></tr>
+            <tr><td>500</td><td>Internal Server Error</td><td>Unexpected server failure (generic, don't overuse)</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Versioning</h3>
+        <p>APIs change. Consumers must be protected from breaking changes. Two common strategies:</p>
+        <ul>
+          <li><strong>URL versioning:</strong> <code>/api/v1/users</code>, <code>/api/v2/users</code> — simple, explicit, but clutters URLs</li>
+          <li><strong>Header versioning:</strong> <code>Accept: application/vnd.myapp.v1+json</code> — cleaner URLs, harder to test manually</li>
+        </ul>
+        <p>For small projects, URL versioning is fine. For public APIs, plan for versioning from day one — even if you only have v1. Adding it later means breaking every consumer.</p>
+      </section>
+
+      <section>
+        <h2>Databases: SQL vs NoSQL</h2>
+        <p>The database decision shapes your entire backend. Choose wrong and you will fight your data layer for the life of the project.</p>
+
+        <table>
+          <thead>
+            <tr><th></th><th>SQL (PostgreSQL, MySQL)</th><th>NoSQL (MongoDB, Firestore)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Data model</strong></td><td>Tables with rows and columns. Schema enforced at write time.</td><td>Documents (JSON-like). Schema flexible per document.</td></tr>
+            <tr><td><strong>Relationships</strong></td><td>Foreign keys, JOINs — first-class support</td><td>Embedding or referencing — manual management</td></tr>
+            <tr><td><strong>ACID</strong></td><td>Strong ACID guarantees by default</td><td>Varies by product. MongoDB added multi-doc ACID in v4.0.</td></tr>
+            <tr><td><strong>Scaling</strong></td><td>Vertical (bigger server) first. Read replicas. Sharding is complex.</td><td>Horizontal scaling designed in from the start.</td></tr>
+            <tr><td><strong>Best for</strong></td><td>Relational data, complex queries, data integrity critical</td><td>Rapid prototyping, hierarchical data, massive scale</td></tr>
+          </tbody>
+        </table>
+
+        <div class="decision-tree">Default choice: PostgreSQL. Switch to MongoDB only if you have a specific reason (schema-less data, hierarchical documents, horizontal scaling needs from day one).</div>
+        <p>The vast majority of web applications have relational data (users have posts, posts have comments, orders have line items). SQL databases model this naturally. MongoDB forces you to denormalize (duplicate) or manually resolve relationships in application code. PostgreSQL's JSONB column type even gives you document-like flexibility when needed.</p>
+      </section>
+
+      <section>
+        <h2>Authentication Models</h2>
+        <p>Authentication answers "who are you?" Authorization answers "what are you allowed to do?" Both must happen on the backend — frontend checks are purely cosmetic.</p>
+
+        <h3>Session-Based Auth</h3>
+        <p>The traditional model: user logs in, server creates a session record (in memory, database, or Redis) and sends a session cookie. The browser automatically includes the cookie on subsequent requests. The server looks up the session to identify the user.</p>
+        <ul>
+          <li>Pros: simple, server can invalidate sessions instantly (logout, ban), no sensitive data in the client</li>
+          <li>Cons: server must maintain session state (not truly stateless), scaling requires shared session storage (Redis)</li>
+        </ul>
+
+        <h3>Token-Based Auth (JWT)</h3>
+        <p>User logs in, server issues a signed token (JSON Web Token) containing user ID and claims. The client stores the token (usually in localStorage or an httpOnly cookie) and sends it as an <code>Authorization: Bearer <token></code> header.</p>
+        <ul>
+          <li>Pros: stateless (server does not need to store sessions), works well for mobile and third-party API access</li>
+          <li>Cons: tokens cannot be revoked server-side (they are valid until expiry), must keep expiry short (15-60 minutes) and use refresh tokens</li>
+        </ul>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>JWT middleware pattern (Node.js)</span></div>
+          <pre><code>function authenticate(req, res, next) {
+  const header = req.headers.authorization;
+  if (!header || !header.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Missing token' });
+  }
+
+  try {
+    const token = header.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    return res.status(401).json({ error: 'Invalid or expired token' });
+  }
+}</code></pre>
+        </div>
+
+        <div class="callout-warning">
+          <div class="callout-title">Never Store JWTs in localStorage for Sensitive Apps</div>
+          <p>localStorage is accessible to any JavaScript running on your domain. An XSS vulnerability can steal all tokens. For high-security applications, store the JWT in an httpOnly cookie (inaccessible to JS) and use CSRF protection. For most applications, localStorage is acceptable — but understand the tradeoff.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Server vs Serverless</h2>
+        <p>The hosting model for your backend is as important as the code itself. The choice affects cost, scalability, maintenance burden, and development speed.</p>
+
+        <table>
+          <thead>
+            <tr><th></th><th>Traditional Server</th><th>Serverless (Functions)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Management</strong></td><td>You manage OS, runtime, scaling, security patches</td><td>Platform manages everything. You write functions.</td></tr>
+            <tr><td><strong>Scaling</strong></td><td>Manual or auto-scaling groups. You pay for provisioned capacity.</td><td>Auto-scales to zero. You pay per invocation and duration.</td></tr>
+            <tr><td><strong>Cold starts</strong></td><td>None — server is always running</td><td>Function instances have latency on first invocation (100ms-1s)</td></tr>
+            <tr><td><strong>State</strong></td><td>Server can hold in-memory state</td><td>Functions are stateless — use external storage (DB, Redis)</td></tr>
+            <tr><td><strong>Max execution</strong></td><td>Unlimited</td><td>Time limit (AWS Lambda: 15 minutes, Cloudflare Workers: 30s CPU)</td></tr>
+            <tr><td><strong>Best for</strong></td><td>Steady traffic, complex backends, long-running processes</td><td>Variable/spiky traffic, event-driven tasks, APIs, prototypes</td></tr>
+          </tbody>
+        </table>
+
+        <div class="decision-tree" style="white-space:normal;overflow:visible;">
+           <svg viewBox="0 0 730 450" style="width:100%;max-width:660px;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+             <defs>
+               <marker id="arrow08" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="var(--color-accent, #2563eb)"/></marker>
+               <marker id="arrow08no" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="var(--color-text-muted, #999)"/></marker>
+             </defs>
+             <rect x="2" y="2" width="726" height="446" rx="8" fill="none" stroke="var(--color-border, #d4d0ca)" stroke-width="1"/>
+             <text x="330" y="22" text-anchor="middle" font-size="15" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">Backend Rendering Strategy Decision</text>
+
+             <text x="330" y="50" text-anchor="middle" font-size="17" font-family="sans-serif" fill="var(--color-text, #1a1a1a)" font-weight="bold">What does your app need?</text>
+
+             <rect x="205" y="60" width="250" height="36" rx="18" fill="var(--color-accent, #2563eb)" opacity="0.15" stroke="var(--color-accent, #2563eb)" stroke-width="1.5"/>
+             <text x="330" y="83" text-anchor="middle" font-size="14" font-family="var(--font-code, monospace)" fill="var(--color-accent, #2563eb)">START</text>
+
+             <line x1="330" y1="100" x2="160" y2="140" stroke="var(--color-text-muted, #999)" stroke-width="1.5"/>
+             <line x1="160" y1="140" x2="160" y2="165" stroke="var(--color-text-muted, #999)" stroke-width="1.5" marker-end="url(#arrow08no)"/>
+             <text x="160" y="115" text-anchor="middle" font-size="13" font-family="sans-serif" fill="var(--color-text-muted, #666)">mostly static?</text>
+
+             <rect x="60" y="165" width="200" height="36" rx="6" fill="var(--color-accent, #2563eb)" opacity="0.1" stroke="var(--color-accent, #2563eb)" stroke-width="1"/>
+             <text x="160" y="190" text-anchor="middle" font-size="15" font-family="sans-serif" fill="var(--color-text, #1a1a1a)">YES → No dynamic features</text>
+
+             <line x1="160" y1="201" x2="160" y2="221" stroke="var(--color-accent, #2563eb)" stroke-width="1.5" marker-end="url(#arrow08)"/>
+             <rect x="40" y="221" width="240" height="50" rx="6" fill="#22c55e" opacity="0.12" stroke="#22c55e" stroke-width="1"/>
+             <text x="55" y="239" font-size="14" font-family="sans-serif" fill="var(--color-text, #1a1a1a)" font-weight="bold">Static Site (SSG)</text>
+             <text x="55" y="254" font-size="12" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">Build-time HTML. Serve from CDN.</text>
+             <text x="55" y="266" font-size="12" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">Zero servers. Fastest, cheapest.</text>
+
+             <line x1="330" y1="100" x2="560" y2="140" stroke="var(--color-text-muted, #999)" stroke-width="1.5"/>
+             <text x="560" y="115" text-anchor="middle" font-size="13" font-family="sans-serif" fill="var(--color-text-muted, #666)">dynamic content?</text>
+
+             <line x1="560" y1="140" x2="560" y2="165" stroke="var(--color-text-muted, #999)" stroke-width="1.5" marker-end="url(#arrow08no)"/>
+             <rect x="460" y="165" width="200" height="36" rx="6" fill="var(--color-accent, #2563eb)" opacity="0.1" stroke="var(--color-accent, #2563eb)" stroke-width="1"/>
+             <text x="560" y="190" text-anchor="middle" font-size="15" font-family="sans-serif" fill="var(--color-text, #1a1a1a)">YES → Needs backend</text>
+
+             <line x1="560" y1="201" x2="560" y2="221" stroke="var(--color-accent, #2563eb)" stroke-width="1.5" marker-end="url(#arrow08)"/>
+             <rect x="460" y="221" width="200" height="36" rx="6" fill="var(--color-accent, #2563eb)" opacity="0.1" stroke="var(--color-accent, #2563eb)" stroke-width="1"/>
+             <text x="560" y="246" text-anchor="middle" font-size="15" font-family="sans-serif" fill="var(--color-text, #1a1a1a)">Steady traffic or long tasks?</text>
+
+             <line x1="560" y1="257" x2="560" y2="277" stroke="var(--color-accent, #2563eb)" stroke-width="1.5" marker-end="url(#arrow08)"/>
+             <rect x="460" y="277" width="250" height="50" rx="6" fill="#eab308" opacity="0.15" stroke="#eab308" stroke-width="1"/>
+             <text x="475" y="295" font-size="14" font-family="sans-serif" fill="var(--color-text, #1a1a1a)" font-weight="bold">Traditional Server</text>
+             <text x="475" y="310" font-size="12" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">Nginx / Apache + PHP / Node</text>
+             <text x="475" y="322" font-size="12" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">Full control, predictable latency</text>
+
+             <line x1="330" y1="100" x2="330" y2="277" stroke="var(--color-text-muted, #999)" stroke-width="1.5" marker-end="url(#arrow08no)"/>
+             <text x="340" y="260" font-size="13" font-family="sans-serif" fill="var(--color-text-muted, #666)">spiky traffic?</text>
+
+             <rect x="40" y="277" width="240" height="50" rx="6" fill="var(--color-accent, #2563eb)" opacity="0.1" stroke="var(--color-accent, #2563eb)" stroke-width="1"/>
+             <text x="55" y="295" font-size="14" font-family="sans-serif" fill="var(--color-text, #1a1a1a)">→ Variable/spiky traffic</text>
+             <text x="55" y="310" font-size="12" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">→ Event-driven tasks</text>
+             <text x="55" y="322" font-size="12" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">→ Short execution times</text>
+
+             <line x1="280" y1="300" x2="440" y2="300" stroke="var(--color-border, #d4d0ca)" stroke-width="1" stroke-dasharray="4,3"/>
+             <rect x="275" y="286" width="50" height="16" rx="3" fill="var(--color-bg, #faf8f5)"/>
+             <text x="300" y="298" text-anchor="middle" font-size="11" font-family="sans-serif" fill="var(--color-text-muted, #666)">OR</text>
+           </svg>
+        </div>
+
+        <p>Cloudflare Workers, Vercel Edge Functions, and Netlify Functions are excellent serverless options that integrate with static frontends. They handle form submissions, API proxying, authentication, and database access — often at zero or minimal cost for small projects.</p>
+      </section>
+
+      <div class="compare-box">
+        <div class="compare-col junior">
+          <div class="compare-label">Junior Developer</div>
+          <h4>How a Junior Might Think</h4>
+          <ul>
+            <li>Jumps into building a backend without asking if one is needed</li>
+            <li>Picks MongoDB because "it is faster" without understanding data relationships</li>
+            <li>Implements auth from scratch with basic hashing</li>
+            <li>Deploys to a VPS without CI/CD, manually SSH-ing to update code</li>
+            <li>Writes APIs without versioning or error standardization</li>
+          </ul>
+        </div>
+        <div class="compare-col senior">
+          <div class="compare-label">Senior Developer</div>
+          <h4>How a Senior Thinks</h4>
+          <ul>
+            <li>Evaluates whether a backend is needed at all (static + form service may suffice)</li>
+            <li>Defaults to PostgreSQL unless there is a specific reason for NoSQL</li>
+            <li>Uses established auth libraries (Passport, Laravel Breeze, NextAuth)</li>
+            <li>Chooses serverless for variable traffic, server for steady load</li>
+            <li>Designs API contract first, versions from v1, uses consistent error format</li>
+          </ul>
+        </div>
+      </div>
+
+      <section>
+        <h2>Web Servers: Apache and Nginx</h2>
+        <p>When choosing a web server, the two dominant options are Apache and Nginx. Understanding what each offers helps you make informed decisions based on your project needs.</p>
+
+        <h3>Apache HTTP Server</h3>
+        <p>Apache has been the workhorse of the web for decades. It's known for its flexibility through configuration files and extensive module system.</p>
+        <ul>
+          <li><strong>.htaccess:</strong> Per-directory configuration, great for shared hosting, allows password protection, redirects, and custom error pages without server access</li>
+          <li><strong>mod_rewrite:</strong> Powerful URL rewriting for clean URLs, redirects, and routing logic</li>
+          <li><strong>Process model:</strong> Spawns processes/threads per request; simple but can be memory-heavy under load</li>
+          <li><strong>Best for:</strong> Shared hosting environments, projects needing .htaccess flexibility, PHP applications on traditional hosting</li>
+        </ul>
+
+        <h3>Nginx</h3>
+        <p>Nginx was built as a response to the C10K problem (handling 10,000+ concurrent connections). It excels at serving static content and as a reverse proxy.</p>
+        <ul>
+          <li><strong>Event-driven:</strong> Single thread handles many connections; memory-efficient under high load</li>
+          <li><strong>Reverse proxy:</strong> Excellent at forwarding requests to backend services (PHP-FPM, Node, Python)</li>
+          <li><strong>No .htaccess:</strong> Configuration is central; more performant but requires server access</li>
+          <li><strong>Best for:</strong> High-traffic static sites, reverse proxy setups, microservices architecture</li>
+        </ul>
+
+        <div class="callout-info">
+          <div class="callout-title">The "Why" Behind the Choice</div>
+          <p>For most modern JavaScript applications deployed on platforms like Vercel, Netlify, or Cloudflare Pages, you won't interact with Apache or Nginx directly — the platform handles it. However, understanding these options matters when: you need traditional PHP hosting, you're working with legacy systems, or you're configuring a VPS. The principle: choose based on your specific constraints, not habit.</p>
+        </div>
+      </section>
+
+      <div class="cheatsheet">
+        <div class="cheatsheet-title">Cheat Sheet</div>
+        <table>
+          <thead>
+            <tr><th>Decision</th><th>Default Choice</th><th>When to Switch</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Need a backend?</td><td>No — start static, add backend when forced</td><td>Need auth, data persistence, background jobs</td></tr>
+            <tr><td>Database</td><td>PostgreSQL</td><td>Schema-less data, extreme scale → MongoDB</td></tr>
+            <tr><td>API style</td><td>REST</td><td>Real-time needs → WebSockets. Complex queries → GraphQL.</td></tr>
+            <tr><td>Auth model</td><td>Session (server) or JWT (API)</td><td>Third-party only → OAuth2. Social login → OAuth2 provider.</td></tr>
+            <tr><td>Hosting</td><td>Serverless (Cloudflare Workers, Vercel)</td><td>Steady traffic, long-running processes → VPS/dedicated server</td></tr>
+            <tr><td>Web server</td><td>Nginx or platform-provided</td><td>Shared hosting, .htaccess needed → Apache</td></tr>
+            <tr><td>API versioning</td><td>URL-based (/api/v1/)</td><td>Public API with multiple consumers → header-based</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <nav class="chapter-nav">
+        <a href="13-photoshop-for-web.html"><span class="nav-label">Prev</span>Prev: Photoshop for Web</a>
+        <a href="15-php.html"><span class="nav-label">Next</span>Next: PHP</a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../../assets/js/sidebar.js"></script>
+  <script src="../../assets/js/navigation.js"></script>
+  <script src="../../assets/js/themes.js"></script>
+</body>
+</html>

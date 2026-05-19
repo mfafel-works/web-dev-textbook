@@ -1,0 +1,59 @@
+{
+  "site": {
+    "title": "My SPA Site",
+    "description": "A config-driven single-page application"
+  },
+  "routes": {
+    "/": "home",
+    "/about": "about",
+    "/contact": "contact",
+    "/blog": "blog"
+  },
+  "pages": {
+    "home": {
+      "title": "Home",
+      "blocks": [
+        { "type": "hero", "text": "Welcome to My Site" },
+        { "type": "text", "content": "This is a config-driven single-page application. All content lives in config.json — no HTML changes needed to add or edit pages." }
+      ]
+    },
+    "about": {
+      "title": "About",
+      "blocks": [
+        { "type": "text", "content": "This site is built with a config-driven CMS pattern. The frontend fetches a single JSON file at startup and renders pages from it using a block-based render engine." },
+        { "type": "image", "src": "assets/screenshot.jpg", "alt": "Screenshot of the SPA architecture" }
+      ]
+    },
+    "contact": {
+      "title": "Contact",
+      "blocks": [
+        { "type": "text", "content": "Get in touch using the form below." },
+        { "type": "contact-form", "endpoint": "/api/contact" }
+      ]
+    },
+    "blog": {
+      "title": "Blog",
+      "blocks": [
+        { "type": "text", "content": "Welcome to the blog." },
+        {
+          "type": "paginated-list",
+          "perPage": 6,
+          "items": [
+            { "title": "Getting Started with SPAs", "date": "2026-05-01", "summary": "Why single-page applications matter and how to build one without a framework." },
+            { "title": "Config-Driven Architecture", "date": "2026-04-28", "summary": "Separating content from code makes your site more maintainable and future-proof." },
+            { "title": "Form Validation Best Practices", "date": "2026-04-20", "summary": "Client-side UX meets server-side security — never trust the frontend alone." },
+            { "title": "Understanding Block-Based Rendering", "date": "2026-04-15", "summary": "Component systems explained by building one from scratch." },
+            { "title": "Hash Routing vs History API", "date": "2026-04-10", "summary": "The tradeoffs between simple hash routing and real URL routing with the History API." },
+            { "title": "Bot Protection with Turnstile", "date": "2026-04-05", "summary": "Cloudflare's privacy-first CAPTCHA alternative and how to integrate it." },
+            { "title": "Deploying Static Sites", "date": "2026-03-28", "summary": "From local development to production with Cloudflare Pages." },
+            { "title": "Pagination UX Patterns", "date": "2026-03-20", "summary": "Sliding window pagination vs infinite scroll — when to use each." },
+            { "title": "PHP Backend for Contact Forms", "date": "2026-03-15", "summary": "A minimal PHP endpoint that validates, sanitizes, and sends email." },
+            { "title": "Fetch API Deep Dive", "date": "2026-03-10", "summary": "Understanding fetch options, error handling, and request lifecycle." },
+            { "title": "Semantic HTML in SPAs", "date": "2026-03-05", "summary": "Why SPAs need extra care with landmark elements and ARIA attributes." },
+            { "title": "CSS Architecture for Dynamic Content", "date": "2026-02-28", "summary": "Styling components that are rendered by JavaScript at runtime." }
+          ]
+        }
+      ]
+    }
+  }
+}

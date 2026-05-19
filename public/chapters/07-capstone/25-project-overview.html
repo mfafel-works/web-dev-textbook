@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>25 — Project Overview | M's Web Development Guide</title>
+  <meta name="description" content="Build an SPA + config-driven CMS + contact system with pagination, validation, and bot protection — step by step.">
+  <link rel="stylesheet" href="../../assets/css/main.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/themes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+  <div class="site-wrapper">
+    <header class="site-header">
+      <div class="site-title"><a href="../../index.html"><i class="fa-solid fa-house"></i> M's Web Development Guide</a></div>
+      <div class="header-controls">
+        <button data-sidebar-toggle class="sidebar-toggle" aria-label="Toggle table of contents">&#9776; TOC</button>
+        <button data-theme-toggle aria-label="Switch theme"><span class="icon">☾</span>Dark</button>
+      </div>
+    </header>
+    <aside class="sidebar" aria-label="Table of Contents">
+      <div id="sidebar-toc"></div>
+    </aside>
+    <main class="main-content" id="main">
+      <span class="chapter-number">Chapter 25</span>
+      <h1>Project Overview</h1>
+      <p class="chapter-subtitle">Build an SPA + config-driven CMS + contact system with pagination, validation, and bot protection — step by step</p>
+
+      <p>This chapter walks through building a complete single-page application from scratch. The project uses no frameworks — just HTML, CSS, and JavaScript — with a JSON-based content system that behaves like a headless CMS. Every decision is explained: not just <em>what</em> to write, but <em>why</em>.</p>
+
+      <section>
+        <h2>Project Overview and Architecture</h2>
+        <p>We are building a content-driven SPA. The architecture follows this pattern:</p>
+        <div class="decision-tree">config.json → fetch layer → routing engine → render system → DOM output</div>
+        <p>Each layer has a single responsibility:</p>
+        <ul>
+          <li><strong>config.json</strong> — stores all content: pages, routes, metadata, settings</li>
+          <li><strong>Fetch layer</strong> — loads config.json at startup, caches it in memory</li>
+          <li><strong>Routing engine</strong> — maps the current URL to a page key</li>
+          <li><strong>Render system</strong> — converts page data into HTML and inserts it into the DOM</li>
+        </ul>
+        <p>The project folder structure looks like this:</p>
+        <div class="file-tree">my-spa/
+├── index.html          # SPA entry point — loaded once
+├── config.json         # All content lives here
+├── css/
+│   └── style.css       # Application styles
+├── js/
+│   ├── app.js          # Init: fetch config, start router
+│   ├── router.js       # URL → page mapping
+│   └── renderer.js     # JSON → DOM rendering
+└── assets/             # Images, fonts, etc.</div>
+        <p><strong>Key rule:</strong> The config.json is the source of truth. The frontend never hardcodes content — it always reads from config. This means you can later swap the JSON file for a Strapi CMS API without touching your frontend code.</p>
+      </section>
+
+      <section>
+        <h2>Step 1: Define the Content Schema</h2>
+        <p>The entire site is driven by a single JSON file. Here is the schema structure:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>config.json — content schema</span></div>
+          <pre><code>{
+  "site": {
+    "title": "My SPA Site",
+    "description": "A config-driven single-page application"
+  },
+  "routes": {
+    "/": "home",
+    "/about": "about",
+    "/contact": "contact"
+  },
+  "pages": {
+    "home": {
+      "title": "Home",
+      "blocks": [
+        { "type": "hero", "text": "Welcome to My Site" }
+      ]
+    },
+    "about": {
+      "title": "About",
+      "blocks": [
+        { "type": "text", "content": "This site is built with a config-driven CMS pattern." }
+      ]
+    },
+    "contact": {
+      "title": "Contact",
+      "blocks": [
+        { "type": "text", "content": "Get in touch using the form below." }
+      ]
+    }
+  }
+}</code></pre>
+        </div>
+        <p>Three core concepts here:</p>
+        <ul>
+          <li><strong>routes</strong> — maps URL paths to page keys (makes routing a pure lookup — no business logic)</li>
+          <li><strong>pages</strong> — the actual content, keyed by page identifier</li>
+          <li><strong>blocks</strong> — an array of content sections. Each block has a <code>type</code> that maps to a renderer function. This is how we build a scalable component system without a framework.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Step 2: Build the HTML Shell</h2>
+        <p>The HTML file is minimal — it provides the app container and loads the scripts:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>index.html — SPA shell</span></div>
+          <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;title&gt;My SPA&lt;/title&gt;
+  &lt;link rel="stylesheet" href="../../assets/css/style.css"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;nav id="nav"&gt;&lt;/nav&gt;
+  &lt;main id="app"&gt;&lt;/main&gt;
+  &lt;script src="../../assets/js/config.js"&gt;&lt;/script&gt;
+  &lt;script src="../../assets/js/router.js"&gt;&lt;/script&gt;
+  &lt;script src="../../assets/js/renderer.js"&gt;&lt;/script&gt;
+  &lt;script src="../../assets/js/app.js"&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+        </div>
+        <p>The <code>#app</code> div is where all page content will be rendered. The <code>#nav</code> div will be populated dynamically from the config. Nothing is hardcoded in the HTML.</p>
+      </section>
+
+      <section>
+        <h2>Step 3: Load Config at Runtime</h2>
+        <p>The fetch layer is simple — load the JSON file once and keep it in memory:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>app.js — fetch and init</span></div>
+          <pre><code>let CMS;
+
+async function init() {
+  const res = await fetch('config.json');
+  CMS = await res.json();
+
+  buildNav();
+  navigate();
+}
+
+function buildNav() {
+  const nav = document.getElementById('nav');
+  nav.innerHTML = Object.keys(CMS.routes).map(path =&gt; {
+    const key = CMS.routes[path];
+    return `&lt;a href="#${path}"&gt;${CMS.pages[key].title}&lt;/a&gt;`;
+  }).join('');
+}
+
+window.addEventListener('hashchange', navigate);
+
+init();</code></pre>
+        </div>
+        <p>Three things happen at startup: the config loads, the navigation is built from route data, and the current route is rendered. On every hash change, <code>navigate()</code> runs again.</p>
+      </section>
+
+      <section>
+        <h2>Step 4: Build the Router</h2>
+        <p>The router is a pure mapping layer — it takes the current URL and returns a page key. No rendering logic, no business rules:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>router.js — hash-based routing</span></div>
+          <pre><code>function getRoute() {
+  const hash = window.location.hash.slice(1) || '/';
+  return hash;
+}
+
+function resolvePage(path) {
+  const key = CMS.routes[path];
+  if (!key) return null;  // 404
+  return CMS.pages[key];
+}
+
+function navigate() {
+  const path = getRoute();
+  const page = resolvePage(path);
+
+  if (!page) {
+    renderNotFound();
+    return;
+  }
+
+  renderPage(page);
+}</code></pre>
+        </div>
+        <p>If the route doesn't exist, <code>resolvePage</code> returns <code>null</code> and we render a 404. Notice the router never touches the DOM — it only resolves data. The renderer handles presentation.</p>
+      </section>
+
+      <section>
+        <h2>Step 5: Build the Render Engine</h2>
+        <p>The render engine converts page data into HTML. It uses a <strong>block system</strong> — each block type maps to a function that produces the right markup:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>renderer.js — block-based rendering</span></div>
+          <pre><code>function renderPage(page) {
+  const html = page.blocks.map(renderBlock).join('');
+  document.getElementById('app').innerHTML =
+    `&lt;h1&gt;${page.title}&lt;/h1&gt;${html}`;
+  document.title = `${page.title} — ${CMS.site.title}`;
+}
+
+function renderBlock(block) {
+  switch (block.type) {
+    case 'hero':
+      return `&lt;section class="hero"&gt;
+        &lt;h2&gt;${block.text}&lt;/h2&gt;
+      &lt;/section&gt;`;
+    case 'text':
+      return `&lt;section class="text-block"&gt;
+        &lt;p&gt;${block.content}&lt;/p&gt;
+      &lt;/section&gt;`;
+    case 'image':
+      return `&lt;figure&gt;
+        &lt;img src="${block.src}" alt="${block.alt}"&gt;
+      &lt;/figure&gt;`;
+    default:
+      return `&lt;p&gt;Unknown block type: ${block.type}&lt;/p&gt;`;
+  }
+}
+
+function renderNotFound() {
+  document.getElementById('app').innerHTML =
+    `&lt;h1&gt;404&lt;/h1&gt;
+     &lt;p&gt;Page not found.&lt;/p&gt;
+     &lt;a href="#/"&gt;Go home&lt;/a&gt;`;
+}</code></pre>
+        </div>
+        <div class="callout">
+          <div class="callout-title">Why This Pattern Matters</div>
+          <p>This block system is the same mental model that React, Vue, and other frameworks use — just without the framework. You define components (block types), map data to them, and compose them into pages. The difference is you wrote it yourself, so you understand every line. Later, when you learn React, you will recognize this pattern immediately — it's just <code>switch(block.type)</code> becomes <code>&lt;Component /&gt;</code>.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Step 6: Navigation Generation</h2>
+        <p>The navigation is built dynamically from the config. It uses hash links (<code>#/about</code>) so the SPA routing works without a server. The active state is highlighted based on the current hash:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Active navigation highlighting</span></div>
+          <pre><code>function buildNav() {
+  const currentPath = getRoute();
+  const nav = document.getElementById('nav');
+  nav.innerHTML = Object.entries(CMS.routes).map(([path, key]) =&gt; {
+    const active = path === currentPath ? ' class="active"' : '';
+    return `&lt;a href="#${path}"${active}&gt;${CMS.pages[key].title}&lt;/a&gt;`;
+  }).join('');
+}
+
+// Update active state on navigation
+function navigate() {
+  const path = getRoute();
+  const page = resolvePage(path);
+  if (!page) { renderNotFound(); return; }
+  renderPage(page);
+  buildNav();  // re-render nav to update active class
+}</code></pre>
+        </div>
+      </section>
+
+      <section>
+        <h2>Step 7: Adding New Content</h2>
+        <p>To add a new page, you only touch <code>config.json</code>:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Adding a new page — config.json only</span></div>
+          <pre><code>{
+  "routes": {
+    "/": "home",
+    "/about": "about",
+    "/contact": "contact",
+    "/blog": "blog"           // ← new route
+  },
+  "pages": {
+    "blog": {                 // ← new page
+      "title": "Blog",
+      "blocks": [
+        { "type": "text", "content": "Welcome to the blog." },
+        { "type": "image", "src": "assets/blog-header.jpg", "alt": "Blog header" }
+      ]
+    }
+  }
+}</code></pre>
+        </div>
+        <p>No HTML changes. No routing code changes. No navigation code changes. The navigation builds itself from the routes object. The router resolves the new route automatically. The renderer handles any existing block type. This is decoupled architecture in action.</p>
+      </section>
+
+      <section>
+        <h2>Step 8: Add the Contact Form</h2>
+        <p>The contact form lives as a page in config.json, but it also needs JavaScript to handle submission. We add a contact block type to the renderer and a form handler to app.js.</p>
+
+        <h3>Config entry for the contact page</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span>config.json — contact page</span></div>
+          <pre><code>"contact": {
+  "title": "Contact",
+  "blocks": [
+    { "type": "text", "content": "Send me a message." },
+    { "type": "contact-form", "endpoint": "/api/contact" }
+  ]
+}</code></pre>
+        </div>
+
+        <h3>Contact form block renderer</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span>renderer.js — new block type</span></div>
+          <pre><code>case 'contact-form':
+  return `&lt;form id="contact-form" class="contact-form"&gt;
+    &lt;label for="name"&gt;Name&lt;/label&gt;
+    &lt;input type="text" id="name" name="name" required&gt;
+
+    &lt;label for="email"&gt;Email&lt;/label&gt;
+    &lt;input type="email" id="email" name="email" required&gt;
+
+    &lt;label for="message"&gt;Message&lt;/label&gt;
+    &lt;textarea id="message" name="message" required&gt;&lt;/textarea&gt;
+
+    &lt;div class="cf-turnstile" data-sitekey="YOUR_SITE_KEY"&gt;&lt;/div&gt;
+
+    &lt;button type="submit"&gt;Send&lt;/button&gt;
+    &lt;div id="form-status"&gt;&lt;/div&gt;
+  &lt;/form&gt;`;</code></pre>
+        </div>
+
+        <h3>Form submission handler</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span>app.js — form handling with validation</span></div>
+          <pre><code>function setupContactForm() {
+  const form = document.getElementById('contact-form');
+  if (!form) return;
+
+  form.addEventListener('submit', async (e) =&gt; {
+    e.preventDefault();
+
+    const formData = new FormData(form);
+    const data = {
+      name: formData.get('name').trim(),
+      email: formData.get('email').trim(),
+      message: formData.get('message').trim()
+    };
+
+    // Client-side validation
+    if (!data.name || !data.email || !data.message) {
+      showFormStatus('All fields are required.', 'error');
+      return;
+    }
+    if (!data.email.includes('@')) {
+      showFormStatus('Please enter a valid email.', 'error');
+      return;
+    }
+
+    // Disable button to prevent double-submit
+    const btn = form.querySelector('button');
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+
+    try {
+      const res = await fetch(data.endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      if (!res.ok) throw new Error('Server error');
+      showFormStatus('Message sent!', 'success');
+      form.reset();
+    } catch (err) {
+      showFormStatus('Something went wrong. Try again.', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Send';
+    }
+  });
+}
+
+function showFormStatus(msg, type) {
+  const el = document.getElementById('form-status');
+  if (el) { el.textContent = msg; el.className = type; }
+}</code></pre>
+        </div>
+        <p>Note the <code>submit</code> event is on the <code>&lt;form&gt;</code> element, not a <code>click</code> on the button — this catches Enter-key submissions. The Turnstile widget div is included in the HTML but its verification happens server-side (covered next).</p>
+
+        <div class="callout-warning">
+          <div class="callout-title">FormData vs JSON: Choosing the Right Encoding</div>
+          <p>The code above uses <code>new FormData(form)</code> to extract field values, then sends them as <code>application/json</code>. This works for text fields but <strong>silently discards file inputs</strong> — <code>JSON.stringify</code> cannot serialize <code>File</code> objects. If your form includes <code>&lt;input type="file"&gt;</code>, you must send the raw <code>FormData</code> directly and <strong>omit</strong> the <code>Content-Type</code> header (the browser sets <code>multipart/form-data</code> with the correct boundary automatically). Setting <code>Content-Type: application/json</code> while passing a <code>FormData</code> body will also break — the boundary parameter is missing. Either use JSON for text-only payloads or <code>FormData</code> for file uploads; never mix the two approaches.</p>
+        </div>
+
+        <h3>Choosing a backend for the form</h3>
+        <p>You have two good options for handling form submissions:</p>
+        <div class="cheatsheet" style="margin-top:0.5em;">
+          <table>
+            <thead>
+              <tr><th>Option</th><th>Best For</th><th>How It Works</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>Resend</strong></td><td>Developer-controlled transactional email</td><td>Install SDK, create an API route, send email programmatically. Full control over message content and routing. Good for contact forms.</td></tr>
+              <tr><td><strong>MailerLite</strong></td><td>Newsletters, marketing automation</td><td>Embed form script, submissions go directly to MailerLite dashboard. Less code but less control. Good for subscriber capture.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>For this project, the <code>backend/</code> folder contains a PHP endpoint that receives the POST, validates the Turnstile token, and forwards the message via Resend's API. The key architectural point: the frontend doesn't care which backend handles the form — it just sends JSON to the configured endpoint.</p>
+      </section>
+
+      <section>
+        <h2>Step 9: Bot Protection with Turnstile</h2>
+        <p>Cloudflare Turnstile is a user-friendly CAPTCHA replacement. Users check a box (or pass invisibly), and you verify the token server-side. It's free, privacy-respecting, and works without showing distorted text images.</p>
+
+        <h3>Add the widget to your form</h3>
+        <p>The Turnstile widget div is already in the contact form HTML above. Replace <code>YOUR_SITE_KEY</code> with your actual site key from the Cloudflare dashboard:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>HTML widget (already included in form)</span></div>
+          <pre><code>&lt;div class="cf-turnstile" data-sitekey="0x4AAAAAA..."&gt;&lt;/div&gt;</code></pre>
+        </div>
+        <p>The Turnstile script is loaded automatically from Cloudflare's CDN when the widget is rendered.</p>
+
+        <h3>Submit the token with your form data</h3>
+        <p>When the form is submitted, Turnstile automatically includes a token in the form data under <code>cf-turnstile-response</code>. The frontend sends it along with the rest of the data:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Token is included automatically — no extra frontend code</span></div>
+          <pre><code>// The FormData object already contains cf-turnstile-response.
+// Just send everything to your backend as shown in Step 8.</code></pre>
+        </div>
+
+        <h3>Verify the token server-side</h3>
+        <p>The backend must verify the token before processing the form. This is critical — never trust the frontend alone:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>PHP — Turnstile verification</span></div>
+          <pre><code>function verifyTurnstile($token) {
+  $ch = curl_init(
+    'https://challenges.cloudflare.com/turnstile/v0/siteverify'
+  );
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+  curl_setopt($ch, CURLOPT_POSTFIELDS, [
+    'secret' =&gt; 'YOUR_SECRET_KEY',
+    'response' =&gt; $token
+  ]);
+  $result = json_decode(curl_exec($ch), true);
+  curl_close($ch);
+  return $result['success'] === true;
+}</code></pre>
+        </div>
+
+        <h3>Common failure point: SPA routing breaks the token lifecycle</h3>
+        <p>In an SPA, the page doesn't reload when navigating. If a user navigates away from the contact page and back, the Turnstile widget may have an expired token. The fix: ensure the token is revalidated on every submission. The widget handles this automatically if you don't manipulate its DOM container — just don't cache the rendered form HTML across navigations.</p>
+        <p>In our SPA, each navigation re-renders the page content, so the widget is re-initialized fresh every time. This is the correct behavior.</p>
+
+        <div class="callout callout-warning">
+          <div class="callout-title">Never Trust Frontend Validation Alone</div>
+          <p>Client-side validation is for user experience — it catches typos and missing fields instantly. Server-side validation is for security — it catches everything else. Turnstile verification happens server-side because a bot can easily bypass anything running in the browser. Always verify the token on your server before accepting the form submission.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Step 10: Sliding Window Pagination</h2>
+        <p>A blog, portfolio, or product listing needs pagination. Our block-based system handles this naturally — pagination is just another block type. The content data lives in config.json, the renderer displays a window of items, and JavaScript handles page switching.</p>
+
+        <h3>Config Schema</h3>
+        <p>Add a <code>paginated-list</code> block to any page. The data array can hold hundreds of items — the pagination logic only renders a slice:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>config.json — paginated list block</span></div>
+          <pre><code>{
+  "type": "paginated-list",
+  "perPage": 6,
+  "items": [
+    { "title": "Post 1", "date": "2026-01-15", "summary": "..." },
+    { "title": "Post 2", "date": "2026-01-20", "summary": "..." }
+    // ... many more items
+  ]
+}</code></pre>
+        </div>
+
+        <h3>Render Engine: Paginated List Handler</h3>
+        <p>The renderer gets the block data, identifies the current page from a data attribute, and renders only the items for that page:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>renderer.js — paginated list render</span></div>
+          <pre><code>function renderPaginatedList(block) {
+  const page = block._page || 1;
+  const perPage = block.perPage || 10;
+  const totalPages = Math.ceil(block.items.length / perPage);
+  const start = (page - 1) * perPage;
+  const end = start + perPage;
+  const pageItems = block.items.slice(start, end);
+
+  let html = '&lt;div class="paginated-list" data-block="' + block._key + '"&gt;';
+
+  // Render items
+  html += '&lt;div class="paginated-items"&gt;';
+  for (const item of pageItems) {
+    html += '&lt;article class="paginated-item"&gt;';
+    html += '&lt;h3&gt;' + escapeHtml(item.title) + '&lt;/h3&gt;';
+    html += '&lt;time&gt;' + item.date + '&lt;/time&gt;';
+    html += '&lt;p&gt;' + escapeHtml(item.summary) + '&lt;/p&gt;';
+    html += '&lt;/article&gt;';
+  }
+  html += '&lt;/div&gt;';
+
+  // Pagination controls
+  html += '&lt;nav class="pagination" aria-label="Pagination"&gt;';
+  html += buildPagination(totalPages, page, block._key);
+  html += '&lt;/nav&gt;';
+
+  html += '&lt;/div&gt;';
+  return html;
+}</code></pre>
+        </div>
+
+        <h3>The Sliding Window Algorithm</h3>
+        <p>Displaying all page numbers works for 10 pages but breaks at 100. The sliding window shows a fixed set of page numbers around the current page with ellipsis for gaps. The algorithm:</p>
+        <div class="decision-tree">Always show: first page + last page + window around current page + ellipsis between gaps</div>
+        <div class="code-block">
+          <div class="code-block-header"><span>renderer.js — sliding window pagination</span></div>
+          <pre><code>function buildPagination(totalPages, currentPage, blockKey) {
+  if (totalPages <= 1) return '';
+
+  const windowSize = 3; // Pages on each side of current
+  let pages = [];
+
+  // Always include page 1
+  pages.push(1);
+
+  // Calculate window start/end
+  let windowStart = Math.max(2, currentPage - windowSize);
+  let windowEnd = Math.min(totalPages - 1, currentPage + windowSize);
+
+  // Adjust window if it overlaps with edges
+  if (windowEnd - windowStart < windowSize * 2) {
+    if (currentPage < totalPages / 2) {
+      windowEnd = Math.min(totalPages - 1, windowStart + windowSize * 2);
+    } else {
+      windowStart = Math.max(2, windowEnd - windowSize * 2);
+    }
+  }
+
+  // Add ellipsis before window if needed
+  if (windowStart > 2) {
+    pages.push('...');
+  }
+
+  // Add window pages
+  for (let i = windowStart; i <= windowEnd; i++) {
+    pages.push(i);
+  }
+
+  // Add ellipsis after window if needed
+  if (windowEnd < totalPages - 1) {
+    pages.push('...');
+  }
+
+  // Always include last page
+  if (totalPages > 1) {
+    pages.push(totalPages);
+  }
+
+  // Build HTML
+  let html = '';
+  for (const p of pages) {
+    if (p === '...') {
+      html += '&lt;span class="pagination-ellipsis"&gt;&amp;hellip;&lt;/span&gt;';
+    } else if (p === currentPage) {
+      html += '&lt;span class="pagination-current" aria-current="page"&gt;' + p + '&lt;/span&gt;';
+    } else {
+      html += '&lt;button class="pagination-page" data-page="' + p + '" data-block="' + blockKey + '"&gt;' + p + '&lt;/button&gt;';
+    }
+  }
+
+  return html;
+}</code></pre>
+        </div>
+
+        <h3>Pagination Event Handler</h3>
+        <p>Clicking a page button triggers a re-render of only that paginated block — no full page navigation, no full re-render:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>app.js — pagination click handler</span></div>
+          <pre><code>document.addEventListener('click', function(e) {
+  const btn = e.target.closest('.pagination-page');
+  if (!btn) return;
+
+  const page = parseInt(btn.dataset.page);
+  const blockKey = btn.dataset.block;
+  const block = findBlockByKey(blockKey);
+
+  if (!block) return;
+
+  block._page = page;
+  const container = document.querySelector('[data-block="' + blockKey + '"]');
+  if (container) {
+    container.outerHTML = renderPaginatedList(block);
+  }
+});</code></pre>
+        </div>
+
+        <div class="callout-info">
+          <div class="callout-title">Why Sliding Window Instead of "Previous / Next" Only</div>
+          <p>Simple "Prev / Next" navigation forces the user to click through every intermediate page to reach a faraway page. Numbered pagination with a sliding window gives direct access to any page while staying compact. The window size of 3 on each side (7 visible numbers + 2 ellipsis) is a good default — it fits on mobile and provides enough context for the user to orient themselves.</p>
+        </div>
+
+        <h3>Edge Cases Handled</h3>
+        <ul>
+          <li><strong>Single page:</strong> No pagination controls rendered at all</li>
+          <li><strong>Fewer pages than window:</strong> Window collapses naturally — no duplicate pages or negative indices</li>
+          <li><strong>First page:</strong> Window starts at 2, ellipsis appears before last page if needed</li>
+          <li><strong>Last page:</strong> Window ends at totalPages - 1, ellipsis after first page if needed</li>
+          <li><strong>No items:</strong> <code>totalPages</code> is 0, no pagination rendered</li>
+          <li><strong>Concurrent paginated blocks:</strong> Each block has a unique <code>data-block</code> key, so pagination is independent per block</li>
+        </ul>
+      </section>
+
+      <div class="compare-box">
+        <div class="compare-col junior">
+          <div class="compare-label">Junior Developer</div>
+          <h4>How a Junior Approaches This</h4>
+          <ul>
+            <li>Jumps straight into writing code without defining the content structure</li>
+            <li>Hardcodes pages in HTML, duplicates navigation across files</li>
+            <li>Writes one giant script with routing, rendering, and data mixed together</li>
+            <li>Adding a new page means editing HTML, JS, and navigation separately</li>
+            <li>Submits forms without client-side validation, trusts frontend alone</li>
+            <li>Has no bot protection or ignores Turnstile verification</li>
+          </ul>
+        </div>
+        <div class="compare-col senior">
+          <div class="compare-label">Senior Developer</div>
+          <h4>How a Senior Approaches This</h4>
+          <ul>
+            <li>Defines the content schema first — data structure drives the code</li>
+            <li>Builds a routing layer, a data layer, and a render layer — each independent</li>
+            <li>Adding a new page means editing one file (config.json) — everything else adapts</li>
+            <li>Designs the system so the CMS can be swapped later without rewriting the frontend</li>
+            <li>Validates forms on both client and server, prevents double-submit</li>
+            <li>Verifies Turnstile token server-side — never trusts frontend validation alone</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="cheatsheet">
+        <div class="cheatsheet-title">Config-Driven CMS Quick Reference</div>
+        <table>
+          <thead>
+            <tr><th>Layer</th><th>File</th><th>Responsibility</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Data</td><td><code>config.json</code></td><td>All content, routes, and page structure</td></tr>
+            <tr><td>Fetch</td><td><code>app.js</code></td><td>Load config, build nav, start router</td></tr>
+            <tr><td>Router</td><td><code>router.js</code></td><td>URL → page key mapping (pure logic, no DOM)</td></tr>
+            <tr><td>Renderer</td><td><code>renderer.js</code></td><td>Page key → HTML via block type switch</td></tr>
+            <tr><td>Form</td><td><code>app.js</code></td><td>Client validation, POST to API, Turnstile token included automatically</td></tr>
+            <tr><td>Backend</td><td><code>backend/contact.php</code></td><td>Verify Turnstile token, validate data, send email via Resend</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <nav class="chapter-nav">
+        <a href="24-career.html"><span class="nav-label">Prev</span>Prev: Career &amp; Communication</a>
+        <a href="26-frontend-implementation.html"><span class="nav-label">Next</span>Next: Frontend Implementation</a>
+      </nav>
+    </main>
+  </div>
+  <script src="../../assets/js/sidebar.js"></script>
+  <script src="../../assets/js/navigation.js"></script>
+  <script src="../../assets/js/themes.js"></script>
+</body>
+</html>

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>14 — Photoshop for Web | M's Web Development Guide</title>
+  <meta name="description" content="Web-optimized assets, GIF animation, and UI effects using Photoshop.">
+  <link rel="stylesheet" href="../../assets/css/main.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/themes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <div class="site-wrapper">
+    <header class="site-header">
+      <div class="site-title"><a href="../../index.html"><i class="fa-solid fa-house"></i> M's Web Development Guide</a></div>
+      <div class="header-controls">
+        <button data-sidebar-toggle class="sidebar-toggle" aria-label="Toggle table of contents">&#9776; TOC</button>
+        <button data-theme-toggle aria-label="Switch theme"><span class="icon">☾</span>Dark</button>
+      </div>
+    </header>
+
+    <aside class="sidebar" aria-label="Table of Contents">
+      <div id="sidebar-toc"></div>
+    </aside>
+
+    <main class="main-content" id="main">
+      <span class="chapter-number">Chapter 13</span>
+      <h1>Photoshop for Web</h1>
+      <p class="chapter-subtitle">Document setup, asset export, GIF animation, and realistic UI effects</p>
+
+      <p>Photoshop is no longer the primary tool for web UI design (Figma is), but you will still encounter PSD files from legacy projects, marketing teams, and specialized asset creation. This chapter covers the subset of Photoshop you need: setting up documents, exporting web-optimized assets, creating GIF animations, and producing realistic UI effects. The goal is self-sufficiency — open a PSD, extract what you need, produce web-ready output without asking a designer.</p>
+
+      <section>
+        <h2>Document Setup for Web</h2>
+        <p>For web mockups, create documents at 1x resolution (72 PPI) at common screen widths:</p>
+        <ul>
+          <li><strong>Desktop:</strong> 1440×900 or 1920×1080</li>
+          <li><strong>Tablet:</strong> 768×1024 or 1024×1366</li>
+          <li><strong>Mobile:</strong> 375×812 (iPhone) or 390×844 (modern Android)</li>
+        </ul>
+        <p>Use a 12-column grid (~60px columns with 20px gutters at 960px) — the standard used by Bootstrap, Tailwind, and most design systems. Set guides via <code>View → New Guide</code>.</p>
+
+        <h3>Layer Hygiene</h3>
+        <p>Well-organized PSDs follow the same principles as well-organized code:</p>
+        <ul>
+          <li>Name every layer — "Rectangle 1 copy 5" is useless</li>
+          <li>Group related layers into folders (Header, Hero, Footer)</li>
+          <li>Use Smart Objects for reusable elements — edit once, update everywhere</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Designing UI Mockups</h2>
+        <p>You do not need to be a designer to produce clean mockups. Focus on structure and spacing — visual flair is what CSS is for.</p>
+
+        <h3>Shape Layers for UI Elements</h3>
+        <p>Use shape layers (rectangle, rounded rectangle, ellipse) rather than selections or brushes. Shape layers are vector — they scale without quality loss and can be exported as SVG. Rounded corners for buttons: 4-8px for standard buttons, 20px+ for pill shapes.</p>
+
+        <h3>Component Libraries in Photoshop</h3>
+        <p>Design your UI as reusable components, just like you would in React. A button designed once should be copied (not redrawn) wherever it appears. If the button design changes, update the master and replace all instances. This is the Photoshop equivalent of DRY — and most designers do not do it, which is why design handoff is often messy.</p>
+
+        <h3>Layer Organization</h3>
+        <ul>
+          <li>Name every layer — "Rectangle 1 copy 5" is useless</li>
+          <li>Group related layers into folders (Header, Hero, Footer)</li>
+          <li>Use color labels for layer groups (red = UI, blue = images, green = text)</li>
+          <li>Use Smart Objects for reusable elements — edit once, update everywhere</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Exporting Web Assets</h2>
+        <p>A poorly exported asset degrades a site more than any CSS mistake. Use <code>File → Export → Export As</code> (not the legacy "Save for Web") — it supports modern formats and generates multiple sizes at once.</p>
+
+        <h3>Format Selection</h3>
+        <table>
+          <thead>
+            <tr><th>Use Case</th><th>Format</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Photos / gradients</td><td>JPG (quality 80-85)</td><td>No transparency. Start at 80% quality and reduce until unacceptable.</td></tr>
+            <tr><td>Screenshots / UI with transparency</td><td>PNG-24 → PNGQuant</td><td>Lossless transparency. PNGQuant reduces file size 60-80% with no visible loss.</td></tr>
+            <tr><td>Flat graphics / logos</td><td>SVG</td><td>Vector — infinite resolution, tiny file size. Export from the source file.</td></tr>
+            <tr><td>Animation</td><td>GIF (or video → WebM)</td><td>GIF is limited to 256 colors. For complex animation, use video formats.</td></tr>
+            <tr><td>Modern web images</td><td>WebP</td><td>20-30% smaller than JPG/PNG. Supported in all modern browsers.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Retina Export</h3>
+        <p>Export UI assets at 2x the display size and use CSS to display at 1x. A 100×40px button → export at 200×80px → set <code>width: 100px; height: 40px</code> in CSS. This produces sharp output on Retina displays.</p>
+
+        <div class="callout-tip">
+          <div class="callout-title">SVG Over PNG When Possible</div>
+          <p>SVG scales to any size without quality loss and produces tiny files for simple graphics. Logos, icons, and illustrations should always be SVG. Only use PNG when the asset contains photographic content or complex gradients.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Creating GIF Animations</h2>
+        <p>GIF animation in Photoshop works by cycling through slightly different frames. The key principle: <strong>inconsistency creates realism</strong>.</p>
+
+        <h3>Workflow</h3>
+        <ol>
+          <li><strong>Prepare.</strong> Duplicate the background layer and lock the original as a safety net.</li>
+          <li><strong>Isolate.</strong> Select the element to animate (Lasso or Quick Selection). Convert to its own layer (<code>Ctrl+J</code>).</li>
+          <li><strong>Open Timeline.</strong> <code>Window → Timeline</code> → "Create Frame Animation".</li>
+          <li><strong>Build frames (3-10).</strong> Duplicate the first frame. On each new frame, make tiny changes: nudge position 1-2px, vary opacity 60-100%, apply subtle Gaussian blur (0.3-0.8px) on some frames but not others.</li>
+          <li><strong>Set timing.</strong> Select all frames → set delay to 0.1 or 0.15 seconds. Vary timing between frames for uneven motion.</li>
+          <li><strong>Loop.</strong> Set to "Forever".</li>
+          <li><strong>Export.</strong> <code>File → Export → Save for Web (Legacy)</code> → GIF format. Reduce color palette to 128 or 64 colors for smaller file size.</li>
+        </ol>
+
+        <div class="callout-tip">
+          <div class="callout-title">Why Small Variations Matter</div>
+          <p>The human eye detects patterns. If a flame moves exactly 2px on every frame with perfect opacity, it looks mechanical. Real motion has randomness — slight timing differences, subtle blur changes, tiny position inconsistencies. The less uniform, the more natural.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Embossed Effects on Textures</h2>
+        <p>Making text or a logo look pressed into a surface (leather, paper, metal) is a common design request. The key insight: <strong>real embossing is surface deformation plus light coupling — not just shadow styling</strong>.</p>
+
+        <h3>Workflow</h3>
+        <ol>
+          <li><strong>Prepare.</strong> Place the logo/text above the background texture. Convert to Smart Object.</li>
+          <li><strong>Bevel & Emboss.</strong> Layer Style → Bevel & Emboss. Style: Inner Bevel. Direction: Down (for deboss). Depth: 150-300%. Highlight: Screen at 10-30% opacity. Shadow: Multiply with a dark tone matching the texture.</li>
+          <li><strong>Blend If.</strong> In the Layer Style panel, adjust the "Underlying Layer" sliders. Hold <code>Alt</code> to split sliders for a smooth gradient transition.</li>
+          <li><strong>Displace.</strong> <code>Filter → Displace</code> using a grayscale version of the texture as the map. This physically warps the logo to follow the texture's bumps — the single most important step for realism.</li>
+          <li><strong>Final polish.</strong> Gaussian blur (0.3-0.8px) to soften vector edges. Add noise (1-3%) to match grain. Reduce layer opacity to 70-90% so texture shows through.</li>
+        </ol>
+
+        <div class="callout-info">
+          <div class="callout-title">Why Most Embossing Looks Fake</div>
+          <p>Most designers stop at step 2 — Bevel & Emboss alone creates a sticker-on-top effect. Realism comes from steps 3-5: blending edges into the texture, physically warping to match surface irregularities, and matching noise/grain. Real pressed-in objects deform the surface around them.</p>
+        </div>
+      </section>
+
+      <div class="compare-box">
+        <div class="compare-col junior">
+          <div class="compare-label">Junior Developer</div>
+          <h4>How a Junior Might Think</h4>
+          <ul>
+            <li>Exports everything as massive PNGs at wrong resolution</li>
+            <li>No organized layer structure — cannot find anything in the PSD</li>
+            <li>Thinks Bevel & Emboss alone is "good enough" for embossing</li>
+            <li>Creates GIFs with uniform frame motion that looks mechanical</li>
+          </ul>
+        </div>
+        <div class="compare-col senior">
+          <div class="compare-label">Senior Developer</div>
+          <h4>How a Senior Thinks</h4>
+          <ul>
+            <li>Exports SVG for vectors, WebP for photos, 2x PNG for Retina UI</li>
+            <li>Maintains organized PSDs with named, grouped layers</li>
+            <li>Uses displacement maps, Blend If, and noise matching for realistic textures</li>
+            <li>Builds GIFs with deliberate frame-to-frame inconsistency for natural motion</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="cheatsheet">
+        <div class="cheatsheet-title">Cheat Sheet</div>
+        <table>
+          <thead>
+            <tr><th>Concept</th><th>Key Takeaway</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Document setup</td><td>72 PPI, 12-column grid, name every layer</td></tr>
+            <tr><td>Export formats</td><td>SVG for vectors, WebP for photos, JPG for gradients, PNG for transparency</td></tr>
+            <tr><td>Retina export</td><td>2x size in Photoshop, 1x size in CSS</td></tr>
+            <tr><td>GIF animation</td><td>3-10 frames, tiny variations, inconsistent timing for realism</td></tr>
+            <tr><td>Embossing</td><td>Bevel & Emboss + Blend If + Displace + Noise = realism</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="cheatsheet">
+        <div class="cheatsheet-title">Web Export Formats — Quick Reference</div>
+        <table>
+          <thead>
+            <tr><th>Format</th><th>Best For</th><th>Transparency</th><th>Compression</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>PNG-8</td><td>Logos, icons, flat graphics</td><td>Yes</td><td>Lossless</td></tr>
+            <tr><td>PNG-24</td><td>Screenshots, complex images with transparency</td><td>Yes</td><td>Lossless</td></tr>
+            <tr><td>JPG</td><td>Photographs, gradient-rich images</td><td>No</td><td>Lossy</td></tr>
+            <tr><td>GIF</td><td>Simple animations, low-color graphics</td><td>Yes</td><td>Lossless</td></tr>
+            <tr><td>SVG</td><td>Vector graphics, responsive icons</td><td>Yes</td><td>Lossless</td></tr>
+            <tr><td>WebP</td><td>Modern web images, both photo and graphic</td><td>Yes</td><td>Lossy or Lossless</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <nav class="chapter-nav">
+  <a href="12-figma.html"><span class="nav-label">Prev</span>Prev: Figma for Web</a>
+  <a href="14-backend-considerations.html"><span class="nav-label">Next</span>Next: Backend Considerations</a>
+</nav>
+    </main>
+  </div>
+
+  <script src="../../assets/js/sidebar.js"></script>
+  <script src="../../assets/js/navigation.js"></script>
+  <script src="../../assets/js/themes.js"></script>
+</body>
+</html>

@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>07 — React | M's Web Development Guide</title>
+  <meta name="description" content="Components, state, hooks, routing, and component-based UI architecture.">
+  <link rel="stylesheet" href="../../assets/css/main.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/themes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <div class="site-wrapper">
+    <header class="site-header">
+      <div class="site-title"><a href="../../index.html"><i class="fa-solid fa-house"></i> M's Web Development Guide</a></div>
+      <div class="header-controls">
+        <button data-sidebar-toggle class="sidebar-toggle" aria-label="Toggle table of contents">&#9776; TOC</button>
+        <button data-theme-toggle aria-label="Switch theme"><span class="icon">☾</span>Dark</button>
+      </div>
+    </header>
+
+    <aside class="sidebar" aria-label="Table of Contents">
+      <div id="sidebar-toc"></div>
+    </aside>
+
+    <main class="main-content" id="main">
+      <span class="chapter-number">Chapter 16</span>
+      <h1>React</h1>
+      <p class="chapter-subtitle">Components, state, hooks, routing, build toolchain, and component-based UI architecture</p>
+
+      <p>React is the most popular frontend library for building interactive UIs. It is not a framework — it is a library for rendering views. You add routing, data fetching, and state management separately. This modularity is both its strength (pick what you need) and its weakness (many choices to make). This chapter gives you the mental model to use React effectively.</p>
+
+      <section>
+        <h2>Why React?</h2>
+        <p>Before React, frontend code manipulated the DOM directly. When data changed, you found the relevant DOM element and updated it. This works for small apps but breaks at scale — keeping the DOM in sync with application state becomes a tangle of <code>document.getElementById</code> and manual updates.</p>
+        <p>React introduces <strong>declarative rendering</strong>: you describe what the UI should look like for a given state, and React handles the DOM updates automatically. This shifts mental effort from "how do I update the DOM?" to "what should the UI look like for this state?"</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Imperative (old) vs Declarative (React)</span></div>
+          <pre><code>// Imperative: manually update DOM
+const el = document.getElementById('counter');
+let count = 0;
+button.addEventListener('click', () => {
+  count++;
+  el.textContent = count;  // manual sync
+});
+
+// Declarative: describe UI for each state
+function Counter() {
+  const [count, setCount] = useState(0);
+  return &lt;button onClick={() => setCount(c => c + 1)}&gt;{count}&lt;/button&gt;;
+}
+// React syncs the DOM automatically</code></pre>
+        </div>
+        <p>The virtual DOM is the mechanism: React maintains a lightweight JavaScript representation of the DOM, computes the difference (diff) between renders, and applies only the minimal DOM updates needed. You never touch the DOM directly.</p>
+      </section>
+
+      <section>
+        <h2>Build Toolchain: Vite, Babel, and the Dev/Prod Divide</h2>
+        <p>React code does not run directly in the browser. JSX is not valid JavaScript, and modern ES features need transpilation for older browsers. Every React project requires a build step — this is non-negotiable. Understanding what happens between saving a file and seeing it in the browser is essential for debugging build errors and shipping performant code.</p>
+
+        <h3>Why a Build Step?</h3>
+        <p>Three things the build step handles:</p>
+        <ul>
+          <li><strong>JSX transformation</strong> — <code>&lt;div&gt;Hello&lt;/div&gt;</code> becomes <code>React.createElement('div', null, 'Hello')</code></li>
+          <li><strong>Module bundling</strong> — dozens of <code>import</code>/<code>export</code> statements across many files are merged into a single file (or a few optimized files) the browser can load</li>
+          <li><strong>Optimization</strong> — production builds are minified, tree-shaken, and cache-busted for performance</li>
+        </ul>
+
+        <h3>Vite</h3>
+        <p>Vite is the current standard build tool for React (replacing Create React App, which is deprecated). It uses two entirely different strategies for development and production — understanding this split is key.</p>
+
+        <h4>Development: Native ES Modules</h4>
+        <p>When you run <code>npm run dev</code>, Vite starts a dev server that serves your source files as native ES modules — no bundling at all. The browser fetches each module as a separate HTTP request. This means startup is near-instant regardless of project size, and hot module replacement (HMR) updates only the changed module without a full page reload, preserving component state.</p>
+
+        <h4>Production: Rollup</h4>
+        <p>For production (<code>npm run build</code>), Vite uses Rollup to bundle everything into optimized static assets: minified JavaScript, inlined or extracted CSS, and hashed filenames for cache busting. The same code served as individual modules in dev is now a lean production bundle.</p>
+
+        <h3>Babel</h3>
+        <p>Babel is a JavaScript compiler that transforms modern JS and JSX into code older browsers can run. In a Vite project, Babel is configured automatically via the <code>@vitejs/plugin-react</code> plugin. Its main jobs:</p>
+        <ul>
+          <li><strong>JSX → React.createElement</strong> — the core transformation that makes JSX work</li>
+          <li><strong>Modern JS → compatible JS</strong> — optional chaining (<code>?.</code>), nullish coalescing (<code>??</code>), arrow functions, etc. for older browsers</li>
+          <li><strong>React Refresh</strong> — preserves component state during HMR edits</li>
+        </ul>
+
+        <h3>Dev vs Production Builds</h3>
+        <div class="cheatsheet" style="margin-top:0.5em;">
+          <table>
+            <thead>
+              <tr><th>Aspect</th><th>Development</th><th>Production</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Command</td><td><code>npm run dev</code></td><td><code>npm run build</code></td></tr>
+              <tr><td>Bundling</td><td>None (native ES modules)</td><td>Rollup bundles into optimized files</td></tr>
+              <tr><td>Source maps</td><td>Full inline maps for debugging</td><td>External or omitted</td></tr>
+              <tr><td>Minification</td><td>None (readable output)</td><td>esbuild minifies (smaller, faster)</td></tr>
+              <tr><td>Tree shaking</td><td>None</td><td>Dead code elimination</td></tr>
+              <tr><td>HMR</td><td>Instant updates, preserves state</td><td>N/A — static files only</td></tr>
+              <tr><td>React warnings</td><td>Full (helpful dev warnings)</td><td>All dev warnings stripped</td></tr>
+              <tr><td>Output</td><td>Served from memory</td><td>Written to <code>dist/</code> folder</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Creating and building a React project with Vite</span></div>
+          <pre><code>npm create vite@latest my-app -- --template react
+cd my-app
+npm install
+npm run dev       # dev server at localhost:5173
+npm run build     # production build → dist/
+npm run preview   # preview production build locally</code></pre>
+        </div>
+
+        <h3>The Build Pipeline</h3>
+        <div class="decision-tree">Source files (.jsx, .js, .css)
+    ↓
+Vite Dev Server (dev) / Rollup (prod)
+    ↓
+Babel transforms JSX → JS
+    ↓
+PostCSS processes CSS (autoprefixer, etc.)
+    ↓
+esbuild minifies (prod only)
+    ↓
+Browser receives flat JS/CSS files</div>
+
+        <div class="callout-tip">
+          <div class="callout-title">You Do Not Need to Configure This</div>
+          <p>Vite + the React plugin is zero-config. Babel, PostCSS, and Rollup are pre-configured and invisible — you write code and run commands. But understanding what each piece does is the difference between an engineer who is blocked by a build error and one who reads the stack trace and knows exactly which tool is complaining.</p>
+        </div>
+
+        <div class="callout-warning">
+          <div class="callout-title"><code>dist/</code> Is What You Deploy</div>
+          <p>Everything in <code>dist/</code> after <code>npm run build</code> is a static file — HTML, CSS, JS, images. There is no Node.js server, no dynamic processing. The <code>dist/</code> folder contains the <strong>entire</strong> deployable artifact. Inspect it before deploying: open <code>dist/index.html</code> and verify it references the correct asset paths. If you use a CDN or subdirectory deployment, you may need to set Vite's <code>base</code> config so asset paths are correct. Deploying the wrong build (or forgetting to build) is the most common production mistake.</p>
+        </div>
+
+        <div class="callout-warning">
+          <div class="callout-title">Environment Variables: Build-Time vs Runtime</div>
+          <p>In Vite, environment variables prefixed with <code>VITE_</code> are <strong>inlined at build time</strong>. When you run <code>npm run build</code>, Vite reads <code>VITE_API_URL</code> from your shell or <code>.env</code> file and replaces every occurrence of <code>import.meta.env.VITE_API_URL</code> with its literal value in the bundled JavaScript. This means: (1) you must rebuild to change them, (2) they are visible in the client-side bundle (never put secrets in <code>VITE_</code> variables), and (3) what works in <code>npm run dev</code> may differ from production if your <code>.env</code> files are set up differently. Server-side env vars (Node.js <code>process.env</code>) are never exposed to the client.</p>
+        </div>
+
+        <div class="callout-warning">
+          <div class="callout-title">JSX Requires Closing Tags — &lt;/&gt; Is Not Optional</div>
+          <p>In JSX, every tag must close: <code>&lt;div&gt;...&lt;/div&gt;</code>, <code>&lt;img /&gt;</code> (self-closing), <code>&lt;Br /&gt;</code>. Unlike HTML, you cannot write <code>&lt;div&gt;&lt;/div&gt;</code> without the slash, or leave a <code>&lt;img&gt;</code> unclosed — JSX will throw a syntax error. The self-closing slash <code>/&gt;</code> is required for void elements in JSX (unlike optional in HTML). The error message will say something like "Unexpected token" pointing at where you forgot to close.</p>
+        </div>
+
+        <div class="callout-warning">
+          <div class="callout-title">className Instead of class — class Is a Reserved Word</div>
+          <p>HTML uses <code>class</code>, but JavaScript already uses <code>class</code> for ES6 classes. JSX uses <code>className</code> instead: <code>&lt;div className="container"&gt;</code>. The same applies to <code>for</code> on labels — use <code>htmlFor</code>. Get used to these differences: JSX maps HTML attributes to their JS-compatible names to avoid conflicts with JavaScript keywords.</p>
+        </div>
+
+        <div class="callout-warning">
+          <div class="callout-title">State Updates Are Async — The UI Doesn't Update Immediately</div>
+          <p>In React, calling <code>setCount(count + 1)</code> does not update <code>count</code> right away. It schedules an update — the component re-renders on the next paint. If you do <code>setCount(count + 1); console.log(count)</code>, you'll see the old value, not the new one. If you need the new value immediately, use the functional form: <code>setCount(c => c + 1)</code> or use <code>useEffect</code> with a dependency to act after the update.</p>
+        </div>
+
+        <div class="callout-warning">
+          <div class="callout-title">useEffect Runs Twice in Development — That's Normal</div>
+          <p>In React 18+ strict mode (which is on by default in dev), <code>useEffect</code> runs twice to help you find bugs. If your effect fetches data twice, that's a hint — you need cleanup or a check to prevent duplicate fetches. In production (non-strict mode), it runs once as expected. Don't be alarmed — this is a feature, not a bug. Add an abort controller or check if the component is mounted to handle this properly.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Components and JSX</h2>
+        <p>A component is a function that returns UI. JSX is the syntax extension that lets you write HTML-like markup inside JavaScript.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Basic React component</span></div>
+          <pre><code>function Greeting({ name, role }) {
+  return (
+    &lt;div className="greeting"&gt;
+      &lt;h1&gt;Hello, {name}!&lt;/h1&gt;
+      {role && &lt;p&gt;You are a {role}.&lt;/p&gt;}
+    &lt;/div&gt;
+  );
+}
+
+// Usage: &lt;Greeting name="Alice" role="admin" /&gt;</code></pre>
+        </div>
+
+        <p>Key JSX rules:</p>
+        <ul>
+          <li>Return a single root element (use <code>&lt;&gt;&lt;/&gt;</code> fragment if no wrapper needed)</li>
+          <li>Use <code>className</code> instead of <code>class</code> (because <code>class</code> is a JS keyword)</li>
+          <li>Close all tags — even <code>&lt;br /&gt;</code> and <code>&lt;img /&gt;</code></li>
+          <li>JavaScript expressions go inside <code>{}</code> — any valid JS expression works</li>
+          <li>Use curly braces for dynamic attributes: <code>src={imageUrl}</code></li>
+        </ul>
+
+        <h3>Component Composition</h3>
+        <p>Components are composable — a component can render other components. This is how you build complex UIs from small, reusable pieces:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Composing components</span></div>
+          <pre><code>function Page() {
+  return (
+    &lt;div&gt;
+      &lt;Header /&gt;
+      &lt;Main&gt;
+        &lt;Sidebar /&gt;
+        &lt;Content&gt;
+          &lt;Article /&gt;
+        &lt;/Content&gt;
+      &lt;/Main&gt;
+      &lt;Footer /&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+        </div>
+      </section>
+
+      <section>
+        <h2>State and Props</h2>
+        <p>These are the two core concepts in React. <strong>Props</strong> (properties) are inputs passed to a component. <strong>State</strong> is data that a component owns and can change. The distinction drives everything.</p>
+
+        <h3>Props Flow Down</h3>
+        <p>Data flows one way: parent passes props to child. A child cannot modify its props — they are read-only. If a child needs to communicate up, the parent passes a callback function as a prop.</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Props and callbacks</span></div>
+          <pre><code>function Parent() {
+  const [items, setItems] = useState([]);
+
+  const addItem = (item) => {
+    setItems(prev => [...prev, item]);
+  };
+
+  return (
+    &lt;&gt;
+      &lt;ItemList items={items} /&gt;
+      &lt;AddItemForm onAdd={addItem} /&gt;
+    &lt;/&gt;
+  );
+}
+
+function AddItemForm({ onAdd }) {
+  const [text, setText] = useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onAdd(text);  // calls parent's addItem
+    setText('');
+  };
+
+  return (
+    &lt;form onSubmit={handleSubmit}&gt;
+      &lt;input value={text} onChange={e => setText(e.target.value)} /&gt;
+      &lt;button type="submit"&gt;Add&lt;/button&gt;
+    &lt;/form&gt;
+  );
+}</code></pre>
+        </div>
+
+        <h3>Lifting State Up</h3>
+        <p>When two components need to share state, move that state to their nearest common ancestor and pass it down as props. This is called "lifting state up" — it is the primary state management pattern in React. Do not reach for a state management library (Redux, Zustand) until lifting state up becomes genuinely painful (prop drilling through 5+ levels).</p>
+      </section>
+
+      <section>
+        <h2>Hooks Deep Dive</h2>
+        <p>Hooks are functions that let you "hook into" React features from function components. Before hooks (React &lt; 16.8), state and lifecycle were only available in class components. Hooks simplified everything.</p>
+
+        <h3>useState</h3>
+        <p>Declares a state variable. Returns an array: current value and setter function.</p>
+
+        <h3>useEffect</h3>
+        <p>Runs side effects after render. The dependency array controls when it re-runs:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>useEffect patterns</span></div>
+          <pre><code>// Runs once on mount (empty deps)
+useEffect(() => {
+  fetch('/api/data').then(r => r.json()).then(setData);
+}, []);
+
+// Runs when `userId` changes
+useEffect(() => {
+  fetchUser(userId).then(setUser);
+}, [userId]);
+
+// Cleanup function (runs on unmount or before re-run)
+useEffect(() => {
+  const subscription = api.subscribe(id, handleUpdate);
+  return () => subscription.unsubscribe();  // cleanup
+}, [id]);</code></pre>
+        </div>
+
+        <h3>Custom Hooks</h3>
+        <p>The most powerful pattern: extract reusable logic into your own hooks. A custom hook is a function that calls other hooks:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Custom hook for data fetching</span></div>
+          <pre><code>function useFetch(url) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+
+    fetch(url)
+      .then(r => r.json())
+      .then(d => { if (!cancelled) setData(d); })
+      .catch(e => { if (!cancelled) setError(e); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+
+    return () => { cancelled = true; };
+  }, [url]);
+
+  return { data, loading, error };
+}
+
+// Usage in any component:
+function UserProfile({ userId }) {
+  const { data, loading, error } = useFetch(`/api/users/${userId}`);
+  if (loading) return &lt;Spinner /&gt;;
+  if (error) return &lt;Error message={error} /&gt;;
+  return &lt;Profile user={data} /&gt;;
+}</code></pre>
+        </div>
+
+        <div class="callout-info">
+          <div class="callout-title">Rules of Hooks</div>
+          <p>Two rules, non-negotiable: (1) Only call hooks at the top level — not inside loops, conditions, or nested functions. (2) Only call hooks from React function components or custom hooks. These rules ensure that hooks are called in the same order on every render, which is how React maintains state between renders.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>React Router</h2>
+        <p>React is a view library — it does not include routing. React Router is the de facto standard for adding client-side navigation to React apps.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>React Router v6 setup</span></div>
+          <pre><code>import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+
+function App() {
+  return (
+    &lt;BrowserRouter&gt;
+      &lt;nav&gt;
+        &lt;Link to="/"&gt;Home&lt;/Link&gt;
+        &lt;Link to="/about"&gt;About&lt;/Link&gt;
+        &lt;Link to="/contact"&gt;Contact&lt;/Link&gt;
+      &lt;/nav&gt;
+
+      &lt;Routes&gt;
+        &lt;Route path="/" element={&lt;Home /&gt;} /&gt;
+        &lt;Route path="/about" element={&lt;About /&gt;} /&gt;
+        &lt;Route path="/contact" element={&lt;Contact /&gt;} /&gt;
+        &lt;Route path="*" element={&lt;NotFound /&gt;} /&gt;
+      &lt;/Routes&gt;
+    &lt;/BrowserRouter&gt;
+  );
+}</code></pre>
+        </div>
+
+        <p><code>&lt;Link&gt;</code> renders an anchor tag that intercepts clicks and navigates without a full page reload. <code>&lt;Routes&gt;</code> matches the current URL to a route and renders the corresponding element. The <code>*</code> catch-all route handles 404s.</p>
+      </section>
+
+      <section>
+        <h2>SPA Architecture with React</h2>
+        <p>React naturally lends itself to SPAs: load once, navigate without full page reloads. But SPAs come with tradeoffs that must be managed.</p>
+
+        <h3>Performance: Code Splitting</h3>
+        <p>Without code splitting, the entire app bundles into one large JavaScript file. With React.lazy and Suspense, you load components only when needed:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Code splitting with React.lazy</span></div>
+          <pre><code>import { lazy, Suspense } from 'react';
+
+const Dashboard = lazy(() => import('./Dashboard'));
+const Settings = lazy(() => import('./Settings'));
+
+function App() {
+  return (
+    &lt;Suspense fallback={&lt;Spinner /&gt;}&gt;
+      &lt;Routes&gt;
+        &lt;Route path="/dashboard" element={&lt;Dashboard /&gt;} /&gt;
+        &lt;Route path="/settings" element={&lt;Settings /&gt;} /&gt;
+      &lt;/Routes&gt;
+    &lt;/Suspense&gt;
+  );
+}</code></pre>
+        </div>
+
+        <h3>SEO Challenge</h3>
+        <p>SPAs render content in the browser. Search engine crawlers may not execute JavaScript, leading to empty pages being indexed. Solutions:</p>
+        <ul>
+          <li><strong>Server-side rendering (SSR)</strong> — React renders on the server first, sending HTML to the browser. Next.js is the standard SSR framework for React.</li>
+          <li><strong>Static site generation (SSG)</strong> — pre-render pages at build time. Best for content-driven sites (blogs, marketing pages).</li>
+          <li><strong>Hybrid</strong> — SSG for static pages, client-side rendering for authenticated/dynamic pages.</li>
+        </ul>
+        <p>For most projects, the choice is not "React vs vanilla" but "React with what rendering strategy?" Use Create React App or Vite for SPAs (client-side only). Use Next.js or Remix when you need SSR or SSG.</p>
+      </section>
+
+      <div class="compare-box">
+        <div class="compare-col junior">
+          <div class="compare-label">Junior Developer</div>
+          <h4>How a Junior Might Think</h4>
+          <ul>
+            <li>Puts all logic in one giant component</li>
+            <li>Overuses useState for derived/computed data</li>
+            <li>Forgets cleanup functions in useEffect (memory leaks)</li>
+            <li>Prop drilling through 10 levels without question</li>
+            <li>Reaches for Redux on day one for a todo app</li>
+            <li>Does not understand when re-renders happen</li>
+            <li>Does not know what Vite or Babel do — runs commands blindly</li>
+            <li>Pushes dev code to production without understanding the dev/prod difference</li>
+          </ul>
+        </div>
+        <div class="compare-col senior">
+          <div class="compare-label">Senior Developer</div>
+          <h4>How a Senior Thinks</h4>
+          <ul>
+            <li>Breaks UI into small components with clear responsibilities</li>
+            <li>Extracts custom hooks for reusable logic</li>
+            <li>Always cleans up subscriptions and intervals</li>
+            <li>Lifts state up to the appropriate level, uses composition to avoid drilling</li>
+            <li>Chooses state management based on actual complexity</li>
+            <li>Memoizes with useMemo/useCallback only when there is a measured problem</li>
+            <li>Understands the build toolchain — can read a build error and know which tool failed</li>
+            <li>Knows the dev/prod difference and tests production builds before deploying</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="cheatsheet">
+        <div class="cheatsheet-title">Cheat Sheet</div>
+        <table>
+          <thead>
+            <tr><th>Hook</th><th>Purpose</th><th>Common Pitfall</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>useState</code></td><td>Local state variable</td><td>Use the functional updater <code>setCount(c => c + 1)</code> for derived state</td></tr>
+            <tr><td><code>useEffect</code></td><td>Side effects after render</td><td>Missing deps cause stale closures. Include all deps or use eslint-plugin-react-hooks.</td></tr>
+            <tr><td><code>useRef</code></td><td>Mutable value that persists across renders</td><td>Changing ref.current does not trigger re-render. Use for DOM refs, intervals, previous values.</td></tr>
+            <tr><td><code>useCallback</code></td><td>Memoize a function</td><td>Only useful when passed to memoized child components. Do not wrap everything.</td></tr>
+            <tr><td><code>useMemo</code></td><td>Memoize a computed value</td><td>Only for expensive computations. Not a semantic signal — use it when profiler says to.</td></tr>
+            <tr><td><code>useReducer</code></td><td>Complex state with multiple transitions</td><td>Overkill for a single boolean or counter. Use when state logic spans 5+ cases.</td></tr>
+          </tbody>
+        </table>
+        <table style="margin-top:1em;">
+          <thead>
+            <tr><th>Tool</th><th>Role</th><th>Key Detail</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Vite</td><td>Dev server + build tool</td><td>Native ES modules in dev, Rollup bundling in prod. Zero-config for React.</td></tr>
+            <tr><td>Babel</td><td>JS/JSX compiler</td><td>Transforms JSX to <code>React.createElement</code>. Also compiles modern JS for older browsers.</td></tr>
+            <tr><td>esbuild</td><td>Minifier (prod only)</td><td>Extremely fast. Runs after bundling to shrink output.</td></tr>
+            <tr><td>PostCSS</td><td>CSS processor</td><td>Autoprefixer, CSS nesting, imports. Pre-configured in Vite.</td></tr>
+            <tr><td><code>dist/</code></td><td>Production output folder</td><td>Contents are what you deploy to hosting. Inspect it to verify your build.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <nav class="chapter-nav">
+        <a href="15-php.html"><span class="nav-label">Prev</span>Prev: PHP</a>
+        <a href="17-api-design.html"><span class="nav-label">Next</span>Next: API Design &amp; REST</a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../../assets/js/sidebar.js"></script>
+  <script src="../../assets/js/navigation.js"></script>
+  <script src="../../assets/js/themes.js"></script>
+</body>
+</html>

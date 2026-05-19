@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>14 — Security by Design | M's Web Development Guide</title>
+  <meta name="description" content="XSS, CSRF, SQL injection, HTTPS, CSP, rate limiting — security isn't an afterthought.">
+  <link rel="stylesheet" href="../../assets/css/main.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/themes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <div class="site-wrapper">
+    <header class="site-header">
+      <div class="site-title"><a href="../../index.html"><i class="fa-solid fa-house"></i> M's Web Development Guide</a></div>
+      <div class="header-controls">
+        <button data-sidebar-toggle class="sidebar-toggle" aria-label="Toggle table of contents">&#9776; TOC</button>
+        <button data-theme-toggle aria-label="Switch theme"><span class="icon">☾</span>Dark</button>
+      </div>
+    </header>
+
+    <aside class="sidebar" aria-label="Table of Contents">
+      <div id="sidebar-toc"></div>
+    </aside>
+
+    <main class="main-content" id="main">
+      <span class="chapter-number">Chapter 18</span>
+      <h1>Security by Design</h1>
+      <p class="chapter-subtitle">XSS, CSRF, SQL injection, HTTPS, CSP, rate limiting — security isn't an afterthought</p>
+
+      <p>Security is not a feature you bolt on at the end. Every line of code you write either adds or removes attack surface. This chapter gives you the mental model to think about security from the start: <strong>assume every input is malicious, every connection is intercepted, and every user is an attacker until proven otherwise.</strong></p>
+
+      <section>
+        <h2>The Security Mindset</h2>
+        <p>Before we talk about specific attacks, establish the principles that guide every security decision:</p>
+        <ul>
+          <li><strong>Defense in depth</strong> — never rely on a single security layer. If your firewall fails, your input validation should still catch the attack. If your validation fails, your parameterized queries should still prevent injection. Layers overlap so no single failure is catastrophic.</li>
+          <li><strong>Least privilege</strong> — every component, user, and process should have only the permissions it needs. A database user that only reads public articles should not have DELETE access. An API key that only sends emails should not have access to user data.</li>
+          <li><strong>Never trust user input</strong> — treat every byte from the network as hostile. This includes URL parameters, headers, cookies, file uploads, JSON bodies, and even seemingly safe data like User-Agent strings.</li>
+          <li><strong>Fail securely</strong> — when something goes wrong, the system should default to a locked state, not an open one. An unhandled error should deny access, not grant it.</li>
+          <li><strong>Security is not privacy</strong> — security prevents unauthorized access. Privacy is about how you handle data you are authorized to collect. You need both, but they require different thinking.</li>
+        </ul>
+        <div class="callout-info">
+          <div class="callout-title">Why This Matters</div>
+          <p>The adversarial mindset is not pessimism — it is realism. Every public web server is scanned by automated bots within hours of going live. Within days, it will be probed for SQL injection, directory traversal, XSS vectors, and known CVE exploits. Security is not paranoia. It is <em>seeing the environment as it actually is</em>.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Input Validation</h2>
+        <p>Every feature that accepts input is an attack surface. The question is not "is this input safe?" but "how is this input dangerous, and how do I make it safe?"</p>
+
+        <h3>Validation vs Sanitization</h3>
+        <p>These are different operations with different goals:</p>
+        <table>
+          <thead>
+            <tr><th>Concept</th><th>What it does</th><th>Example</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Validation</strong></td><td>Rejects input that does not match expected format</td><td>An email field must contain @ and a domain. If it does not, reject the request with an error.</td></tr>
+            <tr><td><strong>Sanitization</strong></td><td>Removes or escapes dangerous parts of input</td><td>Stripping <code>&lt;script&gt;</code> tags from a rich text field before storing it</td></tr>
+          </tbody>
+        </table>
+        <p><strong>Use validation when you can define exact expected formats. Use sanitization when you must accept flexible input.</strong> Validation is always preferred because it is stricter and has no edge cases. Sanitization is a fallback for when you genuinely need to accept free-form content.</p>
+
+        <h3>Whitelist vs Blacklist</h3>
+        <p><strong>Whitelist</strong> (allowlist): define what is allowed, reject everything else. <strong>Blacklist</strong> (blocklist): define what is forbidden, allow everything else. Always prefer whitelisting for security. Blacklists can never be complete — attackers will always find something you did not think to block.</p>
+        <div class="decision-tree">Good: "Only allow alphanumeric characters, @, ., and -" → Bad: "Block <, >, ', \x22, --, and other known bad patterns"</div>
+
+        <h3>File Upload Security</h3>
+        <p>File uploads are one of the most exploited surfaces. An attacker can upload a PHP file disguised as an image and execute it on your server if you are not careful.</p>
+        <ul>
+          <li>Validate the file extension against a whitelist (not by checking Content-Type header — that is trivially spoofed)</li>
+          <li>Validate the file content by reading magic bytes, not by trusting the extension or MIME type</li>
+          <li>Store uploaded files outside the web root or use a CDN with restricted execution</li>
+          <li>Rename files on upload to prevent path traversal and name collision attacks</li>
+          <li>Scan files for malware if your application is high-risk</li>
+        </ul>
+        <div class="code-block">
+          <div class="code-block-header"><span>PHP — safe file upload validation</span></div>
+          <pre><code>&lt;?php
+$allowed_extensions = ['jpg', 'png', 'gif', 'webp'];
+$allowed_mime = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+
+$ext = strtolower(pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION));
+$mime = mime_content_type($_FILES['file']['tmp_name']);
+
+if (!in_array($ext, $allowed_extensions)) {
+    die('Invalid file type.');
+}
+if (!in_array($mime, $allowed_mime)) {
+    die('File content does not match allowed types.');
+}
+
+// Rename and move
+$safe_name = bin2hex(random_bytes(16)) . '.' . $ext;
+move_uploaded_file($_FILES['file']['tmp_name'], 'uploads/' . $safe_name);</code></pre>
+        </div>
+        <p>Notice: the extension is checked, the actual content is verified via <code>mime_content_type()</code>, and the stored name is randomized. Even if an attacker uploads a file containing PHP code, it will never execute because it is stored with a <code>.jpg</code> extension and served as static content.</p>
+
+        <div class="callout-warning">
+          <div class="callout-title">Never Trust Frontend Validation</div>
+          <p>Client-side validation is for user convenience, not security. Every validation check you perform in the browser can be bypassed by any moderately skilled attacker — by disabling JavaScript, editing the DOM, or sending raw HTTP requests with curl. Always re-validate everything on the server side. Treat the frontend as untrusted by default.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Cross-Site Scripting (XSS)</h2>
+        <p>XSS is the most common web vulnerability. It occurs when an attacker injects executable code (usually JavaScript) into a page that other users view. There are three types, and you need to understand all of them because each requires a different prevention strategy.</p>
+
+        <h3>Stored XSS (Persistent)</h3>
+        <p>The attacker submits malicious code that gets stored on the server (in a database, comment field, profile bio, etc.) and served to every visitor. This is the most dangerous type because it affects many users without direct attacker interaction.</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Vulnerable: Stored XSS in a comment system</span></div>
+          <pre><code>&lt;!-- User submits: &lt;script&gt;fetch('/steal-cookies')&lt;/script&gt; --&gt;
+&lt;div class="comment"&gt;
+  &lt;?= $_POST['comment'] ?&gt;  &lt;!-- Outputs raw JS into page --&gt;
+&lt;/div&gt;</code></pre>
+        </div>
+
+        <h3>Reflected XSS (Non-persistent)</h3>
+        <p>The injected code is part of the request (typically a URL parameter) and is reflected back in the response immediately. The attacker must trick the victim into clicking a crafted link. While less damaging than stored XSS, it is extremely common in search pages and error handlers.</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Vulnerable: Reflected XSS in a search page</span></div>
+          <pre><code>&lt;!-- URL: /search?q=&lt;script&gt;alert('xss')&lt;/script&gt; --&gt;
+&lt;p&gt;Search results for: &lt;?= $_GET['q'] ?&gt;&lt;/p&gt;</code></pre>
+        </div>
+
+        <h3>DOM-based XSS</h3>
+        <p>The vulnerability exists entirely in client-side JavaScript. The server response is safe, but the JS reads attacker-controlled data from the URL hash or <code>document.referrer</code> and writes it into the DOM unsafely.</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Vulnerable: DOM-based XSS</span></div>
+          <pre><code>// URL: /page#&lt;img onerror="alert(1)" src=x&gt;
+const hash = location.hash.slice(1);
+document.getElementById('output').innerHTML = hash; // DANGEROUS</code></pre>
+        </div>
+        <div class="code-block">
+          <div class="code-block-header"><span>Safe alternative</span></div>
+          <pre><code>const hash = location.hash.slice(1);
+document.getElementById('output').textContent = hash; // SAFE — no HTML parsing</code></pre>
+        </div>
+
+        <h3>XSS Prevention Summary</h3>
+        <table>
+          <thead>
+            <tr><th>Context</th><th>Dangerous API / Pattern</th><th>Safe Alternative</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>HTML body</td><td><code>innerHTML</code>, <code>outerHTML</code>, <code>document.write()</code></td><td><code>textContent</code>, <code>createTextNode()</code></td></tr>
+            <tr><td>HTML attribute</td><td>String concatenation in <code>setAttribute()</code> or template literals</td><td><code>setAttribute()</code> with validated values, <code>dataset</code> API</td></tr>
+            <tr><td>URL context</td><td><code>javascript:</code> URLs in <code>a.href</code> or <code>location</code></td><td>Validate protocol is <code>https?</code> before assigning</td></tr>
+            <tr><td>CSS context</td><td><code>style</code> attribute with user input</td><td>Use CSS classes, never raw style strings from user data</td></tr>
+            <tr><td>Server-side template</td><td>Unescaped output (<code>&lt;?= $var ?&gt;</code> in PHP without escaping)</td><td>Context-aware escaping: <code>htmlspecialchars()</code>, template engine auto-escaping</td></tr>
+          </tbody>
+        </table>
+
+        <div class="callout-info">
+          <div class="callout-title">Why This Works</div>
+          <p>The most effective XSS prevention is Content Security Policy (covered below) combined with never using <code>innerHTML</code> with user-controlled data. CSP acts as a safety net: even if you accidentally introduce an XSS bug, the browser blocks script execution if the policy is strict enough. This is defense in depth at the browser level.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>CSRF Protection</h2>
+        <p>Cross-Site Request Forgery (CSRF) tricks an authenticated user into performing actions they did not intend. The attacker crafts a malicious page that, when visited by a logged-in user, submits a request to your application using the user's existing session cookie.</p>
+
+        <h3>How CSRF Works</h3>
+        <div class="decision-tree" style="white-space:normal;overflow:visible;">
+          <svg viewBox="0 0 730 450" style="width:100%;max-width:700px;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="arrow17" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="var(--color-accent, #2563eb)"/></marker>
+              <marker id="arrow17bad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#e94560"/></marker>
+            </defs>
+            <rect x="2" y="2" width="726" height="426" rx="8" fill="none" stroke="var(--color-border, #d4d0ca)" stroke-width="1"/>
+            <text x="350" y="20" text-anchor="middle" font-size="15" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">CSRF Attack Flow</text>
+
+            <rect x="60" y="30" width="170" height="40" rx="6" fill="var(--color-accent, #2563eb)" opacity="0.1" stroke="var(--color-accent, #2563eb)" stroke-width="1"/>
+            <text x="145" y="48" text-anchor="middle" font-size="14" font-family="sans-serif" fill="var(--color-text, #1a1a1a)" font-weight="bold">User logs into bank.com</text>
+            <text x="145" y="62" text-anchor="middle" font-size="12" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">→ session cookie set</text>
+
+            <line x1="230" y1="50" x2="260" y2="50" stroke="var(--color-accent, #2563eb)" stroke-width="1.5" marker-end="url(#arrow17)"/>
+
+            <rect x="260" y="30" width="190" height="40" rx="6" fill="var(--color-accent, #2563eb)" opacity="0.1" stroke="var(--color-accent, #2563eb)" stroke-width="1"/>
+            <text x="355" y="48" text-anchor="middle" font-size="14" font-family="sans-serif" fill="var(--color-text, #1a1a1a)" font-weight="bold">User visits attacker's site</text>
+            <text x="355" y="62" text-anchor="middle" font-size="12" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">attacker.com</text>
+
+            <line x1="450" y1="50" x2="480" y2="50" stroke="var(--color-accent, #2563eb)" stroke-width="1.5" marker-end="url(#arrow17)"/>
+
+            <rect x="480" y="30" width="170" height="40" rx="6" fill="#e94560" opacity="0.1" stroke="#e94560" stroke-width="1"/>
+            <text x="565" y="48" text-anchor="middle" font-size="14" font-family="sans-serif" fill="var(--color-text, #1a1a1a)" font-weight="bold">Hidden form submitted</text>
+            <text x="565" y="62" text-anchor="middle" font-size="12" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">POST bank.com/transfer</text>
+
+            <path d="M 565,70 L 565,95 L 615,95 L 615,135" stroke="#e94560" stroke-width="1.5" fill="none" marker-end="url(#arrow17bad)"/>
+
+            <rect x="530" y="135" width="170" height="40" rx="6" fill="#e94560" opacity="0.1" stroke="#e94560" stroke-width="1"/>
+            <text x="615" y="150" text-anchor="middle" font-size="14" font-family="sans-serif" fill="var(--color-text, #1a1a1a)" font-weight="bold">Cookie auto-attached!</text>
+            <text x="615" y="170" text-anchor="middle" font-size="12" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">browser includes it</text>
+
+            <line x1="615" y1="180" x2="615" y2="220" stroke="#e94560" stroke-width="1.5" marker-end="url(#arrow17bad)"/>
+
+            <rect x="500" y="220" width="225" height="40" rx="6" fill="#e94560" opacity="0.15" stroke="#e94560" stroke-width="1.5"/>
+            <text x="615" y="240" text-anchor="middle" font-size="14" font-family="sans-serif" fill="var(--color-text, #1a1a1a)" font-weight="bold">Server accepts request</text>
+            <text x="615" y="255" text-anchor="middle" font-size="12" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">valid session → transfer executed</text>
+
+            <line x1="480" y1="250" x2="305" y2="250" stroke="#e94560" stroke-width="1.5" stroke-dasharray="6,3"/>
+            <text x="400" y="245" text-anchor="middle" font-size="13" font-family="sans-serif" fill="var(--color-text-muted, #666)">server cannot tell the difference</text>
+
+            <rect x="240" y="312" width="220" height="36" rx="18" fill="#22c55e" opacity="0.12" stroke="#22c55e" stroke-width="1.5"/>
+            <text x="350" y="335" text-anchor="middle" font-size="14" font-family="sans-serif" fill="var(--color-text, #1a1a1a)" font-weight="bold">Anti-CSRF token prevents this</text>
+
+            <line x1="350" y1="350" x2="350" y2="380" stroke="#22c55e" stroke-width="1.5" marker-end="url(#arrow17)"/>
+            <rect x="130" y="380" width="440" height="24" rx="4" fill="var(--color-accent, #2563eb)" opacity="0.06"/>
+            <text x="350" y="400" text-anchor="middle" font-size="13" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">Attacker's hidden form has no CSRF token → server rejects</text>
+          </svg>
+        </div>
+        <p>The key insight: the browser automatically attaches cookies to requests regardless of where the request originated. The server cannot distinguish between a legitimate request from the real site and a forged request from an attacker's page — <em>unless we add an anti-CSRF mechanism</em>.</p>
+
+        <h3>Anti-CSRF Token (Synchronizer Token Pattern)</h3>
+        <p>The server generates a random token, associates it with the user's session, and includes it in every form. When the form is submitted, the server verifies the token matches. The attacker's site cannot read this token because of the same-origin policy.</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>PHP — CSRF token generation and validation</span></div>
+          <pre><code>&lt;?php
+session_start();
+
+// Generate token if not exists
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+// In form:
+// &lt;input type="hidden" name="csrf_token" value="&lt;?= $_SESSION['csrf_token'] ?&gt;"&gt;
+
+// On submission:
+if (!hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'] ?? '')) {
+    die('CSRF token validation failed.');
+}</code></pre>
+        </div>
+        <p>Use <code>hash_equals()</code> (or <code>timingSafeEqual</code> in Node) for comparison — it prevents timing attacks by taking the same amount of time regardless of how many characters match.</p>
+
+        <h3>SameSite Cookies</h3>
+        <p>Modern browsers support the <code>SameSite</code> cookie attribute, which is the simplest CSRF defense:</p>
+        <ul>
+          <li><code>SameSite=Strict</code> — cookie is never sent for cross-site requests. Most secure, but breaks legitimate cross-site links (e.g., a link from an email to your site)</li>
+          <li><code>SameSite=Lax</code> — cookie is sent for top-level GET navigations (links from other sites work), but not for POST requests from other origins. This is the modern default and covers most CSRF scenarios.</li>
+          <li><code>SameSite=None</code> — cookie is sent for all requests. Requires <code>Secure</code> flag (HTTPS only). Only use when you explicitly need cross-site cookie access.</li>
+        </ul>
+        <p><strong>Best practice:</strong> Use <code>SameSite=Lax</code> as your default and add CSRF tokens for sensitive forms as a second layer.</p>
+
+        <h3>Origin and Referer Header Checks</h3>
+        <p>A simpler but less reliable defense: verify the <code>Origin</code> or <code>Referer</code> header matches your domain. This works because those headers are not set by cross-site form submissions from <code>&lt;form&gt;</code> elements in the same way. However, these headers can be missing or spoofed in some scenarios, so they are best used as a secondary check.</p>
+      </section>
+
+      <section>
+        <h2>SQL Injection Prevention</h2>
+        <p>SQL injection is the easiest vulnerability to prevent and one of the most devastating when missed. An attacker can read, modify, or delete your entire database through a single unescaped query string.</p>
+
+        <h3>The Vulnerability</h3>
+        <p>When you concatenate user input directly into a SQL query, you give the attacker control over the query structure:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Vulnerable: String concatenation</span></div>
+          <pre><code>&lt;?php
+$id = $_GET['id'];
+$sql = "SELECT * FROM users WHERE id = $id"; // Attacker sets id=1;DROP TABLE users;
+$result = mysqli_query($conn, $sql);</code></pre>
+        </div>
+        <p>If <code>id=1;DROP TABLE users;--</code>, the query becomes: <code>SELECT * FROM users WHERE id = 1; DROP TABLE users; --</code>. The <code>--</code> comments out the rest of the query.</p>
+
+        <h3>Parameterized Queries (Prepared Statements)</h3>
+        <p>The only reliable prevention. The query structure is sent to the database first, and user input is bound as data — never as part of the SQL syntax.</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Safe: Parameterized query (PHP PDO)</span></div>
+          <pre><code>&lt;?php
+$stmt = $pdo->prepare('SELECT * FROM users WHERE id = :id');
+$stmt->execute(['id' => $_GET['id']]);
+$user = $stmt->fetch();</code></pre>
+        </div>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Safe: Parameterized query (Node.js with mysql2)</span></div>
+          <pre><code>const [rows] = await connection.execute(
+  'SELECT * FROM users WHERE id = ?',
+  [req.query.id]
+);</code></pre>
+        </div>
+        <p>The database receives the query structure and the data separately. Even if the user passes <code>1; DROP TABLE users</code>, it is treated as a string value for <code>id</code>, not as SQL syntax.</p>
+
+        <div class="callout-warning">
+          <div class="callout-title">Escaping Is Not Enough</div>
+          <p>Functions like <code>mysqli_real_escape_string()</code> escape certain characters, but they can still be bypassed depending on the database charset and query context. The only safe approach is parameterized queries. Escaping is a band-aid. Prepared statements are the cure.</p>
+        </div>
+
+        <h3>ORM Protection</h3>
+        <p>Modern ORMs (Eloquent, Prisma, Doctrine, Sequelize) use parameterized queries internally, but you can still bypass them with raw query methods. Always use the ORM's query builder instead of raw SQL when possible:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Safe: ORM query (Prisma)</span></div>
+          <pre><code>const user = await prisma.user.findUnique({
+  where: { id: req.params.id }  // Prisma parameterizes this internally
+});</code></pre>
+        </div>
+      </section>
+
+      <section>
+        <h2>Authentication Security</h2>
+        <p>Authentication is the most security-critical feature you will build. A single mistake here compromises every user's account.</p>
+
+        <h3>Password Hashing</h3>
+        <p>Never store passwords in plain text. Never use MD5, SHA-1, or even plain SHA-256 for passwords. These are hash functions designed for speed — and speed is the enemy of password storage because it lets attackers try billions of combinations per second.</p>
+        <p>Use a purpose-built password hashing algorithm:</p>
+        <table>
+          <thead>
+            <tr><th>Algorithm</th><th>Use Case</th><th>PHP</th><th>Node.js</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>bcrypt</strong></td><td>Default choice for most apps</td><td><code>password_hash()</code></td><td><code>bcrypt</code> package</td></tr>
+            <tr><td><strong>Argon2id</strong></td><td>Strongest option (PHP 7.2+, Node 16+)</td><td><code>PASSWORD_ARGON2ID</code></td><td><code>argon2</code> package</td></tr>
+          </tbody>
+        </table>
+        <div class="code-block">
+          <div class="code-block-header"><span>PHP — password hashing (automatic salt, variable cost)</span></div>
+          <pre><code>&lt;?php
+// Hashing
+$hash = password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
+
+// Verification
+if (password_verify($input_password, $hash)) {
+    // Login successful
+}</code></pre>
+        </div>
+        <p>The <code>password_hash()</code> function handles salting automatically — never manually generate or store salts. The cost factor (12) controls how many computation rounds are used. Increase it over time as hardware gets faster.</p>
+
+        <h3>Session Management</h3>
+        <ul>
+          <li>Use server-side sessions, not client-side (JWT is fine, but JWTs stored in localStorage cannot be invalidated server-side — you lose control)</li>
+          <li>Regenerate the session ID after login to prevent session fixation</li>
+          <li>Set session timeout and absolute expiry (e.g., 30 minutes inactivity, 24 hours absolute)</li>
+          <li>Use secure, httpOnly, SameSite cookies for session tokens</li>
+          <li>Store session data server-side (Redis, database, or filesystem), not in the cookie itself</li>
+        </ul>
+        <div class="code-block">
+          <div class="code-block-header"><span>PHP — secure session configuration</span></div>
+          <pre><code>&lt;?php
+session_set_cookie_params([
+    'lifetime' => 0, // Until browser closes
+    'path' => '/',
+    'domain' => 'yourdomain.com',
+    'secure' => true,     // HTTPS only
+    'httponly' => true,   // Inaccessible to JavaScript
+    'samesite' => 'Lax'
+]);
+session_start();
+
+// Regenerate after login
+session_regenerate_id(true);</code></pre>
+        </div>
+      </section>
+
+      <section>
+        <h2>HTTPS and Security Headers</h2>
+        <p>HTTPS is non-negotiable in 2026. Every site — including personal blogs and prototypes — should use HTTPS. Browsers now mark HTTP sites as "Not Secure" and some APIs (geolocation, camera, notifications) require HTTPS to work at all.</p>
+
+        <h3>TLS Configuration</h3>
+        <p>With Cloudflare, Let's Encrypt, and most hosting platforms, TLS is free and automatic. If you are configuring it manually:</p>
+        <ul>
+          <li>Use TLS 1.2 and 1.3 only (disable TLS 1.0, 1.1, and SSL 2.0/3.0)</li>
+          <li>Use modern cipher suites (ECDHE + AES-GCM or ChaCha20)</li>
+          <li>Set HSTS (HTTP Strict Transport Security) to tell browsers to always use HTTPS</li>
+          <li>Use a tool like <a href="https://www.ssllabs.com/ssltest/" target="_blank">SSL Labs</a> to verify your configuration</li>
+        </ul>
+
+        <h3>Security Headers Reference</h3>
+        <p>These six headers provide massive security improvements for almost zero effort:</p>
+        <table>
+          <thead>
+            <tr><th>Header</th><th>Value</th><th>What It Prevents</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Content-Security-Policy</strong></td><td><code>default-src 'self'</code></td><td>XSS and data injection — restricts which resources can be loaded and executed</td></tr>
+            <tr><td><strong>Strict-Transport-Security</strong></td><td><code>max-age=31536000; includeSubDomains</code></td><td>SSL stripping and downgrade attacks — forces HTTPS for one year</td></tr>
+            <tr><td><strong>X-Content-Type-Options</strong></td><td><code>nosniff</code></td><td>MIME-type sniffing — prevents browser from interpreting files as a different type than declared</td></tr>
+            <tr><td><strong>X-Frame-Options</strong></td><td><code>DENY</code></td><td>Clickjacking — prevents your site from being embedded in iframes on other domains</td></tr>
+            <tr><td><strong>Referrer-Policy</strong></td><td><code>strict-origin-when-cross-origin</code></td><td>Information leakage — controls what referrer data is sent with requests</td></tr>
+            <tr><td><strong>Permissions-Policy</strong></td><td><code>camera=(), microphone=(), geolocation=()</code></td><td>Feature restriction — disables browser features your site does not need</td></tr>
+          </tbody>
+        </table>
+        <div class="code-block">
+          <div class="code-block-header"><span>Complete security headers configuration</span></div>
+          <pre><code># Cloudflare Pages _headers file
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https:; connect-src 'self' https:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()</code></pre>
+        </div>
+        <p>The CSP shown here is a reasonable starting point: scripts and styles only from your own domain, images from your domain or any HTTPS source, connections only to your domain and HTTPS APIs, and inline styles allowed (needed for many frameworks). Tighten it further by removing <code>'unsafe-inline'</code> if your CSS is all in external files.</p>
+
+        <div class="callout-info">
+          <div class="callout-title">CSP Reporting</div>
+          <p>CSP supports a <code>report-uri</code> or <code>report-to</code> directive that sends violation reports to an endpoint. Deploy with <code>Content-Security-Policy-Report-Only</code> first to catch violations without blocking them, then switch to enforcement once you have tuned the policy.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>API Security</h2>
+        <p>APIs are the backbone of modern web applications. If your frontend communicates with a backend API, that API needs its own security layer.</p>
+
+        <h3>Rate Limiting</h3>
+        <p>Rate limiting prevents a single client from overwhelming your server, whether through a DoS attack, brute force login attempt, or just a buggy client sending infinite retries.</p>
+        <ul>
+          <li><strong>IP-based</strong> — simplest but can block legit users behind a shared IP (office, college, VPN)</li>
+          <li><strong>User-based</strong> — keyed to the authenticated user (more accurate but requires auth)</li>
+          <li><strong>Endpoint-based</strong> — different limits for different endpoints (login: 5/min, read: 100/min, write: 20/min)</li>
+          <li><strong>Global</strong> — total request cap per client across all endpoints</li>
+        </ul>
+        <div class="code-block">
+          <div class="code-block-header"><span>PHP — simple IP-based rate limiting with Redis</span></div>
+          <pre><code>&lt;?php
+$ip = $_SERVER['REMOTE_ADDR'];
+$key = "rate_limit:$ip:" . date('YmdH'); // Per hour
+$current = $redis->incr($key);
+if ($current > 1000) {
+    http_response_code(429);
+    die('Rate limit exceeded.');
+}</code></pre>
+        </div>
+        <p>Return HTTP 429 (Too Many Requests) with a <code>Retry-After</code> header so the client knows when to retry.</p>
+
+        <h3>CORS (Cross-Origin Resource Sharing)</h3>
+        <p>CORS is a browser mechanism — it does not actually block requests at the HTTP level. A properly configured server restricts which origins can access its resources:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>PHP — strict CORS headers</span></div>
+          <pre><code>&lt;?php
+$allowed_origins = ['https://mysite.com', 'https://www.mysite.com'];
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+
+if (in_array($origin, $allowed_origins)) {
+    header("Access-Control-Allow-Origin: $origin");
+    header("Access-Control-Allow-Methods: GET, POST");
+    header("Access-Control-Allow-Headers: Content-Type, Authorization");
+    header("Access-Control-Max-Age: 86400");
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(204);
+    exit;
+}</code></pre>
+        </div>
+        <p>Never use <code>Access-Control-Allow-Origin: *</code> for authenticated endpoints. Only whitelist specific origins.</p>
+
+        <h3>API Keys</h3>
+        <ul>
+          <li>Treat API keys as passwords — store them hashed (if you do not need to retrieve the raw value) or encrypted</li>
+          <li>Never expose API keys in client-side code. Use a backend proxy if the frontend needs to call a third-party API</li>
+          <li>Rotate keys periodically and allow key revocation</li>
+          <li>Scope keys to specific permissions (read-only, write, admin) rather than using a single master key</li>
+          <li>Monitor key usage for anomalies</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Bot Protection with Cloudflare Turnstile</h2>
+        <p>CAPTCHAs have evolved from distorted text (annoying) to image selection (less annoying) to invisible challenges. Cloudflare Turnstile is the current best option: it runs a non-interactive browser check (JS challenge, canvas fingerprinting, behavior analysis) and typically requires zero user interaction.</p>
+
+        <h3>Turnstile vs Alternatives</h3>
+        <table>
+          <thead>
+            <tr><th>Solution</th><th>User Experience</th><th>Privacy</th><th>Cost</th><th>Setup</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Turnstile (Cloudflare)</td><td>Invisible — no interaction</td><td>No data collection for training</td><td>Free up to 1M checks/mo</td><td>Widget + server verify</td></tr>
+            <tr><td>reCAPTCHA v2 (Google)</td><td>Click "I am not a robot"</td><td>Google collects interaction data</td><td>Free</td><td>Widget + server verify</td></tr>
+            <tr><td>reCAPTCHA v3 (Google)</td><td>Invisible — score-based</td><td>Google collects all page interaction</td><td>Free</td><td>Score threshold + server verify</td></tr>
+            <tr><td>hCaptcha</td><td>Image selection</td><td>Less data collection than Google</td><td>Free / paid plans</td><td>Widget + server verify</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Turnstile Integration</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span>Frontend: Turnstile widget (SPA-compatible)</span></div>
+          <pre><code>&lt;!-- Load the API --&gt;
+&lt;script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer&gt;&lt;/script&gt;
+
+&lt;!-- Widget container --&gt;
+&lt;div id="turnstile-widget"&gt;&lt;/div&gt;</code></pre>
+        </div>
+        <div class="code-block">
+          <div class="code-block-header"><span>JavaScript: Render widget and capture token</span></div>
+          <pre><code>window.onloadTurnstileCallback = function () {
+  turnstile.render('#turnstile-widget', {
+    sitekey: 'YOUR_SITE_KEY',
+    callback: function(token) {
+      // Token is valid — include in form submission
+      document.getElementById('cf-token').value = token;
+    }
+  });
+};</code></pre>
+        </div>
+        <div class="code-block">
+          <div class="code-block-header"><span>PHP: Server-side verification</span></div>
+          <pre><code>&lt;?php
+$turnstile_secret = 'YOUR_SECRET_KEY';
+$token = $_POST['cf-turnstile-response'] ?? '';
+
+$ch = curl_init('https://challenges.cloudflare.com/turnstile/v0/siteverify');
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
+    'secret' => $turnstile_secret,
+    'response' => $token,
+    'remoteip' => $_SERVER['REMOTE_ADDR']
+]));
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+$response = json_decode(curl_exec($ch), true);
+curl_close($ch);
+
+if (!$response['success']) {
+    die('Bot verification failed.');
+}</code></pre>
+        </div>
+
+        <div class="callout-warning">
+          <div class="callout-title">SPA Token Lifecycle</div>
+          <p>In an SPA, the Turnstile token is generated once when the page loads. If your token expires before the user submits a long form, you need to call <code>turnstile.reset()</code> and regenerate it. Alternatively, call <code>turnstile.getResponse()</code> just before submission to get a fresh token. Always verify the token server-side — never trust client-side validation alone.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Security Checklist</h2>
+        <p>Before deploying any application, go through this checklist:</p>
+        <table>
+          <thead>
+            <tr><th>Category</th><th>Check</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>HTTPS</td><td>Enforce HTTPS at the server/edge level. Redirect all HTTP traffic. Set HSTS.</td></tr>
+            <tr><td>Headers</td><td>CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy configured</td></tr>
+            <tr><td>Authentication</td><td>Passwords hashed with bcrypt or Argon2id. Sessions use secure httpOnly SameSite cookies. Session IDs regenerated after login.</td></tr>
+            <tr><td>Input</td><td>All input validated server-side. Parameterized queries for all database operations. File uploads validated by extension AND content.</td></tr>
+            <tr><td>Output</td><td>All user-supplied data contextually escaped on output (HTML, JS, URL, CSS contexts). CSP in enforcement mode.</td></tr>
+            <tr><td>API</td><td>Rate limiting active. CORS restricted to specific origins. API keys scoped and rotatable.</td></tr>
+            <tr><td>Bot protection</td><td>Turnstile or equivalent on forms. Rate limiting on login and signup endpoints.</td></tr>
+            <tr><td>Dependencies</td><td>All third-party packages audited and updated. No known CVEs. SRI hashes on external scripts.</td></tr>
+            <tr><td>Backup</td><td>Automated database backups. Off-site backup storage. Tested restore process.</td></tr>
+            <tr><td>Logging</td><td>Suspicious activity logged. Login attempts (success and failure) logged. No sensitive data in logs.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <div class="callout-info">
+        <div class="callout-title">Security Is a Process, Not a Product</div>
+        <p>This checklist is a starting point, not a final destination. Security posture evolves as new vulnerabilities are discovered, new tools are built, and your application grows. Revisit your security configuration every quarter. Subscribe to security advisories for your dependencies. And never assume you are "done" with security.</p>
+      </div>
+
+      <div class="compare-box">
+        <div class="compare-col junior">
+          <div class="compare-label">Junior Developer</div>
+          <h4>How a Junior Thinks</h4>
+          <ul>
+            <li>Adds security at the end, if there is time</li>
+            <li>Relies on frontend validation as a security measure</li>
+            <li>Uses string concatenation in SQL because "it works on my machine"</li>
+            <li>Ignores security headers because the site "looks fine"</li>
+            <li>Stores passwords with SHA-256 because "it's secure, right?"</li>
+            <li>Thinks HTTPS is only for e-commerce and banking</li>
+            <li>Deploys without checking once for security misconfigurations</li>
+          </ul>
+        </div>
+        <div class="compare-col senior">
+          <div class="compare-label">Senior Developer</div>
+          <h4>How a Senior Thinks</h4>
+          <ul>
+            <li>Bakes security into every architectural decision from day one</li>
+            <li>Treats the frontend as completely untrusted</li>
+            <li>Uses parameterized queries or ORM as the only option — no exceptions</li>
+            <li>Configures CSP, HSTS, and other headers before the first deploy</li>
+            <li>Uses bcrypt or Argon2id and understands what cost factor means</li>
+            <li>Enforces HTTPS at the infrastructure level, not the application level</li>
+            <li>Runs through a security checklist before every production release</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="cheatsheet">
+        <div class="cheatsheet-title">Security Cheat Sheet</div>
+        <table>
+          <thead>
+            <tr><th>Threat</th><th>Prevention</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>XSS</td><td>Output encoding for context, Content-Security-Policy header, never innerHTML with user data</td></tr>
+            <tr><td>CSRF</td><td>Anti-CSRF tokens (synchronizer pattern), SameSite=Lax cookies, Origin header verification</td></tr>
+            <tr><td>SQL Injection</td><td>Parameterized queries exclusively — never string concatenation in SQL</td></tr>
+            <tr><td>Password theft</td><td>bcrypt or Argon2id hashing, never MD5/SHA-1/SHA-256, automatic salting</td></tr>
+            <tr><td>Session hijacking</td><td>Secure httpOnly SameSite cookies, session regeneration after login, short timeouts</td></tr>
+            <tr><td>MITM / Eavesdropping</td><td>HTTPS enforced, HSTS header, secure cookies only over TLS</td></tr>
+            <tr><td>Clickjacking</td><td>X-Frame-Options: DENY or frame-ancestors in CSP</td></tr>
+            <tr><td>Brute force / Abuse</td><td>Rate limiting (IP + user + endpoint), Turnstile CAPTCHA, WAF rules</td></tr>
+            <tr><td>File upload attack</td><td>Whitelist extension + verify content magic bytes, rename on save, store outside webroot</td></tr>
+            <tr><td>Dependency exploit</td><td>Regular audits (npm audit, composer audit), lockfiles, SRI on external scripts</td></tr>
+            <tr><td>Data breach</td><td>Least privilege, encryption at rest, no sensitive data in logs, regular backups</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <nav class="chapter-nav">
+        <a href="17-api-design.html"><span class="nav-label">Prev</span>Prev: API Design &amp; REST</a>
+        <a href="19-deployment.html"><span class="nav-label">Next</span>Next: Deployment</a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../../assets/js/sidebar.js"></script>
+  <script src="../../assets/js/navigation.js"></script>
+  <script src="../../assets/js/themes.js"></script>
+</body>
+</html>

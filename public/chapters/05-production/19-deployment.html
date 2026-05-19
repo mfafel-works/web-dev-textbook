@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>17 — Deployment | M's Web Development Guide</title>
+  <meta name="description" content="From static sites to full-stack apps — Cloudflare Pages, VPS, Docker, AWS, and choosing the right platform.">
+  <link rel="stylesheet" href="../../assets/css/main.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/themes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <div class="site-wrapper">
+    <header class="site-header">
+      <div class="site-title"><a href="../../index.html"><i class="fa-solid fa-house"></i> M's Web Development Guide</a></div>
+      <div class="header-controls">
+        <button data-sidebar-toggle class="sidebar-toggle" aria-label="Toggle table of contents">&#9776; TOC</button>
+        <button data-theme-toggle aria-label="Switch theme"><span class="icon">☾</span>Dark</button>
+      </div>
+    </header>
+
+    <aside class="sidebar" aria-label="Table of Contents">
+      <div id="sidebar-toc"></div>
+    </aside>
+
+    <main class="main-content" id="main">
+      <span class="chapter-number">Chapter 19</span>
+      <h1>Deployment</h1>
+      <p class="chapter-subtitle">From static sites to full-stack apps — Cloudflare Pages, VPS, Docker, AWS, and decision framework</p>
+
+      <p>Deployment is how your code becomes a live website. The right platform depends on your project type, traffic expectations, team size, and budget. This chapter covers the full spectrum — from zero-cost static hosting to production-grade infrastructure — with a decision framework to choose the right option.</p>
+
+      <section>
+        <h2>Choosing the Right Platform</h2>
+        <div class="decision-tree">Static site or SPA?
+├── Yes → Git-based host (Cloudflare Pages, Vercel, Netlify)
+└── No → Server-side app?
+    ├── Small traffic, PHP/MySQL? → Shared hosting or cheap VPS
+    ├── Need reproducible environments? → Docker on VPS
+    ├── Growing traffic, need scaling? → PaaS or cloud
+    └── Enterprise / compliance? → AWS, GCP, Azure</div>
+        <p>The cheapest option is almost always the right starting point. You can migrate later if you grow. Most projects never need to.</p>
+        <div class="callout-info">
+          <div class="callout-title">The Migration Path</div>
+          <p>Start with Cloudflare Pages (free) for any static or SPA project. When you need a backend, add a serverless function or a cheap VPS. As traffic grows, containerize with Docker. Only reach for AWS/GCP/Azure when you need managed services (RDS, ElastiCache) or have a team that demands them. Each step up the ladder adds complexity — don't climb unless you have to.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Cloudflare Pages (Recommended for Static Sites)</h2>
+        <p>Cloudflare Pages is a Git-integrated static site host that builds on every push and deploys to Cloudflare's global edge network. It is free, fast, and handles HTTPS, CDN, and DDoS protection automatically.</p>
+
+        <h3>Setup</h3>
+        <ol>
+          <li>Push your code to GitHub, GitLab, or Bitbucket</li>
+          <li>In Cloudflare, go to Pages → "Connect to Git" → authorize and select your repo</li>
+          <li>Set build command (empty for plain HTML) and output directory</li>
+          <li>Deploy — your site is live at <code>your-project.pages.dev</code></li>
+        </ol>
+        <p>Subsequent pushes trigger automatic redeploys. Pull requests get preview deployments for testing before merging.</p>
+
+        <h3>Custom Domains and HTTPS</h3>
+        <ol>
+          <li>In Cloudflare Pages → Custom Domains → "Set up a custom domain"</li>
+          <li>Update nameservers at your domain registrar to Cloudflare's</li>
+          <li>Cloudflare provisions and auto-renews a free SSL/TLS certificate — no manual certificate management</li>
+        </ol>
+
+        <h3>CDN and Caching</h3>
+        <p>Cloudflare's CDN caches assets at 330+ data centers. Cache behavior is controlled by a <code>_headers</code> file:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>_headers — Cache rules</span></div>
+          <pre><code>/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+/
+  Cache-Control: public, max-age=0, must-revalidate
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate</code></pre>
+        </div>
+
+        <h3>Security Headers via _headers</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span>_headers — Security</span></div>
+          <pre><code>/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Referrer-Policy: strict-origin-when-cross-origin</code></pre>
+        </div>
+
+        <h3>Turnstile (Bot Protection)</h3>
+        <p>Cloudflare Turnstile is a privacy-focused CAPTCHA alternative — users pass invisibly or with one click. Get your site key and secret key from the Cloudflare dashboard, add the widget to your form, and verify the token server-side via <code>/siteverify</code>.</p>
+        <p>Turnstile supports three modes: <strong>non-interactive</strong> (invisible check, passes most visitors), <strong>managed</strong> (shows a challenge only if the visitor is suspicious), and <strong>invisible</strong> (fully invisible, calls your callback). Start with non-interactive — it balances security and user experience without adding friction.</p>
+
+        <h3>Workers (Edge Functions)</h3>
+        <p>Workers run JavaScript at Cloudflare's edge — serverless functions that execute on every request with no cold starts. Use them for API proxying, A/B testing, JWT validation, or geolocation-based content. Free tier: 100,000 requests/day.</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Basic Worker — A/B test</span></div>
+          <pre><code>export default {
+  async fetch(request) {
+    const url = new URL(request.url);
+    const cookie = request.headers.get('Cookie');
+
+    if (cookie && cookie.includes('variant=b')) {
+      url.pathname = '/b' + url.pathname;
+    }
+    return fetch(url);
+  }
+}</code></pre>
+        </div>
+      </section>
+
+      <section>
+        <h2>VPS (DigitalOcean, Linode, Hetzner)</h2>
+        <p>A VPS gives you full control — root access, any software, any configuration. You manage the OS, web server, firewall, database, and deployment pipeline.</p>
+        <ol>
+          <li>Create a droplet (Ubuntu, cheapest plan, enable SSH key auth)</li>
+          <li>SSH in: <code>ssh root@your-server-ip</code></li>
+          <li>Install Nginx: <code>apt install nginx</code></li>
+          <li>Set up firewall: allow ports 22, 80, 443 only</li>
+          <li>Deploy code via rsync, scp, or Git hooks</li>
+          <li>Configure HTTPS with Certbot: <code>certbot --nginx</code> (free Let's Encrypt)</li>
+        </ol>
+        <p>Choose VPS when you need full control or a non-standard stack. The tradeoff: you are now the sysadmin — updates, backups, and monitoring are your responsibility.</p>
+      </section>
+
+      <section>
+        <h2>Docker and Containerization</h2>
+        <p>Docker packages your app and its dependencies into a container that runs identically everywhere — eliminating "it works on my machine."</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Dockerfile for a static site</span></div>
+          <pre><code>FROM nginx:alpine
+COPY public/ /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80</code></pre>
+        </div>
+        <div class="code-block">
+          <div class="code-block-header"><span>docker-compose.yml — app + database</span></div>
+          <pre><code>version: '3'
+services:
+  app:
+    build: .
+    ports:
+      - "80:80"
+    depends_on:
+      - db
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: myapp
+      POSTGRES_PASSWORD: securepass
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+volumes:
+  pgdata:</code></pre>
+        </div>
+        <p>Docker shines in teams — every developer and every deployment target runs the same container. No version mismatches, no OS differences.</p>
+
+        <h3>Multi-Stage Builds</h3>
+        <p>Multi-stage builds keep production images small by separating build dependencies from runtime dependencies:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Multi-stage Dockerfile for a Node.js app</span></div>
+          <pre><code># Stage 1: Install ALL dependencies and build
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+# Stage 2: Production image — only what's needed
+FROM node:20-alpine
+WORKDIR /app
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./
+EXPOSE 3000
+CMD ["node", "dist/server.js"]</code></pre>
+        </div>
+        <p>The production image contains only the compiled output and runtime dependencies — no build tools, no source code. Typical reduction: 1.2GB → 150MB.</p>
+
+        <div class="callout-tip">
+          <div class="callout-title">Docker Best Practices</div>
+          <p>Use specific image tags (<code>node:20-alpine</code> not <code>node:latest</code>) for reproducible builds. Add a <code>HEALTHCHECK</code> instruction so orchestrators know when your container is ready. Use <code>.dockerignore</code> to exclude <code>node_modules</code> and build artifacts. Never store secrets in images — use environment variables at runtime.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Traditional Hosting (cPanel, FTP)</h2>
+        <p>Shared hosting is still common for PHP/MySQL projects. You get a control panel, one-click CMS installs, and email — but limited performance and no SSH access.</p>
+        <ul>
+          <li><strong>Pros:</strong> Cheap ($3-15/mo), no sysadmin work</li>
+          <li><strong>Cons:</strong> Shared resources, no Docker, limited Node.js/Python</li>
+          <li><strong>Best for:</strong> Small PHP/WordPress sites, client projects where you won't maintain the server</li>
+        </ul>
+        <p>Use SFTP (not plain FTP) for encrypted transfers, and keep a local Git repo even if you cannot run Git on the server.</p>
+      </section>
+
+      <section>
+        <h2>AWS and Cloud Providers</h2>
+        <p>AWS, Google Cloud, and Azure offer every service imaginable — with significant complexity and cost-management challenges.</p>
+        <table>
+          <thead>
+            <tr><th>Service</th><th>Use For</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>S3 + CloudFront</td><td>Static/SPA hosting with CDN</td></tr>
+            <tr><td>EC2</td><td>Virtual servers (like VPS but managed)</td></tr>
+            <tr><td>Lambda</td><td>Serverless functions</td></tr>
+            <tr><td>RDS</td><td>Managed databases (Postgres, MySQL)</td></tr>
+          </tbody>
+        </table>
+        <p><strong>Warning:</strong> Set billing alerts from day one. Use the pricing calculator before provisioning anything. Cloud cost surprises are the most common cloud provider complaint.</p>
+      </section>
+
+      <section>
+        <h2>CI/CD Pipelines</h2>
+        <p>Continuous Integration and Continuous Deployment automate the steps between pushing code and having it live. Every deploy should go through the same pipeline — no manual steps, no "it worked on my machine."</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>GitHub Actions — Deploy to Cloudflare Pages</span></div>
+          <pre><code>name: Deploy
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          command: pages deploy dist/ --project-name=my-app</code></pre>
+        </div>
+        <p>Key pipeline principles:</p>
+        <ul>
+          <li><strong>Fail fast</strong> — run linting and tests before building. If tests fail, the pipeline stops immediately.</li>
+          <li><strong>Artifact immutability</strong> — build once, promote the same artifact through environments (dev → staging → prod). Never rebuild for production.</li>
+          <li><strong>Environment parity</strong> — use the same Docker image in development, CI, and production. Differences between environments are the #1 source of deployment bugs.</li>
+          <li><strong>Preview deployments</strong> — each PR gets a unique URL for testing before merging. Cloudflare Pages and Vercel do this automatically.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Nginx as a Reverse Proxy</h2>
+        <p>When running a VPS, Nginx sits in front of your application server, handling SSL termination, static file serving, and request routing.</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Nginx reverse proxy config</span></div>
+          <pre><code>server {
+    listen 80;
+    server_name example.com www.example.com;
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name example.com;
+
+    ssl_certificate /etc/letsencrypt/live/example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+
+    # Proxy API requests to the Node.js app
+    location /api/ {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    # Serve static files directly
+    location / {
+        root /var/www/myapp/dist;
+        try_files $uri $uri/ /index.html;  # SPA fallback
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+}</code></pre>
+        </div>
+        <p>Nginx handles static file serving (much faster than Node.js/Python), buffers slow clients, and provides a security layer before requests reach your application. The SPA fallback (<code>try_files ... /index.html</code>) is critical — without it, refreshing any non-root route returns a 404.</p>
+
+        <div class="callout-warning">
+          <div class="callout-title">Always Redirect HTTP to HTTPS</div>
+          <p>The <code>return 301</code> block at the top redirects all HTTP traffic to HTTPS. Never serve your app over plain HTTP — every request (including passwords, API keys, session cookies) travels in cleartext. Let's Encrypt provides free certificates that auto-renew via Certbot.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Zero-Downtime Deployment</h2>
+        <p>Zero-downtime deployment ensures users never see an error page during a deploy. Two common strategies:</p>
+        <div class="cheatsheet" style="margin-top:0.5em;">
+          <table>
+            <thead>
+              <tr><th>Strategy</th><th>How It Works</th><th>Complexity</th><th>Best For</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>Blue-Green</strong></td><td>Run two identical environments. Deploy to the inactive one, then swap the load balancer.</td><td>Medium</td><td>Production apps where downtime costs money</td></tr>
+              <tr><td><strong>Canary</strong></td><td>Route a small % of traffic to the new version, gradually increase as confidence grows.</td><td>High</td><td>High-traffic apps where bugs affect many users</td></tr>
+              <tr><td><strong>Rolling</strong></td><td>Update servers one at a time while the rest serve traffic.</td><td>Low</td><td>Containerized apps on Kubernetes / Nomad</td></tr>
+              <tr><td><strong>Symlink Swap</strong></td><td>Build new version to a timestamped directory, swap a symlink, reload Nginx.</td><td>Low</td><td>VPS with Nginx (simple and effective)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="code-block">
+          <div class="code-block-header"><span>Symlink swap deployment script</span></div>
+          <pre><code>#!/bin/bash
+# deploy.sh — zero-downtime via symlink swap
+TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+DEPLOY_DIR="/var/www/myapp/releases/$TIMESTAMP"
+CURRENT_LINK="/var/www/myapp/current"
+
+# Build the new release
+mkdir -p "$DEPLOY_DIR"
+git clone git@github.com:user/myapp.git "$DEPLOY_DIR"
+cd "$DEPLOY_DIR"
+npm ci && npm run build
+
+# Swap the symlink and reload
+ln -sfn "$DEPLOY_DIR" "$CURRENT_LINK"
+nginx -s reload
+
+# Remove old releases (keep last 3)
+ls -t /var/www/myapp/releases/ | tail -n +4 | \
+  xargs -I {} rm -rf "/var/www/myapp/releases/{}"</code></pre>
+        </div>
+        <p>The symlink swap is atomic — either users see the old version or the new one, never a half-deployed state. If the new version fails, swap the symlink back instantly.</p>
+      </section>
+
+      <section>
+        <h2>Feature Flags and Rollbacks</h2>
+        <p>Deployment is not just about getting code to production — it is about managing risk when things go wrong.</p>
+        <ul>
+          <li><strong>Feature flags</strong> — Ship code behind a toggle. Turn it on for internal users first, then 1% of traffic, then ramp up. If something breaks, flip the toggle off without redeploying.</li>
+          <li><strong>Rollbacks</strong> — Every deployment platform supports rollback to a previous version. On Cloudflare Pages, click "Rollback" in the deployment dashboard. On a VPS, keep the previous build directory and swap the symlink back.</li>
+          <li><strong>Incremental deploy</strong> — Deploy to a staging or canary environment first. Run smoke tests. Then promote to production. This catches environment-specific issues before they affect users.</li>
+        </ul>
+
+        <div class="callout-warning">
+          <div class="callout-title">Always Have a Rollback Plan</div>
+          <p>Every deployment is a risk. Before deploying, know exactly how to undo it. If your platform supports one-click rollback (Cloudflare Pages, Vercel), great. If not, script it: keep the last three builds, symlink the active one, and keep the symlink in version control. A deploy without a rollback plan is not a deploy — it is a gamble.</p>
+        </div>
+      </section>
+
+      <div class="cheatsheet" style="margin-top:1em;">
+        <div class="cheatsheet-title">Cloudflare Free Tier Reference</div>
+        <table>
+          <thead>
+            <tr><th>Feature</th><th>Free Tier</th><th>Use Case</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Pages</td><td>500 builds/month</td><td>Static site hosting with Git deploy</td></tr>
+            <tr><td>Workers</td><td>100k req/day</td><td>Serverless edge functions</td></tr>
+            <tr><td>Turnstile</td><td>Unlimited</td><td>Bot detection without CAPTCHA</td></tr>
+            <tr><td>DNS</td><td>Unlimited</td><td>Domain resolution with proxy</td></tr>
+            <tr><td>CDN</td><td>Unlimited bandwidth</td><td>Global asset delivery (330+ data centers)</td></tr>
+            <tr><td>SSL</td><td>Unlimited</td><td>Auto-renewing TLS certificates</td></tr>
+            <tr><td>DDoS</td><td>Always-on</td><td>Layer 3/4/7 attack mitigation</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="compare-box">
+        <div class="compare-col junior">
+          <div class="compare-label">Junior Developer</div>
+          <h4>How a Junior Deploys</h4>
+          <ul>
+            <li>Uploads files via FTP to a shared host — no version control, no rollback</li>
+            <li>Picks the first hosting provider from a Google search</li>
+            <li>No CDN, no HTTPS configuration, no build pipeline</li>
+            <li>Does not understand the tradeoff between control and complexity</li>
+          </ul>
+        </div>
+        <div class="compare-col senior">
+          <div class="compare-label">Senior Developer</div>
+          <h4>How a Senior Deploys</h4>
+          <ul>
+            <li>Evaluates platforms against project constraints (budget, traffic, team)</li>
+            <li>Sets up Git-integrated deployment with automatic rollbacks</li>
+            <li>Configures CDN caching, security headers, HTTPS, and preview deployments</li>
+            <li>Uses feature flags and incremental rollout to de-risk releases</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="cheatsheet">
+        <div class="cheatsheet-title">Platform Comparison</div>
+        <table>
+          <thead>
+            <tr><th>Platform</th><th>Best For</th><th>Effort</th><th>Cost</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Cloudflare Pages</td><td>Static sites, SPAs</td><td>Low</td><td>Free</td></tr>
+            <tr><td>VPS (DO/Linode)</td><td>Full control, any stack</td><td>High</td><td>$5-20/mo</td></tr>
+            <tr><td>Docker + VPS</td><td>Reproducible environments</td><td>Medium</td><td>$5-20/mo</td></tr>
+            <tr><td>cPanel hosting</td><td>PHP/MySQL, non-technical</td><td>Low</td><td>$3-15/mo</td></tr>
+            <tr><td>AWS S3+CloudFront</td><td>Static + CDN at scale</td><td>Medium</td><td>Pay-as-you-go</td></tr>
+            <tr><td>AWS EC2/RDS</td><td>Enterprise full stack</td><td>High</td><td>Pay-as-you-go</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <nav class="chapter-nav">
+        <a href="18-security-by-design.html"><span class="nav-label">Prev</span>Prev: Security by Design</a>
+        <a href="20-performance.html"><span class="nav-label">Next</span>Next: Performance</a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../../assets/js/sidebar.js"></script>
+  <script src="../../assets/js/navigation.js"></script>
+  <script src="../../assets/js/themes.js"></script>
+</body>
+</html>

@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>13 — Architecture Blueprints | M's Web Development Guide</title>
+  <meta name="description" content="The 4-layer model, architecture patterns, and decision trees for choosing the right system design.">
+  <link rel="stylesheet" href="../../assets/css/main.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/themes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <div class="site-wrapper">
+    <header class="site-header">
+      <div class="site-title"><a href="../../index.html"><i class="fa-solid fa-house"></i> M's Web Development Guide</a></div>
+      <div class="header-controls">
+        <button data-sidebar-toggle class="sidebar-toggle" aria-label="Toggle table of contents">&#9776; TOC</button>
+        <button data-theme-toggle aria-label="Switch theme"><span class="icon">☾</span>Dark</button>
+      </div>
+    </header>
+
+    <aside class="sidebar" aria-label="Table of Contents">
+      <div id="sidebar-toc"></div>
+    </aside>
+
+    <main class="main-content" id="main">
+      <span class="chapter-number">Chapter 21</span>
+      <h1>Architecture Blueprints</h1>
+      <p class="chapter-subtitle">The 4-layer model, architecture patterns, and decision trees for choosing the right system design</p>
+
+      <p>Architecture is about making decisions before you write code. The right architecture makes your system easy to change, test, and scale. The wrong one makes every feature feel like fighting against your own code. This chapter gives you the mental models to choose well.</p>
+
+      <section>
+        <h2>The 4-Layer Model</h2>
+        <p>Every web application — no matter how simple or complex — can be understood as four layers:</p>
+        <div class="decision-tree">User Interface → Application Logic → Data Layer → Infrastructure Layer</div>
+        <ul>
+          <li><strong>UI Layer</strong> — what the user interacts with: HTML, CSS, JS, React components, static pages</li>
+          <li><strong>Application Logic</strong> — routing, state management, business rules, workflows, API endpoints</li>
+          <li><strong>Data Layer</strong> — where content and state live: CMS, databases, JSON config files, APIs</li>
+          <li><strong>Infrastructure Layer</strong> — hosting, CDN, security, email, DNS, server config</li>
+        </ul>
+        <p>The critical rule: <strong>each layer only communicates with the layer directly below it.</strong> The UI never touches the database. The application logic never generates HTML directly. Infrastructure never contains business logic. This is the foundation of every good system design.</p>
+        <p>What changes as you scale is not the model — it's how many layers you introduce. A static site might collapse all four layers into a single HTML file. A large application might split each layer into multiple services. But the mental model stays the same.</p>
+      </section>
+
+      <section>
+        <h2>Project Type Decision Tree</h2>
+        <p>Before choosing a stack, define what you're building:</p>
+
+        <h3>Content-driven site</h3>
+        <p>Portfolio, marketing site, documentation, blog. <strong>Best architecture:</strong> Static site or SPA + config JSON, optionally with a headless CMS.</p>
+
+        <h3>Interactive app</h3>
+        <p>Dashboards, user accounts, workflows, CRUD systems. <strong>Best architecture:</strong> SPA + backend API with database and auth system.</p>
+
+        <h3>Hybrid system</h3>
+        <p>CMS + app features, admin panel + public UI, content + interactions. <strong>Best architecture:</strong> Headless CMS + SPA + API layer.</p>
+      </section>
+
+      <section>
+        <h2>Architecture Blueprints</h2>
+
+        <h3>Blueprint 1: Lightweight SPA (Config-Driven)</h3>
+        <div class="decision-tree">index.html + JS + config.json → dynamic UI renderer</div>
+        <p>All content lives in a single JSON file. The frontend fetches it at runtime and renders pages dynamically. <strong>When to use:</strong> small sites, fast prototyping, no backend needed. This is the architecture built in Chapter 09.</p>
+
+        <h3>Blueprint 2: Headless CMS Architecture</h3>
+        <div class="decision-tree">CMS → API → SPA frontend → UI render layer</div>
+        <p>Content is managed in a CMS (Strapi, WordPress, Sanity) and accessed via API. The frontend is decoupled — it just fetches content and renders it. <strong>When to use:</strong> when non-developers need to edit content, client-managed sites, scaling content complexity.</p>
+
+        <h3>Blueprint 3: Full Stack App</h3>
+        <div class="decision-tree">Frontend SPA → Backend API → Database → Auth system</div>
+        <p>The full stack. Backend handles business logic, authentication, database operations. Frontend handles presentation. <strong>When to use:</strong> user accounts, permissions, dashboards, transactions, any application logic that can't live in the browser.</p>
+      </section>
+
+      <section>
+        <h2>Data Flow Patterns</h2>
+
+        <h3>Static flow (no backend)</h3>
+        <div class="decision-tree">config.json → fetch → render UI</div>
+        <p>Simplest system. No persistence, no auth. Content is pre-defined or loaded from a static file. This is the right choice for the majority of websites.</p>
+
+        <h3>API-driven flow</h3>
+        <div class="decision-tree">UI → API request → backend → DB → response → UI update</div>
+        <p>Dynamic data. Requires server logic. Scalable. This is the standard pattern for any application with user-generated content or real-time data.</p>
+
+        <h3>Event-driven flow (advanced)</h3>
+        <div class="decision-tree">User action → event → handler → state update → UI re-render</div>
+        <p>React-like systems. Highly modular. The UI doesn't know about other components — it just emits events and listens for state changes. This scales to complex applications without tight coupling.</p>
+      </section>
+
+      <section>
+        <h2>Backend Decision Map</h2>
+        <p>The question "do I need a backend?" is one of the most important decisions you'll make. Here's how to decide:</p>
+
+        <h3>NO backend if:</h3>
+        <ul>
+          <li>Content is static (pre-built or loaded from a JSON file)</li>
+          <li>No user accounts or authentication</li>
+          <li>No data needs to be saved between sessions</li>
+          <li>Forms can use a third-party service (Resend, Formspree, MailerLite)</li>
+        </ul>
+
+        <h3>YES backend if:</h3>
+        <ul>
+          <li>Forms need custom processing or data storage</li>
+          <li>Users log in and have permissions</li>
+          <li>Content changes dynamically based on user state</li>
+          <li>You need to process payments, send emails, or run scheduled tasks</li>
+        </ul>
+
+        <h3>Lightweight backend options</h3>
+        <ul>
+          <li><strong>Email/form handling:</strong> Resend, MailerLite, Formspree — no server needed</li>
+          <li><strong>Serverless functions:</strong> Cloudflare Workers, Vercel Edge Functions, Lambda — API routes only, no full server management</li>
+          <li><strong>BaaS (Backend as a Service):</strong> Supabase, Firebase — database, auth, and storage without managing servers</li>
+        </ul>
+        <p>The trend in modern web development is toward <strong>no-backend</strong> or <strong>minimal-backend</strong> architectures. Add a backend only when you have a specific need that can't be solved by a third-party service or edge function.</p>
+      </section>
+
+      <section>
+        <h2>CMS Architecture Pattern (Core Insight)</h2>
+        <p>Most content systems reduce to this pattern:</p>
+        <div class="decision-tree">Content Source → Schema → Renderer → UI</div>
+        <p>The key abstraction rule: <strong>the CMS defines structure, not appearance.</strong> The CMS specifies what content exists (title, body, hero image) but not how it looks (font size, color, layout). That is the frontend's job.</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>CMS data — structure only</span></div>
+          <pre><code>{
+  "type": "hero",
+  "data": {
+    "title": "Hello",
+    "subtitle": "World"
+  }
+}</code></pre>
+        </div>
+        <p>The frontend receives this structure and decides the presentation. This separation means you can redesign your entire UI without touching the CMS, and you can swap CMS providers without touching the frontend. This is not a technical constraint — it's a design principle that prevents expensive coupling.</p>
+      </section>
+
+      <section>
+        <h2>SPA Architecture Pattern</h2>
+        <div class="decision-tree">Router → State Manager → Renderer → DOM</div>
+        <p>A Single Page Application has three responsibilities:</p>
+        <ul>
+          <li><strong>Router:</strong> URL → page mapping. Determines what to render based on the current URL.</li>
+          <li><strong>State Manager:</strong> current app memory. Holds the data that the UI depends on.</li>
+          <li><strong>Renderer:</strong> converts state into DOM elements. Takes data and produces HTML.</li>
+        </ul>
+        <p>Notice this matches the architecture built in Chapter 09. Whether you use React or vanilla JS, the mental model is the same: route input, state management, DOM output.</p>
+      </section>
+
+      <section>
+        <h2>Stack Selection Decision Tree</h2>
+        <p>This is the high-level filter that determines your entire technology stack. Run through it for every new project:</p>
+        <div class="decision-tree" style="white-space:normal;overflow:visible;">
+          <svg viewBox="0 0 900 520" style="width:100%;max-width:730px;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="arrow20" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="var(--color-accent, #2563eb)"/></marker>
+              <marker id="arrow20no" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="var(--color-text-muted, #999)"/></marker>
+            </defs>
+            <rect x="2" y="2" width="896" height="516" rx="8" fill="none" stroke="var(--color-border, #d4d0ca)" stroke-width="1"/>
+            <text x="450" y="24" text-anchor="middle" font-size="15" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">Stack Selection Decision Tree</text>
+
+            <text x="450" y="55" text-anchor="middle" font-size="17" font-family="sans-serif" fill="var(--color-text, #1a1a1a)" font-weight="bold">What kind of project are you building?</text>
+
+            <rect x="340" y="68" width="220" height="38" rx="19" fill="var(--color-accent, #2563eb)" opacity="0.15" stroke="var(--color-accent, #2563eb)" stroke-width="1.5"/>
+            <text x="450" y="93" text-anchor="middle" font-size="14" font-family="var(--font-code, monospace)" fill="var(--color-accent, #2563eb)" font-weight="bold">START</text>
+
+            <line x1="450" y1="110" x2="175" y2="152" stroke="var(--color-text-muted, #999)" stroke-width="1.5"/>
+            <line x1="175" y1="152" x2="175" y2="177" stroke="var(--color-text-muted, #999)" stroke-width="1.5" marker-end="url(#arrow20no)"/>
+            <text x="175" y="128" text-anchor="middle" font-size="13" font-family="sans-serif" fill="var(--color-text-muted, #666)">mostly static content?</text>
+
+            <rect x="60" y="177" width="230" height="40" rx="6" fill="var(--color-accent, #2563eb)" opacity="0.1" stroke="var(--color-accent, #2563eb)" stroke-width="1"/>
+            <text x="175" y="200" text-anchor="middle" font-size="15" font-family="sans-serif" fill="var(--color-text, #1a1a1a)" font-weight="bold">YES → Static Content</text>
+            <text x="175" y="213" text-anchor="middle" font-size="12" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">mostly static pages</text>
+
+            <line x1="175" y1="217" x2="175" y2="237" stroke="var(--color-accent, #2563eb)" stroke-width="1.5" marker-end="url(#arrow20)"/>
+
+            <line x1="175" y1="237" x2="88" y2="265" stroke="var(--color-text-muted, #999)" stroke-width="1.5"/>
+            <line x1="88" y1="265" x2="88" y2="285" stroke="var(--color-text-muted, #999)" stroke-width="1.5" marker-end="url(#arrow20no)"/>
+            <text x="88" y="248" font-size="13" font-family="sans-serif" fill="var(--color-text-muted, #666)">non-devs edit?</text>
+
+            <line x1="175" y1="237" x2="265" y2="265" stroke="var(--color-text-muted, #999)" stroke-width="1.5"/>
+            <line x1="265" y1="265" x2="265" y2="285" stroke="var(--color-text-muted, #999)" stroke-width="1.5" marker-end="url(#arrow20no)"/>
+            <text x="265" y="248" font-size="13" font-family="sans-serif" fill="var(--color-text-muted, #666)">devs manage it</text>
+
+            <line x1="450" y1="110" x2="725" y2="152" stroke="var(--color-text-muted, #999)" stroke-width="1.5"/>
+            <line x1="725" y1="152" x2="725" y2="177" stroke="var(--color-text-muted, #999)" stroke-width="1.5" marker-end="url(#arrow20no)"/>
+            <text x="725" y="128" text-anchor="middle" font-size="13" font-family="sans-serif" fill="var(--color-text-muted, #666)">needs a backend?</text>
+
+            <rect x="610" y="177" width="230" height="40" rx="6" fill="var(--color-accent, #2563eb)" opacity="0.1" stroke="var(--color-accent, #2563eb)" stroke-width="1"/>
+            <text x="725" y="200" text-anchor="middle" font-size="15" font-family="sans-serif" fill="var(--color-text, #1a1a1a)" font-weight="bold">YES → Interactive</text>
+            <text x="725" y="213" text-anchor="middle" font-size="12" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">login, auth, dashboards</text>
+
+            <line x1="725" y1="217" x2="725" y2="237" stroke="var(--color-accent, #2563eb)" stroke-width="1.5" marker-end="url(#arrow20)"/>
+
+            <line x1="725" y1="237" x2="635" y2="265" stroke="var(--color-text-muted, #999)" stroke-width="1.5"/>
+            <line x1="635" y1="265" x2="635" y2="285" stroke="var(--color-text-muted, #999)" stroke-width="1.5" marker-end="url(#arrow20no)"/>
+            <text x="635" y="248" font-size="13" font-family="sans-serif" fill="var(--color-text-muted, #666)">small team</text>
+
+            <line x1="725" y1="237" x2="815" y2="265" stroke="var(--color-text-muted, #999)" stroke-width="1.5"/>
+            <line x1="815" y1="265" x2="815" y2="285" stroke="var(--color-text-muted, #999)" stroke-width="1.5" marker-end="url(#arrow20no)"/>
+            <text x="815" y="248" font-size="13" font-family="sans-serif" fill="var(--color-text-muted, #666)">large team</text>
+
+            <rect x="3" y="285" width="170" height="42" rx="6" fill="#22c55e" opacity="0.12" stroke="#22c55e" stroke-width="1"/>
+            <text x="18" y="303" font-size="13" font-family="sans-serif" fill="var(--color-text, #1a1a1a)" font-weight="bold">CMS-Driven Site</text>
+            <text x="18" y="316" font-size="11" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">Headless CMS + frontend</text>
+
+            <rect x="180" y="285" width="170" height="42" rx="6" fill="#22c55e" opacity="0.12" stroke="#22c55e" stroke-width="1"/>
+            <text x="195" y="303" font-size="13" font-family="sans-serif" fill="var(--color-text, #1a1a1a)" font-weight="bold">Static / Vanilla Site</text>
+            <text x="195" y="316" font-size="11" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">HTML + CSS + JS, no backend</text>
+
+            <rect x="550" y="285" width="170" height="42" rx="6" fill="#eab308" opacity="0.15" stroke="#eab308" stroke-width="1"/>
+            <text x="565" y="303" font-size="13" font-family="sans-serif" fill="var(--color-text, #1a1a1a)" font-weight="bold">SPA + API + BaaS</text>
+            <text x="565" y="316" font-size="11" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">Vite + Supabase/Firebase</text>
+
+            <rect x="732" y="285" width="165" height="42" rx="6" fill="#eab308" opacity="0.15" stroke="#eab308" stroke-width="1"/>
+            <text x="747" y="303" font-size="13" font-family="sans-serif" fill="var(--color-text, #1a1a1a)" font-weight="bold">Full-Stack Framework</text>
+            <text x="747" y="316" font-size="11" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">Next.js / Remix / Rails</text>
+
+            <rect x="40" y="355" width="820" height="55" rx="6" fill="var(--color-accent, #2563eb)" opacity="0.04" stroke="var(--color-border, #d4d0ca)" stroke-width="0.5"/>
+            <text x="55" y="375" font-size="14" font-family="sans-serif" fill="var(--color-text, #1a1a1a)" font-weight="bold">Every project needs:</text>
+            <text x="55" y="393" font-size="13" font-family="sans-serif" fill="var(--color-text-muted, #666)">• Hosting (CDN for static, serverless or VPS for backend) • Domain + DNS • Build pipeline</text>
+
+            <rect x="160" y="435" width="580" height="24" rx="4" fill="var(--color-accent, #2563eb)" opacity="0.06"/>
+            <text x="450" y="452" text-anchor="middle" font-size="13" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">Start simple. Add complexity only when you have a specific need.</text>
+
+            <rect x="180" y="468" width="540" height="24" rx="4" fill="var(--color-accent, #2563eb)" opacity="0.04"/>
+            <text x="450" y="485" text-anchor="middle" font-size="13" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">"The best architecture is the one you don't have to maintain."</text>
+          </svg>
+        </div>
+
+        <h3>Quick Selection Rules</h3>
+        <div class="cheatsheet" style="margin-top:0.5em;">
+          <table>
+            <thead>
+              <tr><th>If ANY of these are true</th><th>→ Choose</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Login/auth, payments, user data, dashboards</td><td>Full Stack</td></tr>
+              <tr><td>Multiple UI states, component reuse, frequent updates without reloads</td><td>React / SPA</td></tr>
+              <tr><td>Content changes often, non-developers manage content, blog/portfolio</td><td>CMS-driven</td></tr>
+              <tr><td>None of the above — static pages, minimal interactivity</td><td>Vanilla / Static</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Hybrid Combinations (Most Real-World Projects)</h3>
+        <p>Most projects are not pure architecture types — they're hybrids:</p>
+        <ul>
+          <li><strong>React + CMS</strong> — CMS → API → React SPA → UI. Common for blogs with admin features, marketing sites with interactive UI, client-managed content with a dynamic frontend.</li>
+          <li><strong>Vanilla + CMS</strong> — CMS → JSON API → Vanilla JS renderer. Lightweight hybrid for small marketing sites, performance-first projects.</li>
+          <li><strong>Full Stack + CMS</strong> — CMS → Backend API → Database → React Admin + Public UI. Enterprise SaaS platforms, marketplaces, complex content + user systems.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Practical Build Order</h2>
+        <p>Regardless of which architecture you choose, build in this order:</p>
+        <ol>
+          <li><strong>Define system type</strong> — static, app, or hybrid (use the decision tree above)</li>
+          <li><strong>Define data source</strong> — JSON, CMS, or database (choose the simplest that works)</li>
+          <li><strong>Build frontend first</strong> — routing, rendering system, UI components</li>
+          <li><strong>Add data layer</strong> — API or CMS integration, fetch and render</li>
+          <li><strong>Add infrastructure last</strong> — hosting, email, bot protection, CDN</li>
+        </ol>
+        <p>This order ensures you always have a working (if simple) system at each step. You can launch after step 3 for a static site. You launch after step 4 for a CMS site. Infrastructure is always last because it depends on knowing what you're deploying.</p>
+      </section>
+
+      <section>
+        <h2>Key Engineering Principle</h2>
+        <div class="callout">
+          <div class="callout-title">The Most Important Rule</div>
+          <p><strong>UI design, data structure, and system architecture are separate concerns.</strong> If they are mixed early, your system becomes fragile, scaling becomes expensive, and the CMS becomes messy. If they are separated, systems remain replaceable, the backend can change without rewriting the UI, and the frontend stays stable regardless of what happens behind it.</p>
+        </div>
+        <p>Think in layers, not frameworks. Framework choice is just <em>how many layers you introduce</em> — not what the system fundamentally is.</p>
+      </section>
+
+      <div class="compare-box">
+        <div class="compare-col junior">
+          <div class="compare-label">Junior Developer</div>
+          <h4>How a Junior Thinks About Architecture</h4>
+          <ul>
+            <li>Starts coding without any architectural plan</li>
+            <li>Picks a framework because it's popular, not because it fits the problem</li>
+            <li>Mixes presentation, logic, and data access in a single file</li>
+            <li>Doesn't consider how the system will evolve</li>
+            <li>Uses a full backend when a JSON file would suffice</li>
+          </ul>
+        </div>
+        <div class="compare-col senior">
+          <div class="compare-label">Senior Developer</div>
+          <h4>How a Senior Thinks About Architecture</h4>
+          <ul>
+            <li>Sketches the architecture before writing any code</li>
+            <li>Evaluates architecture patterns against project constraints</li>
+            <li>Enforces layer separation with clear interface boundaries</li>
+            <li>Designs for future scaling and team growth</li>
+            <li>Chooses the minimal viable architecture first, adds complexity only when measured data demands it</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="cheatsheet">
+        <div class="cheatsheet-title">Architecture Quick Reference</div>
+        <table>
+          <thead>
+            <tr><th>Architecture</th><th>Best For</th><th>Key Tradeoff</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Static Site</td><td>Documentation, blogs, marketing</td><td>No dynamic content without client-side JS</td></tr>
+            <tr><td>Lightweight SPA</td><td>Small sites, fast prototypes, no backend</td><td>Limited to static content, manual updates</td></tr>
+            <tr><td>CMS-Driven</td><td>Content-heavy sites with editors</td><td>Added backend complexity, CMS lock-in risk</td></tr>
+            <tr><td>Full Stack</td><td>Apps with auth, DB, real-time</td><td>More infrastructure, slower iteration</td></tr>
+            <tr><td>Hybrid (CMS+SPA)</td><td>Blogs with dynamic UI, marketing + dashboard</td><td>Best of both, but more moving parts</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="file-tree">
+        project/
+        ├── frontend/          # UI Layer
+        │   ├── pages/
+        │   ├── components/
+        │   └── styles/
+        ├── backend/           # Application Logic Layer
+        │   ├── routes/
+        │   ├── controllers/
+        │   └── middleware/
+        ├── data/              # Data Layer
+        │   ├── models/
+        │   ├── migrations/
+        │   └── seeds/
+        └── infrastructure/   # Infrastructure Layer
+            ├── docker/
+            ├── nginx/
+            └── deploy/
+      </div>
+
+      <nav class="chapter-nav">
+        <a href="20-performance.html"><span class="nav-label">Prev</span>Prev: Performance</a>
+        <a href="22-scaling-strategies.html"><span class="nav-label">Next</span>Next: Scaling Strategies</a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../../assets/js/sidebar.js"></script>
+  <script src="../../assets/js/navigation.js"></script>
+  <script src="../../assets/js/themes.js"></script>
+</body>
+</html>

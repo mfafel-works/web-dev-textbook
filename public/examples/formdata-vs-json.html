@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FormData vs JSON Encoder — Interactive Example</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/themes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .encoder-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 1.5rem 0; }
+    @media (max-width: 700px) { .encoder-grid { grid-template-columns: 1fr; } }
+    .encoder-panel { border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden; }
+    .encoder-panel h3 { margin: 0; padding: 0.75rem 1rem; background: var(--bg-secondary); border-bottom: 1px solid var(--border-color); font-size: 0.9rem; }
+    .panel-content { padding: 1rem; }
+    .field-row { margin-bottom: 0.75rem; }
+    .field-row label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.2rem; }
+    .field-row input, .field-row textarea, .field-row select { width: 100%; padding: 0.4rem 0.6rem; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.85rem; background: var(--bg-input); color: var(--text-primary); }
+    .field-row textarea { min-height: 60px; resize: vertical; font-family: monospace; }
+    .wire-format { margin-top: 1rem; }
+    .wire-format h4 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 0.3rem; }
+    .wire-display { background: var(--bg-code); padding: 0.75rem; border-radius: 4px; font-family: monospace; font-size: 0.8rem; white-space: pre-wrap; word-break: break-all; max-height: 200px; overflow-y: auto; border: 1px solid var(--border-color); }
+    .method-tag { display: inline-block; padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.75rem; font-weight: 700; margin-right: 0.3rem; }
+    .method-json { background: #d4edda; color: #155724; }
+    .method-formdata { background: #cce5ff; color: #004085; }
+    .comparison-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 700px) { .comparison-row { grid-template-columns: 1fr; } }
+    .highlight-ok { border-left: 3px solid #22c55e; padding-left: 0.75rem; }
+    .highlight-bad { border-left: 3px solid #e94560; padding-left: 0.75rem; }
+    .code-inline { background: var(--bg-code); padding: 0.1rem 0.3rem; border-radius: 3px; font-family: monospace; font-size: 0.85em; }
+    .file-input-wrapper { position: relative; }
+    .file-input-wrapper input[type="file"] { width: 100%; padding: 0.3rem; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+  <div class="site-wrapper">
+    <header class="site-header" style="justify-content:space-between;">
+      <div class="site-title"><a href="../index.html"><i class="fa-solid fa-house"></i> M's Web Development Guide</a></div>
+      <a href="../chapters/11-project-walkthrough.html" style="font-size:0.85rem;">Back to Chapter 11</a>
+    </header>
+    <main class="main-content" id="main">
+      <h1>FormData vs JSON Encoder</h1>
+      <p class="chapter-subtitle">See how the same form data looks in both encoding formats — and why choosing the wrong one silently drops file uploads.</p>
+
+      <div class="callout-warning">
+        <div class="callout-title">The Gotcha</div>
+        <p><code>JSON.stringify()</code> cannot serialize <code>File</code> objects. If your form has a file input and you extract values via <code>new FormData(form)</code> then send as <code>application/json</code>, the file is silently dropped. Use <code>FormData</code> directly (with no manual <code>Content-Type</code>) for file uploads, or JSON for text-only payloads — never mix the two.</p>
+      </div>
+
+      <div class="encoder-grid">
+        <div class="encoder-panel">
+          <h3>Form Fields</h3>
+          <div class="panel-content">
+            <div class="field-row">
+              <label for="fd-name">Name (text)</label>
+              <input type="text" id="fd-name" value="Jane Doe">
+            </div>
+            <div class="field-row">
+              <label for="fd-email">Email (text)</label>
+              <input type="email" id="fd-email" value="jane@example.com">
+            </div>
+            <div class="field-row">
+              <label for="fd-message">Message (textarea)</label>
+              <textarea id="fd-message">Hello, I'd like to get in touch.</textarea>
+            </div>
+            <div class="field-row">
+              <label for="fd-file">Attachment (file)</label>
+              <div class="file-input-wrapper">
+                <input type="file" id="fd-file">
+              </div>
+              <p style="font-size:0.75rem;color:var(--text-secondary);margin-top:0.2rem;">Select a file to see how it behaves differently in each format.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="encoder-panel">
+          <h3>Encoded Output</h3>
+          <div class="panel-content">
+            <div class="wire-format">
+              <h4><span class="method-tag method-json">JSON</span> <code>application/json</code></h4>
+              <div class="wire-display" id="json-output">{ }</div>
+              <p id="json-note" style="font-size:0.8rem;margin-top:0.3rem;color:var(--text-secondary);"></p>
+            </div>
+            <div class="wire-format" style="margin-top:1rem;">
+              <h4><span class="method-tag method-formdata">FormData</span> <code>multipart/form-data</code></h4>
+              <div class="wire-display" id="formdata-output">(empty)</div>
+              <p id="formdata-note" style="font-size:0.8rem;margin-top:0.3rem;color:var(--text-secondary);"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="compare-box">
+        <div class="compare-col junior">
+          <div class="compare-label">Common Mistake</div>
+          <p>Trying to send a file via JSON:</p>
+          <pre style="font-size:0.8rem;background:var(--bg-code);padding:0.5rem;border-radius:4px;overflow-x:auto;">const fd = new FormData(form);
+const data = { name: fd.get('name') };
+data.attachment = fd.get('file');
+await fetch('/api', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(data)  // file is lost!
+});</pre>
+          <p class="highlight-bad">The <code>File</code> object becomes <code>{}</code> in JSON.</p>
+        </div>
+        <div class="compare-col senior">
+          <div class="compare-label">Correct Approach</div>
+          <p>Sending a file via FormData:</p>
+          <pre style="font-size:0.8rem;background:var(--bg-code);padding:0.5rem;border-radius:4px;overflow-x:auto;">const fd = new FormData(form);
+await fetch('/api', {
+  method: 'POST',
+  // Do NOT set Content-Type —
+  // browser sets multipart/form-data
+  // with the correct boundary
+  body: fd
+});</pre>
+          <p class="highlight-ok">File data is included. Browser handles encoding.</p>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script>
+    function escapeHtml(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+    function update() {
+      var name = document.getElementById('fd-name').value;
+      var email = document.getElementById('fd-email').value;
+      var message = document.getElementById('fd-message').value;
+      var fileInput = document.getElementById('fd-file');
+      var file = fileInput.files ? fileInput.files[0] : null;
+
+      // Build what JSON.stringify sees
+      var jsonObj = { name: name, email: email, message: message };
+      if (file) {
+        jsonObj.attachment = file;
+      }
+      var jsonStr = JSON.stringify(jsonObj, null, 2);
+      document.getElementById('json-output').textContent = jsonStr;
+
+      var jsonNote = document.getElementById('json-note');
+      if (file) {
+        jsonNote.innerHTML = '<span style="color:#e94560;font-weight:600;">&#x2717; File dropped:</span> <code>JSON.stringify</code> serialized the File as <code>{}</code>. The binary data is lost.';
+      } else {
+        jsonNote.innerHTML = '<span style="color:#22c55e;font-weight:600;">&#x2713; Text only — JSON works fine.</span>';
+      }
+
+      // Build what FormData sends (simulated wire format)
+      var fdParts = [];
+      fdParts.push('------WebKitFormBoundary');
+      fdParts.push('Content-Disposition: form-data; name="name"');
+      fdParts.push('');
+      fdParts.push(name);
+      fdParts.push('');
+      fdParts.push('------WebKitFormBoundary');
+      fdParts.push('Content-Disposition: form-data; name="email"');
+      fdParts.push('');
+      fdParts.push(email);
+      fdParts.push('');
+      fdParts.push('------WebKitFormBoundary');
+      fdParts.push('Content-Disposition: form-data; name="message"');
+      fdParts.push('');
+      fdParts.push(message);
+      fdParts.push('');
+
+      if (file) {
+        fdParts.push('------WebKitFormBoundary');
+        fdParts.push('Content-Disposition: form-data; name="attachment"; filename="' + escapeHtml(file.name) + '"');
+        fdParts.push('Content-Type: ' + (file.type || 'application/octet-stream'));
+        fdParts.push('');
+        fdParts.push('<' + file.name + ' — ' + file.size + ' bytes of binary data>');
+        fdParts.push('');
+      }
+
+      fdParts.push('------WebKitFormBoundary--');
+      document.getElementById('formdata-output').textContent = fdParts.join('\n');
+
+      var fdNote = document.getElementById('formdata-note');
+      if (file) {
+        fdNote.innerHTML = '<span style="color:#22c55e;font-weight:600;">&#x2713; File included:</span> FormData preserves the file with its name, type, and binary content. The browser sets <code>Content-Type: multipart/form-data; boundary=...</code> automatically.';
+      } else {
+        fdNote.innerHTML = '<span style="color:#22c55e;font-weight:600;">&#x2713; No file — FormData works identically to JSON for text fields.</span>';
+      }
+    }
+
+    document.getElementById('fd-name').addEventListener('input', update);
+    document.getElementById('fd-email').addEventListener('input', update);
+    document.getElementById('fd-message').addEventListener('input', update);
+    document.getElementById('fd-file').addEventListener('change', update);
+
+    update();
+  </script>
+  <script src="../js/themes.js"></script>
+</body>
+</html>

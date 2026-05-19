@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>15 — Performance | M's Web Development Guide</title>
+  <meta name="description" content="Core Web Vitals, Lighthouse, image optimization, code splitting, critical CSS, caching strategies, and performance budgets.">
+  <link rel="stylesheet" href="../../assets/css/main.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/themes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <div class="site-wrapper">
+    <header class="site-header">
+      <div class="site-title"><a href="../../index.html"><i class="fa-solid fa-house"></i> M's Web Development Guide</a></div>
+      <div class="header-controls">
+        <button data-sidebar-toggle class="sidebar-toggle" aria-label="Toggle table of contents">&#9776; TOC</button>
+        <button data-theme-toggle aria-label="Switch theme"><span class="icon">☾</span>Dark</button>
+      </div>
+    </header>
+
+    <aside class="sidebar" aria-label="Table of Contents">
+      <div id="sidebar-toc"></div>
+    </aside>
+
+    <main class="main-content" id="main">
+      <span class="chapter-number">Chapter 20</span>
+      <h1>Performance</h1>
+      <p class="chapter-subtitle">Core Web Vitals, measuring, optimizing images, code splitting, caching, and budgets</p>
+
+      <p>Performance is a feature. Users expect pages to load in under 2 seconds — every additional second of load time reduces conversions by 7% on desktop and up to 20% on mobile. Google uses performance as a ranking factor. And performance is accessibility: slow sites disproportionately affect users on slow connections, older devices, and in developing markets. This chapter covers what to measure, what to optimize, and how to stay fast.</p>
+
+      <section>
+        <h2>Core Web Vitals</h2>
+        <p>Google's Core Web Vitals are the three metrics that matter most for user experience. They are also search ranking factors:</p>
+
+        <table>
+          <thead>
+            <tr><th>Metric</th><th>What It Measures</th><th>Good</th><th>Poor</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>LCP</strong> (Largest Contentful Paint)</td><td>Loading — when the largest visible element (hero image, heading) finishes rendering</td><td>&le; 2.5s</td><td>&gt; 4.0s</td></tr>
+            <tr><td><strong>FID</strong> (First Input Delay)</td><td>Interactivity — time from user first interaction to browser being able to respond</td><td>&le; 100ms</td><td>&gt; 300ms</td></tr>
+            <tr><td><strong>CLS</strong> (Cumulative Layout Shift)</td><td>Visual stability — how much the page jumps around while loading</td><td>&le; 0.1</td><td>&gt; 0.25</td></tr>
+          </tbody>
+        </table>
+
+        <p><strong>LCP</strong> is typically improved by optimizing images, eliminating render-blocking resources, and using a CDN. <strong>FID</strong> is improved by code splitting, deferring non-critical JavaScript, and avoiding long tasks. <strong>CLS</strong> is improved by setting explicit dimensions on images and ads, using <code>font-display: swap</code>, and avoiding injecting content above existing content.</p>
+
+        <div class="callout-warning">
+          <div class="callout-title">Always Set Image Dimensions</div>
+          <p>The single most common CLS cause: images without <code>width</code> and <code>height</code> attributes. The browser reserves zero space until the image loads, then the page jumps. Always set <code>&lt;img width="800" height="600"&gt;</code> — the browser uses these to calculate aspect ratio and reserve the correct space even before the image downloads. Combined with CSS <code>max-width: 100%; height: auto</code>, this prevents layout shift.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Measuring Performance</h2>
+        <p>Before optimizing, measure. These tools tell you what to fix:</p>
+
+        <table>
+          <thead>
+            <tr><th>Tool</th><th>When to Use</th><th>What It Gives You</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Lighthouse</strong></td><td>Local dev, CI, any URL</td><td>Audit scores (Performance, Accessibility, SEO, Best Practices) with actionable recommendations</td></tr>
+            <tr><td><strong>PageSpeed Insights</strong></td><td>Production URLs</td><td>Lighthouse + field data from real Chrome users (CrUX report)</td></tr>
+            <tr><td><strong>Chrome DevTools Performance tab</strong></td><td>Deep profiling during development</td><td>Frame-by-frame recording, long tasks, network waterfall</td></tr>
+            <tr><td><strong>Web Vitals extension</strong></td><td>Real-time LCP/FID/CLS in the browser</td><td>Per-page vitals display in the toolbar</td></tr>
+            <tr><td><strong>Bundle analyzer (vite-bundle-visualizer, source-map-explorer)</strong></td><td>After a production build</td><td>Visual breakdown of bundle size by package</td></tr>
+          </tbody>
+        </table>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Running Lighthouse from the command line</span></div>
+          <pre><code># Install
+npm install -g lighthouse
+
+# Audit a URL
+lighthouse https://example.com --view
+
+# CI-friendly output (JSON)
+lighthouse https://example.com --output json --output-path ./report.json
+--chrome-flags="--headless"</code></pre>
+        </div>
+
+        <div class="callout-tip">
+          <div class="callout-title">Measure on Mobile First</div>
+          <p>Most performance issues are worse on mobile: slower CPUs, limited memory, smaller screens, flaky connections. Lighthouse defaults to mobile emulation for a reason. Optimize for mobile first, then verify desktop. A fast mobile experience is almost always fast on desktop. The reverse is not true.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Image Optimization</h2>
+        <p>Images account for 60-70% of a typical page's weight. Optimizing images is the single highest-impact performance improvement you can make.</p>
+
+        <h3>Format Decision Tree</h3>
+        <div class="decision-tree">Is the image photographic or has complex gradients?
+├── YES → Does it need transparency?
+│   ├── YES → WebP (lossy, supports transparency)
+│   └── NO  → WebP (lossy) or AVIF (even smaller, less supported)
+└── NO (flat colors, logos, icons)
+    → SVG if vector source exists
+    → WebP (lossless) or PNG if no vector source</div>
+
+        <h3>Techniques</h3>
+        <table>
+          <thead>
+            <tr><th>Technique</th><th>Impact</th><th>How</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Resize to max display size</td><td>High</td><td>Do not serve a 4000px image for a 600px container</td></tr>
+            <tr><td>Modern formats (WebP, AVIF)</td><td>High</td><td>20-30% smaller than JPEG, 30-50% smaller than PNG</td></tr>
+            <tr><td>Responsive images (<code>srcset</code>)</td><td>High</td><td>Serve different sizes for different viewports</td></tr>
+            <tr><td>Lazy loading</td><td>Medium</td><td><code>loading="lazy"</code> on below-the-fold images</td></tr>
+            <tr><td>Compression</td><td>Medium</td><td>JPEG quality 80%, PNGQuant for PNGs</td></tr>
+            <tr><td>CDN with image transformation</td><td>High</td><td>Cloudflare Images, Imgix, Cloudinary — transform on the fly</td></tr>
+          </tbody>
+        </table>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Responsive image with WebP fallback</span></div>
+          <pre><code>&lt;picture&gt;
+  &lt;source srcset="photo.avif" type="image/avif"&gt;
+  &lt;source srcset="photo.webp" type="image/webp"&gt;
+  &lt;img src="photo.jpg" width="800" height="600"
+       alt="Description"
+       loading="lazy"&gt;
+&lt;/picture&gt;</code></pre>
+        </div>
+        <h3>Image CDNs</h3>
+        <p>Image CDNs (Cloudinary, Imgix, Cloudflare Images) automatically transform images on the fly — resize, format conversion, compression, cropping — based on URL parameters. This eliminates the need to generate multiple image sizes at build time:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Cloudinary URL transformations</span></div>
+          <pre><code>// Original: https://res.cloudinary.com/demo/image/upload/sample.jpg
+
+// Resize to 400px wide, auto-quality, WebP format
+https://res.cloudinary.com/demo/image/upload/w_400,q_auto,f_webp/sample.jpg
+
+// Responsive via srcset
+&lt;img srcset="
+  https://.../w_400/sample.jpg 400w,
+  https://.../w_800/sample.jpg 800w,
+  https://.../w_1200/sample.jpg 1200w"
+  sizes="(max-width: 600px) 100vw, 800px"
+  src="https://.../w_800/sample.jpg"
+  width="800" height="600" alt=""&gt;</code></pre>
+        </div>
+        <p>Image CDNs also handle CDN delivery, caching, and format negotiation. The browser requests the best format automatically. For projects with many images, an image CDN is worth the cost — it replaces hours of manual optimization with URL parameters.</p>
+      </section>
+
+      <section>
+        <h2>HTTP/2, HTTP/3, and Modern Protocols</h2>
+        <p>HTTP versions affect how browsers download resources. Each version improves performance in different ways:</p>
+        <table>
+          <thead>
+            <tr><th>Version</th><th>Key Feature</th><th>Performance Impact</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>HTTP/1.1</strong></td><td>One request per connection</td><td>Browsers open 6 parallel connections per domain. Bundling CSS/JS into fewer files was necessary to reduce request overhead.</td></tr>
+            <tr><td><strong>HTTP/2</strong></td><td>Multiplexing — multiple requests over one connection</td><td>One TCP connection handles many concurrent streams. No head-of-line blocking. Enables server push (rarely used). Makes file bundling less critical.</td></tr>
+            <tr><td><strong>HTTP/3 (QUIC)</strong></td><td>UDP-based, no head-of-line blocking at transport layer</td><td>Faster connection establishment (0-RTT), better performance on lossy networks (mobile). No TCP head-of-line blocking.</td></tr>
+          </tbody>
+        </table>
+        <p>All modern hosting platforms (Cloudflare, Vercel, Netlify, AWS CloudFront) support HTTP/2 and HTTP/3 automatically — no configuration needed. The practical effect: you can serve more individual files without performance penalty, reducing the need for aggressive CSS/JS bundling. However, still <strong>do</strong> minimize and compress resources — smaller files are always faster regardless of protocol.</p>
+      </section>
+
+      <section>
+        <h2>Real User Monitoring (RUM)</h2>
+        <p>Synthetic testing (Lighthouse, PageSpeed Insights) tells you how fast a page <em>can</em> be. Real User Monitoring tells you how fast it <em>actually is</em> for your users, on their devices, networks, and locations.</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Collecting Web Vitals in the browser</span></div>
+          <pre><code>import { onLCP, onFID, onCLS } from 'web-vitals';
+
+function sendToAnalytics(metric) {
+  const body = {
+    name: metric.name,
+    value: metric.value,
+    rating: metric.rating,      // 'good' | 'needs-improvement' | 'poor'
+    delta: metric.delta,
+    id: metric.id,
+    url: location.href,
+    userAgent: navigator.userAgent,
+  };
+
+  // Send to your analytics endpoint
+  navigator.sendBeacon('/analytics', JSON.stringify(body));
+}
+
+onLCP(sendToAnalytics);
+onFID(sendToAnalytics);
+onCLS(sendToAnalytics);</code></pre>
+        </div>
+        <p>Send the data to Google Analytics 4 (which tracks Web Vitals automatically), Datadog RUM, Sentry Performance, or your own backend. Watch the <strong>75th percentile</strong> (p75) — if 75% of your users have a good experience, most are happy. Ignore outliers (the 99th percentile often reflects edge cases like loading on a 2G network during a thunderstorm).</p>
+        <div class="callout-info">
+          <div class="callout-title">Synthetic vs RUM: Both Are Necessary</div>
+          <p>Synthetic tests catch issues before users see them. RUM tells you about issues users actually encounter. Use Lighthouse in CI to prevent regressions. Use RUM in production to discover problems your synthetic tests miss (slow 3G networks, older devices, regional CDN issues). They complement each other — you need both.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>JavaScript and CSS Optimization</h2>
+
+        <h3>Code Splitting</h3>
+        <p>Instead of sending one giant JavaScript bundle, split it into chunks that are loaded on demand. Modern bundlers (Vite, Webpack) support code splitting natively:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Dynamic import for code splitting</span></div>
+          <pre><code>// Instead of:
+import { HeavyComponent } from './HeavyComponent';
+
+// Do this:
+const HeavyComponent = () =&gt; import('./HeavyComponent');
+// Webpack/Vite creates a separate chunk, loaded only when this component renders</code></pre>
+        </div>
+
+        <h3>Tree Shaking</h3>
+        <p>Tree shaking removes unused code from the production bundle. It happens automatically when you import specific exports:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Tree shaking — import what you use</span></div>
+          <pre><code>// BAD — imports the entire library (60KB)
+import _ from 'lodash';
+_.debounce(fn, 300);
+
+// GOOD — imports only the function (4KB)
+import debounce from 'lodash/debounce';
+// or with ES modules:
+import { debounce } from 'lodash-es';</code></pre>
+        </div>
+        <p>Verify tree shaking with a bundle analyzer. Some packages (especially older ones) are not tree-shakeable — avoid them or use a modern alternative.</p>
+
+        <h3>Critical CSS</h3>
+        <p>Critical CSS is the minimal CSS needed to render the above-the-fold content. By inlining it in <code>&lt;head&gt;</code>, the page can render without waiting for the full CSS file to download:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Critical CSS pattern</span></div>
+          <pre><code>&lt;head&gt;
+  &lt;style&gt;
+    /* Critical CSS — inline, blocks rendering but tiny */
+    header { background: white; padding: 1rem; }
+    .hero  { font-size: 2rem; margin: 2rem 0; }
+  &lt;/style&gt;
+  &lt;link rel="stylesheet" href="full.css" media="print" onload="this.media='all'"&gt;
+&lt;/head&gt;</code></pre>
+        </div>
+        <p>Tools like <code>critical</code> (Node package) automate extracting critical CSS. Use this technique for pages where time-to-first-paint matters most (landing pages, marketing sites). For logged-in dashboards, the complexity may not be worth it.</p>
+
+        <h3>Resource Hints</h3>
+        <p>Tell the browser about important resources early:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Resource hints in &lt;head&gt;</span></div>
+          <pre><code>&lt;!-- Preload critical resources --&gt;
+&lt;link rel="preload" href="font.woff2" as="font" type="font/woff2" crossorigin&gt;
+
+&lt;!-- Preconnect to third-party origins --&gt;
+&lt;link rel="preconnect" href="https://api.example.com"&gt;
+
+&lt;!-- Prefetch resources for the next page --&gt;
+&lt;link rel="prefetch" href="/next-page" as="document"&gt;</code></pre>
+        </div>
+        <p>Use <code>preload</code> sparingly — only for critical above-the-fold resources. Overuse competes with the browser's own resource prioritization.</p>
+      </section>
+
+      <section>
+        <h2>Caching Strategy</h2>
+        <p>Caching is the most impactful performance lever and the most common source of "it worked before" bugs. The browser caches responses based on the <code>Cache-Control</code> header sent by the server.</p>
+
+        <table>
+          <thead>
+            <tr><th>Resource Type</th><th>Cache Strategy</th><th><code>Cache-Control</code> Header</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>HTML pages</td><td>No cache or short TTL</td><td><code>no-cache</code> (revalidate with server)</td></tr>
+            <tr><td>JavaScript bundles with hash</td><td>Immutable, long cache</td><td><code>public, max-age=31536000, immutable</code></td></tr>
+            <tr><td>CSS with hash</td><td>Immutable, long cache</td><td><code>public, max-age=31536000, immutable</code></td></tr>
+            <tr><td>Images (non-versioned)</td><td>Long cache with revalidation</td><td><code>public, max-age=2592000</code> (30 days)</td></tr>
+            <tr><td>Fonts</td><td>Long cache</td><td><code>public, max-age=31536000, immutable</code></td></tr>
+            <tr><td>API responses</td><td>Short or no cache</td><td><code>no-cache</code> or <code>private, max-age=60</code></td></tr>
+          </tbody>
+        </table>
+
+        <p>When filenames include a content hash (<code>main.a1b2c3.js</code>), you can cache forever — a new hash means a new file. When the hash changes, the browser treats it as a different URL and downloads the new version. This is called <strong>cache busting</strong> and is the reason modern build tools add hashes to output filenames.</p>
+      </section>
+
+      <section>
+        <h2>Performance Budgets</h2>
+        <p>A performance budget is a set of constraints you agree not to exceed. Without a budget, performance degrades gradually — a few KB here, a new library there — until the site is slow and no one knows which change caused it.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Example performance budget</span></div>
+          <pre><code>{
+  "budgets": [
+    {
+      "resourceType": "total",
+      "budget": 300000,        // 300KB total JavaScript
+      "resourceType": "total",
+      "budget": 500000,        // 500KB total images
+      "resourceType": "total",
+      "budget": 100000         // 100KB total CSS
+    },
+    {
+      "resourceType": "script",
+      "budget": 200000,        // 200KB per script
+      "resourceType": "image",
+      "budget": 100000         // 100KB per image
+    }
+  ]
+}</code></pre>
+        </div>
+
+        <p>Tools like <code>bundlesize</code>, <code>Lighthouse CI</code>, and <code>webpack-bundle-analyzer</code> can enforce budgets in CI. When a PR exceeds the budget, the build fails. This is the only reliable way to prevent performance regression over time.</p>
+
+        <div class="callout-tip">
+          <div class="callout-title">Start With a Generous Budget</div>
+          <p>Do not set a 100KB budget on day one if your site is already 500KB. Measure the current state, add 10-20% buffer, and set that as the initial budget. Then tighten it over time. A budget that is impossible to meet will be ignored. A budget that requires minor effort will be respected.</p>
+        </div>
+      </section>
+
+      <div class="compare-box">
+        <div class="compare-col junior">
+          <div class="compare-label">Junior Developer</div>
+          <h4>How a Junior Might Think</h4>
+          <ul>
+            <li>Does not measure performance — "it loads fine on my machine"</li>
+            <li>Adds libraries without considering bundle impact</li>
+            <li>Uses giant PNGs exported at 3x resolution from Photoshop</li>
+            <li>Does not know what Core Web Vitals are</li>
+            <li>Forgets to set image dimensions — pages jump around during loading</li>
+            <li>Has no caching strategy — does not understand <code>Cache-Control</code></li>
+          </ul>
+        </div>
+        <div class="compare-col senior">
+          <div class="compare-label">Senior Developer</div>
+          <h4>How a Senior Thinks</h4>
+          <ul>
+            <li>Measures with Lighthouse and real-user monitoring before optimizing</li>
+            <li>Checks bundle size impact before adding any dependency</li>
+            <li>Uses responsive images with <code>srcset</code> and modern formats (WebP, AVIF)</li>
+            <li>Monitors LCP, FID, and CLS as part of the development workflow</li>
+            <li>Sets explicit width/height on all images — zero layout shift</li>
+            <li>Enforces a performance budget to prevent regression</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="cheatsheet">
+        <div class="cheatsheet-title">Cheat Sheet</div>
+        <table>
+          <thead>
+            <tr><th>Concept</th><th>Key Takeaway</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Core Web Vitals</td><td>LCP (&le;2.5s), FID (&le;100ms), CLS (&le;0.1)</td></tr>
+            <tr><td>Measure</td><td>Lighthouse (dev), PageSpeed Insights (production), DevTools Performance tab (profiling)</td></tr>
+            <tr><td>Images</td><td>WebP/AVIF, resize to display size, srcset, lazy loading, set width/height</td></tr>
+            <tr><td>JavaScript</td><td>Code splitting, tree shaking, defer non-critical scripts</td></tr>
+            <tr><td>CSS</td><td>Critical CSS inline, defer full stylesheet, purge unused CSS</td></tr>
+            <tr><td>Caching</td><td>Hash filenames for long cache. <code>no-cache</code> for HTML. 1 year for hashed assets.</td></tr>
+            <tr><td>Budgets</td><td>Set limits for JS, CSS, images. Enforce in CI to prevent regression.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <nav class="chapter-nav">
+        <a href="19-deployment.html"><span class="nav-label">Prev</span>Prev: Deployment</a>
+        <a href="21-architecture-blueprints.html"><span class="nav-label">Next</span>Next: Architecture Blueprints</a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../../assets/js/sidebar.js"></script>
+  <script src="../../assets/js/navigation.js"></script>
+  <script src="../../assets/js/themes.js"></script>
+</body>
+</html>

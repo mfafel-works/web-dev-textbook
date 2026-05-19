@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>06 — How the Browser Works | M's Web Development Guide</title>
+  <meta name="description" content="Rendering pipeline, JavaScript engine, event loop, storage APIs, and what the browser actually does.">
+  <link rel="stylesheet" href="../../assets/css/main.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/themes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <div class="site-wrapper">
+    <header class="site-header">
+      <div class="site-title"><a href="../../index.html"><i class="fa-solid fa-house"></i> M's Web Development Guide</a></div>
+      <div class="header-controls">
+        <button data-sidebar-toggle class="sidebar-toggle" aria-label="Toggle table of contents">&#9776; TOC</button>
+        <button data-theme-toggle aria-label="Switch theme"><span class="icon">☾</span>Dark</button>
+      </div>
+    </header>
+
+    <aside class="sidebar" aria-label="Table of Contents">
+      <div id="sidebar-toc"></div>
+    </aside>
+
+    <main class="main-content" id="main">
+      <span class="chapter-number">Chapter 2</span>
+      <h1>How the Browser Works</h1>
+      <p class="chapter-subtitle">Rendering pipeline, JavaScript engine, event loop, and the runtime environment</p>
+
+      <p>The browser is the most important piece of software in a web developer's life — and the least understood. When you write code, you are writing instructions for the browser to execute. Understanding how the browser reads, interprets, and displays your work is the difference between guessing and knowing. This chapter pulls back the curtain.</p>
+
+      <section>
+        <h2>The Browser's Job</h2>
+        <p>A browser has four main responsibilities:</p>
+        <ol>
+          <li><strong>Networking</strong> — fetch resources (HTML, CSS, JS, images) over HTTP</li>
+          <li><strong>Parsing</strong> — convert raw bytes into structured data the browser can work with</li>
+          <li><strong>Rendering</strong> — turn structured data into pixels on screen</li>
+          <li><strong>Execution</strong> — run JavaScript, handle events, manage state</li>
+        </ol>
+        <p>Every browser (Chrome, Firefox, Safari, Edge) does these four things. They do them differently under the hood, but the concepts are the same. Once you understand the concepts, browser-specific quirks become predictable.</p>
+      </section>
+
+      <section>
+        <h2>The Rendering Pipeline</h2>
+        <p>When the browser receives an HTML page, it does not display it all at once. It goes through a sequence of steps, each building on the last:</p>
+
+        <div class="decision-tree" style="white-space:normal;overflow:visible;">
+          <svg viewBox="0 0 720 150" style="width:100%;max-width:720px;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="arrow06" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="var(--color-accent, #2563eb)"/></marker>
+            </defs>
+            <rect x="2" y="2" width="716" height="146" rx="8" fill="none" stroke="var(--color-border, #d4d0ca)" stroke-width="1"/>
+            <text x="360" y="20" text-anchor="middle" font-size="15" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">Critical Rendering Path</text>
+
+            <rect x="10" y="32" width="100" height="44" rx="4" fill="var(--color-accent, #2563eb)" opacity="0.12" stroke="var(--color-accent, #2563eb)" stroke-width="1"/>
+            <text x="60" y="51" text-anchor="middle" font-size="13" font-family="var(--font-code, monospace)" fill="var(--color-text, #1a1a1a)" font-weight="bold">HTML</text>
+            <text x="60" y="65" text-anchor="middle" font-size="12" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">HTML Bytes</text>
+
+            <line x1="110" y1="54" x2="130" y2="54" stroke="var(--color-accent, #2563eb)" stroke-width="1.5" marker-end="url(#arrow06)"/>
+
+            <rect x="135" y="32" width="100" height="44" rx="4" fill="var(--color-accent, #2563eb)" opacity="0.12" stroke="var(--color-accent, #2563eb)" stroke-width="1"/>
+            <text x="185" y="48" text-anchor="middle" font-size="13" font-family="var(--font-code, monospace)" fill="var(--color-text, #1a1a1a)" font-weight="bold">DOM Tree</text>
+            <text x="185" y="62" text-anchor="middle" font-size="12" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">parser tokens</text>
+            <text x="185" y="72" text-anchor="middle" font-size="12" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">→ nodes</text>
+
+            <line x1="235" y1="54" x2="255" y2="54" stroke="var(--color-accent, #2563eb)" stroke-width="1.5" marker-end="url(#arrow06)"/>
+
+            <rect x="260" y="32" width="110" height="44" rx="4" fill="#22c55e" opacity="0.12" stroke="#22c55e" stroke-width="1"/>
+            <text x="315" y="48" text-anchor="middle" font-size="13" font-family="var(--font-code, monospace)" fill="var(--color-text, #1a1a1a)" font-weight="bold">Render Tree</text>
+            <text x="315" y="62" text-anchor="middle" font-size="12" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">DOM + CSSOM</text>
+            <text x="315" y="72" text-anchor="middle" font-size="12" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">visible nodes only</text>
+
+            <line x1="370" y1="54" x2="390" y2="54" stroke="var(--color-accent, #2563eb)" stroke-width="1.5" marker-end="url(#arrow06)"/>
+
+            <rect x="395" y="32" width="100" height="44" rx="4" fill="#eab308" opacity="0.15" stroke="#eab308" stroke-width="1"/>
+            <text x="445" y="48" text-anchor="middle" font-size="13" font-family="var(--font-code, monospace)" fill="var(--color-text, #1a1a1a)" font-weight="bold">Layout</text>
+            <text x="445" y="62" text-anchor="middle" font-size="12" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">box positions</text>
+            <text x="445" y="72" text-anchor="middle" font-size="12" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">and sizes</text>
+
+            <line x1="495" y1="54" x2="515" y2="54" stroke="var(--color-accent, #2563eb)" stroke-width="1.5" marker-end="url(#arrow06)"/>
+
+            <rect x="520" y="32" width="90" height="44" rx="4" fill="#e94560" opacity="0.12" stroke="#e94560" stroke-width="1"/>
+            <text x="565" y="48" text-anchor="middle" font-size="13" font-family="var(--font-code, monospace)" fill="var(--color-text, #1a1a1a)" font-weight="bold">Paint</text>
+            <text x="565" y="62" text-anchor="middle" font-size="12" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">pixel colors</text>
+
+            <line x1="610" y1="54" x2="630" y2="54" stroke="var(--color-accent, #2563eb)" stroke-width="1.5" marker-end="url(#arrow06)"/>
+
+            <rect x="635" y="32" width="75" height="44" rx="4" fill="var(--color-accent, #2563eb)" opacity="0.12" stroke="var(--color-accent, #2563eb)" stroke-width="1"/>
+            <text x="672" y="48" text-anchor="middle" font-size="13" font-family="var(--font-code, monospace)" fill="var(--color-text, #1a1a1a)" font-weight="bold">Composite</text>
+            <text x="672" y="62" text-anchor="middle" font-size="12" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">layers →</text>
+            <text x="672" y="72" text-anchor="middle" font-size="12" font-family="var(--color-code, monospace)" fill="var(--color-text-muted, #666)">screen</text>
+
+            <text x="10" y="100" font-size="12" font-family="sans-serif" fill="var(--color-text-muted, #666)">CSS path: </text>
+            <rect x="65" y="88" width="90" height="28" rx="3" fill="var(--color-accent, #2563eb)" opacity="0.08" stroke="var(--color-border, #d4d0ca)" stroke-width="0.5"/>
+            <text x="110" y="102" text-anchor="middle" font-size="12" font-family="var(--font-code, monospace)" fill="var(--color-text, #1a1a1a)">CSS Bytes</text>
+            <line x1="155" y1="98" x2="175" y2="98" stroke="var(--color-border, #d4d0ca)" stroke-width="1"/>
+            <rect x="180" y="88" width="95" height="28" rx="3" fill="var(--color-accent, #2563eb)" opacity="0.08" stroke="var(--color-border, #d4d0ca)" stroke-width="0.5"/>
+            <text x="227" y="102" text-anchor="middle" font-size="12" font-family="var(--font-code, monospace)" fill="var(--color-text, #1a1a1a)">CSSOM Tree</text>
+
+            <text x="10" y="130" font-size="12" font-family="sans-serif" fill="var(--color-text-muted, #666)">JS blocks HTML parsing: </text>
+            <rect x="170" y="118" width="350" height="28" rx="3" fill="#e94560" opacity="0.08" stroke="var(--color-border, #d4d0ca)" stroke-width="0.5"/>
+            <text x="345" y="132" text-anchor="middle" font-size="12" font-family="var(--font-code, monospace)" fill="var(--color-text, #1a1a1a)">&lt;script&gt; → pause DOM → execute → resume</text>
+          </svg>
+        </div>
+
+        <h3>Step 1: HTML Parsing → DOM Tree</h3>
+        <p>The browser reads raw HTML bytes and converts them into tokens (tags, attributes, text), then builds a tree structure called the <strong>DOM</strong> (Document Object Model). Each HTML element becomes a node in the tree. The DOM is an in-memory representation of the page structure that JavaScript can access and modify.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>HTML → DOM tree mentally</span></div>
+          <pre><code>&lt;html&gt;
+  &lt;body&gt;
+    &lt;h1&gt;Hello&lt;/h1&gt;
+    &lt;p&gt;World&lt;/p&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+
+// Becomes:
+document
+ └── html
+      └── body
+           ├── h1 ("Hello")
+           └── p  ("World")</code></pre>
+        </div>
+
+        <h3>Step 2: CSS Parsing → CSSOM Tree</h3>
+        <p>CSS bytes become the <strong>CSSOM</strong> (CSS Object Model) — a tree of styles that mirrors the DOM. The browser calculates which styles apply to which elements, resolving specificity, inheritance, and cascade. This is why the cascade (the C in CSS) is named that — styles cascade down the tree.</p>
+
+        <h3>Step 3: Render Tree</h3>
+        <p>The DOM and CSSOM are combined into the <strong>render tree</strong>. This contains only the elements that will actually be displayed — <code>display: none</code> elements are excluded. <code>visibility: hidden</code> elements are included (they take up space but are invisible).</p>
+
+        <h3>Step 4: Layout</h3>
+        <p>The browser calculates the exact position and size of every element in the render tree. This is where the box model comes to life — margins, padding, borders, and content areas are all computed. Layout is the most expensive step in terms of performance. Changing a element's width or height triggers a <strong>reflow</strong>, which recalculates positions for potentially all elements on the page.</p>
+
+        <h3>Step 5: Paint</h3>
+        <p>The browser fills in pixels: text colors, background images, borders, shadows. Modern browsers break the page into <strong>layers</strong> (like Photoshop layers) and paint each one separately. This is why <code>transform</code> and <code>opacity</code> animations are cheap — they only affect the composite step, not layout or paint.</p>
+
+        <h3>Step 6: Compositing</h3>
+        <p>The painted layers are assembled into the final image you see on screen. Only compositing-related properties (transform, opacity) can be animated without triggering layout or paint.</p>
+
+        <div class="callout-tip">
+          <div class="callout-title">Layout Thrashing — The Hidden Performance Killer</div>
+          <p>Every time you read a layout property like <code>offsetHeight</code> or <code>getBoundingClientRect()</code> after changing a style, the browser must force a synchronous layout to give you the correct value. This is called <strong>layout thrashing</strong>. Batch your reads and writes: read all measurements first, then make all changes. Or use <code>requestAnimationFrame</code> to coordinate.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>The JavaScript Engine</h2>
+        <p>JavaScript code does not run directly on your CPU — it runs in an <strong>engine</strong> embedded in the browser. Each browser has its own engine:</p>
+        <table>
+          <thead>
+            <tr><th>Browser</th><th>Engine</th><th>Also Used By</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Chrome, Edge, Brave, Opera</td><td>V8</td><td>Node.js, Deno, Electron</td></tr>
+            <tr><td>Firefox</td><td>SpiderMonkey</td><td>First JavaScript engine ever</td></tr>
+            <tr><td>Safari</td><td>JavaScriptCore (Nitro)</td><td>iOS web views, React Native (Hermes)</td></tr>
+          </tbody>
+        </table>
+
+        <h3>How an Engine Executes Code</h3>
+        <p>The simplified flow:</p>
+        <div class="decision-tree">Source Code (.js file)
+    ↓
+Parser → builds an Abstract Syntax Tree (AST)
+    ↓
+Interpreter → executes the AST (slow but immediate)
+    ↓
+Compiler (JIT) → observes hot code paths, compiles to optimized machine code
+    ↓
+Optimized machine code replaces interpreted code at runtime</div>
+        <p>Modern engines use <strong>Just-In-Time (JIT) compilation</strong>. They start interpreting code immediately so there is no startup delay, then observe which code runs most frequently (hot paths) and compile those into highly optimized machine code. This is why JavaScript can be both fast to start and fast to run.</p>
+
+        <div class="callout-info">
+          <div class="callout-title">The Cost of Dynamic Types</div>
+          <p>JavaScript is dynamically typed — a variable can hold a string, then a number, then an object. The engine must check the type every time it accesses a variable. If you change a variable's type inside a hot loop, the engine deoptimizes that code path and falls back to the interpreter. This is why TypeScript and consistent types actually make your code faster — the engine can optimize more aggressively when types don't change.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>The Event Loop</h2>
+        <p>JavaScript runs on a single thread — it can do only one thing at a time. But the browser is multi-threaded. The event loop is the mechanism that coordinates between JavaScript, the browser's rendering engine, and asynchronous operations (timers, network requests, user input).</p>
+
+        <h3>The Three Queues</h3>
+        <div class="decision-tree">Call Stack (one thing at a time — where your code runs)
+    ↓
+Microtask Queue (Promise resolutions, MutationObserver — higher priority)
+    ↓
+Task Queue (setTimeout, setInterval, events, fetch callbacks)</div>
+
+        <h4>Call Stack</h4>
+        <p>When a function calls another function, the stack grows. When a function returns, the stack shrinks. If the stack overflows (too many nested calls, or infinite recursion), you get a "Maximum call stack size exceeded" error. The stack is where synchronous code executes.</p>
+
+        <h4>Microtask Queue</h4>
+        <p>Promise resolutions (<code>.then()</code>, <code>.catch()</code>, <code>.finally()</code>) and <code>MutationObserver</code> callbacks go here. After every stack frame, the browser empties the ENTIRE microtask queue before moving on. This is why promise callbacks run before timer callbacks — they are higher priority.</p>
+
+        <h4>Task Queue</h4>
+        <p><code>setTimeout</code>, <code>setInterval</code>, user events (click, keydown), and fetch response handling go here. After emptying microtasks, the browser takes ONE task from this queue, executes it, and checks microtasks again. This is why <code>setTimeout(0)</code> does not run immediately — it still has to wait for the stack and microtask queue to clear.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Event loop execution order — predict the output</span></div>
+          <pre><code>console.log('1');  // sync
+
+setTimeout(() => {
+  console.log('2');  // task queue
+}, 0);
+
+Promise.resolve().then(() => {
+  console.log('3');  // microtask queue
+});
+
+console.log('4');  // sync
+
+// Output: 1, 4, 3, 2
+// Sync runs first, then microtasks, then tasks.</code></pre>
+        </div>
+
+        <div class="callout-warning">
+          <div class="callout-title">Blocking the Event Loop</div>
+          <p>A long-running synchronous operation (an infinite loop, a massive calculation, a synchronous network request) blocks the entire event loop. The page freezes — no clicks register, no animations play, no scroll events fire. This is why you never use synchronous <code>XMLHttpRequest</code> and why heavy computations should be offloaded to Web Workers or broken into chunks with <code>setTimeout</code>.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Storage APIs</h2>
+        <p>Browsers provide several ways to store data on the client side. Each has different characteristics for capacity, persistence, and scope:</p>
+
+        <table>
+          <thead>
+            <tr><th>API</th><th>Capacity</th><th>Persistence</th><th>Scope</th><th>Use Case</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>localStorage</code></td><td>~5-10 MB</td><td>Until manually cleared</td><td>Per origin</td><td>User preferences, theme choice, non-sensitive cached data</td></tr>
+            <tr><td><code>sessionStorage</code></td><td>~5-10 MB</td><td>Until tab closes</td><td>Per tab</td><td>Form data in progress, temporary state</td></tr>
+            <tr><td><code>cookies</code></td><td>~4 KB per cookie</td><td>Controlled by <code>Expires</code> / <code>Max-Age</code></td><td>Sent with every request to that domain</td><td>Session tokens, authentication, tracking (avoid for storage)</td></tr>
+            <tr><td><code>IndexedDB</code></td><td>Usually unlimited (browser-dependent)</td><td>Until manually cleared</td><td>Per origin</td><td>Large structured data, offline apps, file storage</td></tr>
+            <tr><td><code>Cache API</code></td><td>Unlimited (disk space permitting)</td><td>Managed by Service Worker</td><td>Per origin</td><td>HTTP response caching, offline-first PWAs</td></tr>
+          </tbody>
+        </table>
+
+        <h3>localStorage vs sessionStorage</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span>Storage basics</span></div>
+          <pre><code>// localStorage — survives browser restarts
+localStorage.setItem('theme', 'dark');
+const theme = localStorage.getItem('theme');
+localStorage.removeItem('theme');
+localStorage.clear();
+
+// sessionStorage — survives page refreshes, NOT tab close
+sessionStorage.setItem('draft', 'unsaved content');
+const draft = sessionStorage.getItem('draft');</code></pre>
+        </div>
+
+        <h3>When to Use What</h3>
+        <ul>
+          <li><strong>User preferences</strong> (theme, language, layout) → <code>localStorage</code></li>
+          <li><strong>Temporary form state</strong> → <code>sessionStorage</code></li>
+          <li><strong>Authentication tokens</strong> → <code>cookies</code> (with <code>HttpOnly</code> and <code>Secure</code> flags — set by the server, not client JS)</li>
+          <li><strong>Large datasets</strong> (product catalog, messages) → <code>IndexedDB</code></li>
+          <li><strong>Offline page caching</strong> → <code>Cache API</code> via Service Worker</li>
+        </ul>
+
+        <div class="callout-warning">
+          <div class="callout-title">localStorage Is Synchronous — It Blocks the Main Thread</div>
+          <p>Reading from or writing to <code>localStorage</code> blocks the event loop. For small values (a theme setting), this is negligible. For large values, use <code>IndexedDB</code> which is async and does not block rendering. Never store sensitive data (passwords, tokens) in <code>localStorage</code> — it is accessible to any JavaScript running on the same origin, including third-party scripts.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Web APIs</h2>
+        <p>Browsers expose a vast set of APIs beyond the core JavaScript language. These are not part of the JavaScript specification — they are provided by the browser environment. Here are the ones you will encounter most often:</p>
+
+        <div class="cheatsheet" style="margin-top:0.5em;">
+          <table>
+            <thead>
+              <tr><th>API</th><th>What It Does</th><th>Requires HTTPS</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>fetch()</code></td><td>Make HTTP requests (GET, POST, etc.) — modern replacement for XMLHttpRequest</td><td>No</td></tr>
+              <tr><td><code>Geolocation</code></td><td>Get the user's physical location (with permission)</td><td>Yes</td></tr>
+              <tr><td><code>Canvas</code></td><td>Draw graphics, render animations, process images pixel-by-pixel</td><td>No</td></tr>
+              <tr><td><code>WebSockets</code></td><td>Full-duplex persistent connection for real-time data (chat, live updates)</td><td>Yes (wss://)</td></tr>
+              <tr><td><code>Service Workers</code></td><td>Background script that intercepts network requests, enables offline mode, push notifications</td><td>Yes</td></tr>
+              <tr><td><code>Web Workers</code></td><td>Run JavaScript in a background thread — does not block the UI</td><td>No</td></tr>
+              <tr><td><code>History API</code></td><td>Manipulate browser history and URL without page reload (SPA routing)</td><td>No</td></tr>
+              <tr><td><code>Intersection Observer</code></td><td>Detect when an element enters/leaves the viewport (lazy loading, infinite scroll)</td><td>No</td></tr>
+              <tr><td><code>Clipboard API</code></td><td>Read and write the system clipboard (with permission)</td><td>Yes</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Feature Detection, Not Browser Detection</h3>
+        <p>Never check which browser the user is running. Instead, check whether the API you need exists:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Feature detection pattern</span></div>
+          <pre><code>// ❌ Bad — browser detection
+if (navigator.userAgent.includes('Chrome')) {
+  useGeolocation();
+}
+
+// ✅ Good — feature detection
+if ('geolocation' in navigator) {
+  navigator.geolocation.getCurrentPosition(success, error);
+} else {
+  fallbackToManualLocation();
+}</code></pre>
+        </div>
+        <p>Browser detection breaks constantly — user agents can be spoofed, new browser versions change behavior, and feature availability varies even within the same browser. Feature detection is future-proof.</p>
+      </section>
+
+      <section>
+        <h2>Browser Compatibility</h2>
+        <p>Not all browsers support all features at the same time. Every time you use a modern API, you need to check whether the browsers your users are on support it.</p>
+
+        <h3>How to Check Compatibility</h3>
+        <ul>
+          <li><strong>Can I Use</strong> (caniuse.com) — the standard reference. Search any feature and see support tables across all major browsers and versions.</li>
+          <li><strong>MDN Browser Compatibility Tables</strong> — every MDN page has a browser compatibility section at the bottom showing exactly which versions support the feature.</li>
+          <li><strong>Babel / Core.js</strong> — for JavaScript features, Babel can transpile modern syntax to older equivalents. For APIs (like <code>fetch</code>), you need polyfills.</li>
+        </ul>
+
+        <h3>Polyfills vs Transpilation</h3>
+        <ul>
+          <li><strong>Transpilation</strong> — converts new syntax to old syntax. Babel turns <code>const</code> into <code>var</code>, arrow functions into regular functions, optional chaining into ternary checks. This happens at build time.</li>
+          <li><strong>Polyfill</strong> — adds missing functionality at runtime. If the browser lacks <code>Array.prototype.includes</code>, a polyfill adds it. Tools like <code>core-js</code> and <code>polyfill.io</code> provide these.</li>
+        </ul>
+        <p>For modern development, use Babel for syntax and specify browser targets in your <code>package.json</code> or <code>.browserslistrc</code> file. Tools like Vite and Next.js handle this automatically.</p>
+      </section>
+
+      <div class="compare-box">
+        <div class="compare-col junior">
+          <div class="compare-label">Junior Developer</div>
+          <h4>How a Junior Might Think</h4>
+          <ul>
+            <li>Treats the browser as a black box — "it just works"</li>
+            <li>Does not understand why animations sometimes stutter (layout thrashing)</li>
+            <li>Uses <code>localStorage</code> for everything, including sensitive data</li>
+            <li>Does not know the difference between microtasks and tasks</li>
+            <li>Checks browser version instead of feature detection</li>
+          </ul>
+        </div>
+        <div class="compare-col senior">
+          <div class="compare-label">Senior Developer</div>
+          <h4>How a Senior Thinks</h4>
+          <ul>
+            <li>Understands the rendering pipeline and knows which properties trigger layout vs paint vs composite</li>
+            <li>Chooses the right storage API based on data size, persistence needs, and security</li>
+            <li>Understands the event loop and can predict async execution order</li>
+            <li>Uses feature detection for cross-browser compatibility</li>
+            <li>Knows that blocking the event loop freezes the page — keeps heavy work async</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="cheatsheet">
+        <div class="cheatsheet-title">Cheat Sheet</div>
+        <table>
+          <thead>
+            <tr><th>Concept</th><th>Key Takeaway</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Rendering Pipeline</td><td>HTML→DOM, CSS→CSSOM, DOM+CSSOM→Render Tree, Layout, Paint, Composite</td></tr>
+            <tr><td>Layout Thrashing</td><td>Batch style reads and writes. Avoid reading layout properties after writing styles.</td></tr>
+            <tr><td>Event Loop</td><td>Call stack → microtasks (Promise) → tasks (setTimeout). Microtasks always run first.</td></tr>
+            <tr><td>Storage</td><td><code>localStorage</code> for preferences, <code>sessionStorage</code> for tab state, <code>IndexedDB</code> for large data, cookies for auth only.</td></tr>
+            <tr><td>Feature Detection</td><td>Check <code>'apiName' in navigator</code> — never check <code>navigator.userAgent</code>.</td></tr>
+            <tr><td>JIT Compilation</td><td>Engine interprets first, then compiles hot paths. Consistent types = faster code.</td></tr>
+            <tr><td>Blocking</td><td>Sync operations freeze the tab. Use Web Workers for heavy computation.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <nav class="chapter-nav">
+  <a href="01-how-the-web-works.html"><span class="nav-label">Prev</span>Prev: How the Web Works</a>
+  <a href="03-terminal-and-tools.html"><span class="nav-label">Next</span>Next: The Command Line &amp; Local Dev</a>
+</nav>
+    </main>
+  </div>
+
+  <script src="../../assets/js/sidebar.js"></script>
+  <script src="../../assets/js/navigation.js"></script>
+  <script src="../../assets/js/themes.js"></script>
+</body>
+</html>

@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Turnstile Token Lifecycle — Interactive Example</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/themes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .lifecycle { margin: 1.5rem 0; }
+    .token-display { font-family: monospace; background: var(--bg-code); padding: 1rem; border-radius: 6px; font-size: 0.85rem; word-break: break-all; margin: 1rem 0; border: 1px solid var(--border-color); min-height: 60px; }
+    .token-valid { border-left: 4px solid #22c55e; }
+    .token-expired { border-left: 4px solid #e94560; }
+    .token-pending { border-left: 4px solid #eab308; }
+    .state-indicator { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem; border-radius: 4px; margin: 1rem 0; }
+    .state-indicator.valid { background: #d4edda; color: #155724; }
+    .state-indicator.expired { background: #f8d7da; color: #721c24; }
+    .state-indicator.pending { background: #fff3cd; color: #856404; }
+    .state-indicator .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    .state-indicator.valid .dot { background: #22c55e; }
+    .state-indicator.expired .dot { background: #e94560; }
+    .state-indicator.pending .dot { background: #eab308; }
+    .timeline { position: relative; margin: 2rem 0; padding-left: 2rem; }
+    .timeline::before { content: ''; position: absolute; left: 0.5rem; top: 0; bottom: 0; width: 2px; background: var(--border-color); }
+    .timeline-item { position: relative; margin-bottom: 1.5rem; padding-left: 1rem; }
+    .timeline-item::before { content: ''; position: absolute; left: -1.25rem; top: 0.3rem; width: 12px; height: 12px; border-radius: 50%; background: var(--text-secondary); }
+    .timeline-item.current::before { background: #e94560; box-shadow: 0 0 0 3px rgba(233,69,96,0.3); }
+    .timeline-item .time { font-size: 0.8rem; color: var(--text-secondary); }
+    .action-buttons { display: flex; gap: 0.75rem; flex-wrap: wrap; margin: 1rem 0; }
+    .action-buttons button { padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; }
+    .action-buttons button.primary { background: #e94560; color: #fff; }
+    .action-buttons button.secondary { background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); }
+    .action-buttons button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .flow-diagram { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; margin: 1.5rem 0; }
+    @media (max-width: 600px) { .flow-diagram { grid-template-columns: 1fr; } }
+    .flow-step { text-align: center; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.8rem; }
+    .flow-step .step-num { display: block; font-weight: 700; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.3rem; }
+    .flow-step.active { border-color: #e94560; background: rgba(233,69,96,0.05); }
+    .flow-arrow { display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: var(--text-secondary); }
+    @media (max-width: 600px) { .flow-arrow { transform: rotate(90deg); } }
+  </style>
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+  <div class="site-wrapper">
+    <header class="site-header" style="justify-content:space-between;">
+      <div class="site-title"><a href="../index.html"><i class="fa-solid fa-house"></i> M's Web Development Guide</a></div>
+      <a href="../chapters/11-project-walkthrough.html" style="font-size:0.85rem;">Back to Chapter 11</a>
+    </header>
+    <main class="main-content" id="main">
+      <h1>Turnstile Token Lifecycle</h1>
+      <p class="chapter-subtitle">Interactive walkthrough of how Cloudflare Turnstile generates, validates, and expires tokens in an SPA.</p>
+
+      <div class="callout-info">
+        <div class="callout-title">What Happens During Turnstile Verification</div>
+        <p>Turnstile is a privacy-preserving CAPTCHA replacement. When the widget renders, it runs a browser challenge (usually invisible). On success, it generates a one-time token that must be verified server-side. The token expires after 300 seconds (5 minutes) — a common SPA gotcha.</p>
+      </div>
+
+      <div class="flow-diagram">
+        <div class="flow-step" id="step-1">
+          <span class="step-num">Step 1</span>
+          <strong>Widget Renders</strong>
+          <p style="font-size:0.75rem;margin-top:0.3rem;">Turnstile div appears in the DOM</p>
+        </div>
+        <div class="flow-arrow">&#x2192;</div>
+        <div class="flow-step" id="step-2">
+          <span class="step-num">Step 2</span>
+          <strong>Browser Challenge</strong>
+          <p style="font-size:0.75rem;margin-top:0.3rem;">Cloudflare runs a silent challenge</p>
+        </div>
+        <div class="flow-arrow">&#x2192;</div>
+        <div class="flow-step" id="step-3">
+          <span class="step-num">Step 3</span>
+          <strong>Token Generated</strong>
+          <p style="font-size:0.75rem;margin-top:0.3rem;">One-time token in <code>cf-turnstile-response</code></p>
+        </div>
+        <div class="flow-arrow">&#x2192;</div>
+        <div class="flow-step" id="step-4">
+          <span class="step-num">Step 4</span>
+          <strong>Server Verifies</strong>
+          <p style="font-size:0.75rem;margin-top:0.3rem;">POST to <code>/siteverify</code> endpoint</p>
+        </div>
+      </div>
+
+      <div class="lifecycle">
+        <div class="state-indicator pending" id="state-indicator">
+          <span class="dot"></span>
+          <span id="state-text">Waiting for challenge...</span>
+        </div>
+
+        <div id="token-box" class="token-display token-pending">
+          <em>No token yet. Click "Simulate Challenge" below.</em>
+        </div>
+
+        <div class="action-buttons">
+          <button class="primary" id="btn-challenge">Simulate Challenge</button>
+          <button class="secondary" id="btn-submit" disabled>Verify Token (Server)</button>
+          <button class="secondary" id="btn-reset">Reset</button>
+          <button class="secondary" id="btn-expire" disabled>Wait 5 Minutes (Token Expires)</button>
+        </div>
+
+        <div id="verification-result" style="display:none;padding:0.75rem;border-radius:4px;margin-top:0.75rem;"></div>
+      </div>
+
+      <div class="timeline" id="timeline">
+        <div class="timeline-item" id="tl-render">
+          <div class="time">T+0s</div>
+          <strong>Widget rendered</strong> — Turnstile div added to page
+        </div>
+        <div class="timeline-item" id="tl-challenge">
+          <div class="time">T+~2s</div>
+          <strong>Challenge running</strong> — Cloudflare checks browser environment
+        </div>
+        <div class="timeline-item" id="tl-token">
+          <div class="time">T+~3s</div>
+          <strong>Token issued</strong> — <code>cf-turnstile-response</code> populated
+        </div>
+        <div class="timeline-item" id="tl-submit">
+          <div class="time">T+~4s</div>
+          <strong>Token submitted</strong> — Sent with form data to backend
+        </div>
+        <div class="timeline-item" id="tl-verify">
+          <div class="time">T+~4.5s</div>
+          <strong>Server verifies</strong> — POST to Cloudflare's /siteverify
+        </div>
+        <div class="timeline-item" id="tl-expire">
+          <div class="time">T+300s</div>
+          <strong>Token expires</strong> — Must re-challenge if not yet submitted
+        </div>
+      </div>
+
+      <div class="compare-box">
+        <div class="compare-col junior">
+          <div class="compare-label">Common SPA Mistake</div>
+          <p>Rendering the Turnstile widget once and reusing the same form HTML across navigations. When the user navigates away and back, the token is stale — the server rejects it. The user sees a generic error and doesn't know why.</p>
+        </div>
+        <div class="compare-col senior">
+          <div class="compare-label">Correct SPA Approach</div>
+          <p>Each navigation re-renders the page content, which destroys and re-creates the Turnstile widget. This forces a fresh challenge and a new token. Alternatively, call <code>turnstile.reset()</code> on the widget container when reusing cached DOM.</p>
+        </div>
+      </div>
+
+      <details style="margin-top:1.5rem;">
+        <summary style="cursor:pointer;font-weight:600;">Server-Side Verification Code (PHP)</summary>
+        <div class="code-block" style="margin-top:0.5em;">
+          <pre style="font-size:0.85rem;background:var(--bg-code);padding:0.75rem;border-radius:4px;overflow-x:auto;">function verifyTurnstile($token): bool {
+    if (empty($token)) return false;
+
+    $ch = curl_init('https://challenges.cloudflare.com/turnstile/v0/siteverify');
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER =&gt; true,
+        CURLOPT_POSTFIELDS     =&gt; [
+            'secret'   =&gt; $_ENV['TURNSTILE_SECRET_KEY'],
+            'response' =&gt; $token,
+        ],
+    ]);
+
+    $result = json_decode(curl_exec($ch), true);
+    return ($result['success'] ?? false) === true;
+}</pre>
+        </div>
+      </details>
+    </main>
+  </div>
+  <script>
+    var state = 'idle'; // idle | challenging | has-token | submitted | verified | expired
+    var token = null;
+    var timer = null;
+
+    var steps = document.querySelectorAll('.flow-step');
+
+    function setState(newState) {
+      state = newState;
+      var indicator = document.getElementById('state-indicator');
+      var tokenBox = document.getElementById('token-box');
+      var result = document.getElementById('verification-result');
+      var btnChallenge = document.getElementById('btn-challenge');
+      var btnSubmit = document.getElementById('btn-submit');
+      var btnExpire = document.getElementById('btn-expire');
+
+      result.style.display = 'none';
+      indicator.className = 'state-indicator';
+      tokenBox.className = 'token-display';
+
+      steps.forEach(function(s, i) {
+        s.classList.remove('active');
+      });
+
+      var timelineItems = document.querySelectorAll('.timeline-item');
+      timelineItems.forEach(function(t) { t.classList.remove('current'); });
+
+      switch (newState) {
+        case 'idle':
+          indicator.classList.add('pending');
+          document.getElementById('state-text').textContent = 'Waiting for challenge...';
+          tokenBox.classList.add('token-pending');
+          tokenBox.innerHTML = '<em>No token yet. Click "Simulate Challenge" below.</em>';
+          btnChallenge.disabled = false;
+          btnSubmit.disabled = true;
+          btnExpire.disabled = true;
+          break;
+
+        case 'challenging':
+          indicator.classList.add('pending');
+          document.getElementById('state-text').textContent = 'Challenge in progress...';
+          tokenBox.classList.add('token-pending');
+          tokenBox.innerHTML = '<em>Running browser challenge...</em>';
+          btnChallenge.disabled = true;
+          btnSubmit.disabled = true;
+          btnExpire.disabled = true;
+          document.getElementById('tl-challenge').classList.add('current');
+          break;
+
+        case 'has-token':
+          indicator.classList.add('valid');
+          document.getElementById('state-text').textContent = 'Token issued. Ready to submit.';
+          token = '0x' + Array.from({length: 40}, function() { return '0123456789abcdef'[Math.floor(Math.random() * 16)]; }).join('');
+          tokenBox.classList.add('token-valid');
+          tokenBox.textContent = 'cf-turnstile-response: ' + token;
+          btnChallenge.disabled = true;
+          btnSubmit.disabled = false;
+          btnExpire.disabled = false;
+          document.getElementById('tl-token').classList.add('current');
+          break;
+
+        case 'submitted':
+          indicator.classList.add('pending');
+          document.getElementById('state-text').textContent = 'Token submitted. Waiting for server verification...';
+          btnChallenge.disabled = true;
+          btnSubmit.disabled = true;
+          btnExpire.disabled = true;
+          document.getElementById('tl-submit').classList.add('current');
+          break;
+
+        case 'verified':
+          indicator.classList.add('valid');
+          document.getElementById('state-text').textContent = 'Token verified! Server confirmed valid.';
+          tokenBox.classList.add('token-valid');
+          result.style.display = 'block';
+          result.className = 'state-indicator valid';
+          result.innerHTML = '<span class="dot"></span> Server response: { "success": true } — Form accepted.';
+          btnChallenge.disabled = true;
+          btnSubmit.disabled = true;
+          btnExpire.disabled = true;
+          document.getElementById('tl-verify').classList.add('current');
+          break;
+
+        case 'expired':
+          indicator.classList.add('expired');
+          document.getElementById('state-text').textContent = 'Token expired! Must re-challenge.';
+          tokenBox.classList.add('token-expired');
+          tokenBox.innerHTML = '<em>Token expired after 300 seconds. Click "Simulate Challenge" to get a new token.</em>';
+          btnChallenge.disabled = false;
+          btnSubmit.disabled = true;
+          btnExpire.disabled = true;
+          document.getElementById('tl-expire').classList.add('current');
+          break;
+      }
+    }
+
+    document.getElementById('btn-challenge').addEventListener('click', function() {
+      setState('challenging');
+      setTimeout(function() {
+        setState('has-token');
+      }, 1500);
+    });
+
+    document.getElementById('btn-submit').addEventListener('click', function() {
+      if (state !== 'has-token') return;
+      setState('submitted');
+      setTimeout(function() {
+        setState('verified');
+      }, 1500);
+    });
+
+    document.getElementById('btn-expire').addEventListener('click', function() {
+      setState('expired');
+    });
+
+    document.getElementById('btn-reset').addEventListener('click', function() {
+      if (timer) { clearTimeout(timer); timer = null; }
+      setState('idle');
+    });
+
+    // Expire automatically if user waits too long
+    var expireTimer = null;
+    var origSetState = setState;
+    setState = function(newState) {
+      origSetState(newState);
+      if (newState === 'has-token') {
+        expireTimer = setTimeout(function() {
+          if (state === 'has-token') {
+            setState('expired');
+          }
+        }, 10000); // 10s instead of 300s for demo
+      } else if (newState === 'idle' || newState === 'expired') {
+        if (expireTimer) { clearTimeout(expireTimer); expireTimer = null; }
+      }
+    };
+
+    setState('idle');
+  </script>
+  <script src="../js/themes.js"></script>
+</body>
+</html>

@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>03 — CSS | M's Web Development Guide</title>
+  <meta name="description" content="Layout, styling, responsive design, and the decision-making process behind every property.">
+  <link rel="stylesheet" href="../../assets/css/main.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/themes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <div class="site-wrapper">
+    <header class="site-header">
+      <div class="site-title"><a href="../../index.html"><i class="fa-solid fa-house"></i> M's Web Development Guide</a></div>
+      <div class="header-controls">
+        <button data-sidebar-toggle class="sidebar-toggle" aria-label="Toggle table of contents">&#9776; TOC</button>
+        <button data-theme-toggle aria-label="Switch theme"><span class="icon">☾</span>Dark</button>
+      </div>
+    </header>
+
+    <aside class="sidebar" aria-label="Table of Contents">
+      <div id="sidebar-toc"></div>
+    </aside>
+
+    <main class="main-content" id="main">
+      <span class="chapter-number">Chapter 7</span>
+      <h1>CSS</h1>
+      <p class="chapter-subtitle">Layout, styling, responsive design, and the decision-making process behind every property</p>
+
+      <p>CSS is the language of visual decisions. Every property is a tradeoff: readability vs brevity, flexibility vs control, consistency vs uniqueness. This chapter teaches you not just what each property does, but <strong>when to reach for it</strong> and <strong>why</strong>.</p>
+
+      <section>
+        <h2>CSS Core Concepts</h2>
+        <p>Three concepts underpin every line of CSS you will ever write. Understanding them first will save you hours of confusion.</p>
+
+        <h3>CSS Units</h3>
+        <p>Every measurement in CSS needs a unit. The unit tells the browser what kind of measurement you mean. They fall into two categories:</p>
+        <table>
+          <thead>
+            <tr><th>Unit</th><th>Type</th><th>Relative To</th><th>Best For</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>px</code></td><td>Absolute</td><td>One physical pixel on screen</td><td>Borders, shadows, anything that should not scale</td></tr>
+            <tr><td><code>rem</code></td><td>Relative</td><td>The root element's font-size (<code>&lt;html&gt;</code>, default 16px)</td><td><strong>Font sizes and spacing</strong> — scales when user changes browser font size</td></tr>
+            <tr><td><code>em</code></td><td>Relative</td><td>The <em>current</em> element's font-size</td><td>Padding or margin that should scale with the element's text size. Be careful — <code>em</code> compounds (a 2em child inside a 1.5em parent is 3x the root).</td></tr>
+            <tr><td><code>%</code></td><td>Relative</td><td>The parent element's value for that property</td><td>Widths (50% = half the parent), line-height (150% of font-size)</td></tr>
+            <tr><td><code>vw</code></td><td>Viewport</td><td>1% of the viewport width</td><td>Full-width elements, large hero text that scales with screen</td></tr>
+            <tr><td><code>vh</code></td><td>Viewport</td><td>1% of the viewport height</td><td>Full-screen sections ("hero" that fills the screen)</td></tr>
+            <tr><td><code>ch</code></td><td>Relative</td><td>The width of the "0" character in the current font</td><td>Limiting line width for readability (<code>max-width: 65ch</code>)</td></tr>
+            <tr><td><code>fr</code></td><td>Grid-specific</td><td>Fraction of available space in a CSS Grid container</td><td>Grid columns: <code>1fr 2fr</code> = second column gets twice the space of the first</td></tr>
+          </tbody>
+        </table>
+        <p><strong>The rule of thumb:</strong> use <code>rem</code> for font sizes and spacing (it respects user accessibility preferences), use <code>px</code> for borders and fine details, use <code>%</code> or <code>vw</code>/<code>vh</code> for layout widths. Avoid <code>em</code> for font sizes unless you understand compounding.</p>
+
+        <h3>Specificity and the Cascade</h3>
+        <p>When two CSS rules conflict, the browser must decide which one wins. It uses a three-tier priority system called the <strong>cascade</strong>:</p>
+        <div class="decision-tree">1. Origin & importance (user's !important > author's !important > author normal > browser default)<br>
+2. Specificity (inline style > ID > class/attribute/pseudo-class > element/pseudo-element)<br>
+3. Source order (if specificity is equal, the last rule wins)</div>
+
+        <p>Specificity is calculated as a four-part score: <strong>(inline, IDs, classes, elements)</strong>. Each selector type adds to its column:</p>
+        <table>
+          <thead>
+            <tr><th>Selector</th><th>Example</th><th>Inline</th><th>IDs</th><th>Classes</th><th>Elements</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Element</td><td><code>p</code></td><td>0</td><td>0</td><td>0</td><td>1</td></tr>
+            <tr><td>Class</td><td><code>.highlight</code></td><td>0</td><td>0</td><td>1</td><td>0</td></tr>
+            <tr><td>ID</td><td><code>#header</code></td><td>0</td><td>1</td><td>0</td><td>0</td></tr>
+            <tr><td>Inline</td><td><code>style="color: red"</code></td><td>1</td><td>0</td><td>0</td><td>0</td></tr>
+            <tr><td>Combined</td><td><code>#sidebar .widget p</code></td><td>0</td><td>1</td><td>1</td><td>1</td></tr>
+          </tbody>
+        </table>
+        <p><strong>One ID beats any number of classes.</strong> One class beats any number of elements. Inline styles beat everything except <code>!important</code>.</p>
+
+        <h4>The !important Trap</h4>
+        <p><code>!important</code> overrides the entire cascade, forcing a property to win regardless of specificity:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Why !important is dangerous</span></div>
+          <pre><code>.button { color: blue !important; }
+#submit { color: red; }  /* Loses — !important wins */</code></pre>
+        </div>
+        <p>The problem: if you use <code>!important</code> to fix one style conflict, the next developer cannot override it without adding another <code>!important</code>. This creates an arms race. <strong>Never use <code>!important</code> in application code.</strong> The only acceptable uses are in utility classes (like a Tailwind helper) or user stylesheets. Fix specificity by making your selector more specific instead.</p>
+
+        <div class="callout-warning">
+          <div class="callout-title">CSS Specificity Wars</div>
+          <p>The specificity calculation seems simple on paper, but real-world selectors create surprises. <code>#header .nav a</code> (0,1,1,1) beats <code>.nav .item a</code> (0,0,2,1) because one ID outweighs any number of classes. A class on a deeply nested element loses to an ID on a distant parent. The worst trap: <code>.class:not(.something)</code> — the <code>:not()</code> pseudo-class contributes the highest specificity of its argument, so <code>:not(#id)</code> has an ID's worth of specificity even though it negates it. If two selectors target the same element and you cannot figure out why one wins, paste them into a specificity calculator — the answer is never intuition.</p>
+        </div>
+
+        <h3>Inheritance</h3>
+        <p>Some CSS properties are automatically passed from a parent to its children. If you set <code>color: blue</code> on a <code>&lt;div&gt;</code>, all the text inside it (including nested <code>&lt;p&gt;</code>, <code>&lt;span&gt;</code>, and <code>&lt;a&gt;</code> elements) also becomes blue — unless something overrides it.</p>
+        <table>
+          <thead>
+            <tr><th>Inherits automatically</th><th>Does NOT inherit</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>color</code>, <code>font-family</code>, <code>font-size</code>, <code>font-weight</code>, <code>line-height</code>, <code>text-align</code>, <code>visibility</code></td><td><code>margin</code>, <code>padding</code>, <code>border</code>, <code>width</code>, <code>height</code>, <code>background</code>, <code>display</code>, <code>position</code>, <code>overflow</code></td></tr>
+          </tbody>
+        </table>
+        <p>You can force inheritance with the <code>inherit</code> keyword: <code>border: inherit</code> makes an element use its parent's border. You can prevent it with <code>initial</code> (resets to browser default) or <code>unset</code> (acts as <code>inherit</code> for inheritable properties, <code>initial</code> for others).</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Inheritance in practice</span></div>
+          <pre><code>/* Set on parent — children inherit */
+.card { color: #333; font-family: Georgia, serif; line-height: 1.6; }
+
+/* Child overrides only what it needs */
+.card h2 { font-size: 1.5rem; }     /* inherits color, font-family, line-height */
+.card p  { font-size: 1rem; }        /* inherits color, font-family, line-height */
+.card a  { color: blue; }            /* overrides color only */</code></pre>
+        </div>
+
+        <div class="callout-info">
+          <div class="callout-title">Why These Three Concepts Matter</div>
+          <p>Units, specificity, and inheritance are the most common source of "CSS doesn't do what I expect" bugs. <em>Why is my font 24px when I set it to 16px?</em> — somewhere an <code>em</code> is compounding. <em>Why is my button still blue when I wrote <code>color: red</code>?</em> — a more specific selector (or <code>!important</code>) is winning. <em>Why does my div have margin when I didn't set one?</em> — margins are not inherited, but margin-collapse between siblings can look like it. Knowing these three rules eliminates whole categories of bugs.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>The Box Model</h2>
+        <p>Every element on a web page is a rectangle. The box model defines how that rectangle's size is calculated. It consists of four layers, from inside out:</p>
+
+        <table>
+          <thead>
+            <tr><th>Layer</th><th>Property</th><th>What it controls</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Content</td><td><code>width</code> / <code>height</code></td><td>The actual content area (text, image, child elements)</td></tr>
+            <tr><td>Padding</td><td><code>padding</code></td><td>Space between content and border. Transparent. Used for breathing room.</td></tr>
+            <tr><td>Border</td><td><code>border</code></td><td>Visual edge of the element. Can be styled (solid, dashed), colored, and rounded.</td></tr>
+            <tr><td>Margin</td><td><code>margin</code></td><td>Space outside the border. Creates gaps between elements.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>content-box vs border-box</h3>
+        <p>This is the single most impactful CSS decision you will make. The <code>box-sizing</code> property changes how <code>width</code> and <code>height</code> are calculated:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>box-sizing comparison</span></div>
+          <pre><code>/* content-box (default) — width excludes padding and border */
+.box { width: 200px; padding: 20px; border: 2px solid; }
+/* Total width: 200 + 20 + 20 + 2 + 2 = 244px */
+
+/* border-box — width INCLUDES padding and border */
+.box { box-sizing: border-box; width: 200px; padding: 20px; border: 2px solid; }
+/* Total width: 200px (padding and border squeezed inside) */</code></pre>
+        </div>
+        <p><strong>Always use <code>box-sizing: border-box</code></strong> on every element. It makes sizing predictable — a 50% width is always 50% of the parent, regardless of padding or border. Apply it globally:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Global reset (industry standard)</span></div>
+          <pre><code>*, *::before, *::after {
+  box-sizing: border-box;
+}</code></pre>
+        </div>
+
+        <h3>Margin Collapsing</h3>
+        <p>Vertical margins collapse: when two block elements are stacked, the larger margin wins and the smaller one is ignored. This is not a bug — it prevents double-spacing between elements. Horizontal margins never collapse.</p>
+        <div class="decision-tree">Element A has margin-bottom: 30px. Element B has margin-top: 20px. The gap between them is 30px (the larger wins), not 50px.</div>
+        <p>Margin collapsing catches every developer at least once. The fix is usually simple: use padding on the parent instead of margin on the child, or use flexbox/gap which does not collapse.</p>
+      </section>
+
+      <section>
+        <h2>Display and Positioning</h2>
+
+        <h3>Display Values</h3>
+        <table>
+          <thead>
+            <tr><th>Value</th><th>Behavior</th><th>Common Use</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>block</code></td><td>Full width, starts on new line, respects width/height</td><td><code>&lt;div&gt;</code>, <code>&lt;p&gt;</code>, <code>&lt;h1&gt;</code> — naturally block</td></tr>
+            <tr><td><code>inline</code></td><td>Shrink-wraps content, flows horizontally, ignores width/height</td><td><code>&lt;span&gt;</code>, <code>&lt;a&gt;</code>, <code>&lt;strong&gt;</code> — naturally inline</td></tr>
+            <tr><td><code>inline-block</code></td><td>Inline flow but respects width/height like a block</td><td>Buttons, nav items that need a specific size but sit in text</td></tr>
+            <tr><td><code>flex</code></td><td>Block-level flex container</td><td>One-dimensional layouts</td></tr>
+            <tr><td><code>grid</code></td><td>Block-level grid container</td><td>Two-dimensional layouts</td></tr>
+            <tr><td><code>none</code></td><td>Element removed from layout entirely (not visible, no space)</td><td>Toggle visibility without JavaScript</td></tr>
+          </tbody>
+        </table>
+        <p>Note: <code>display: none</code> removes the element from the layout flow. <code>visibility: hidden</code> hides it but keeps its space. Use <code>display: none</code> when you want to collapse the space. Use <code>visibility: hidden</code> when you want to preserve the layout.</p>
+
+        <h3>Positioning Schemes</h3>
+        <table>
+          <thead>
+            <tr><th>Value</th><th>Offset Relative To</th><th>Use Case</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>static</code></td><td>Normal document flow (default)</td><td>Most elements</td></tr>
+            <tr><td><code>relative</code></td><td>Its own normal position</td><td>Fine-tuning without affecting layout; anchor for absolute children</td></tr>
+            <tr><td><code>absolute</code></td><td>Nearest positioned ancestor (non-static)</td><td>Modals, tooltips, dropdown menus, overlays</td></tr>
+            <tr><td><code>fixed</code></td><td>Viewport</td><td>Sticky headers, floating buttons, chat widgets</td></tr>
+            <tr><td><code>sticky</code></td><td>Scrolls normally then sticks at a threshold</td><td>Section headers that stick on scroll, table headers</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Z-Index and Stacking Context</h3>
+        <p>Z-index controls which element appears on top — but only within the same <strong>stacking context</strong>. A new stacking context is created by:</p>
+        <ul>
+          <li><code>position: relative/absolute/fixed/sticky</code> with <code>z-index</code> set</li>
+          <li><code>opacity</code> less than 1</li>
+          <li><code>transform</code>, <code>filter</code>, or <code>clip-path</code></li>
+          <li><code>isolation: isolate</code></li>
+        </ul>
+        <p>The most common z-index bug: setting <code>z-index: 9999</code> on a modal, but the modal is inside a parent with <code>transform</code> and <code>z-index: 1</code>, creating a new stacking context. The modal's 9999 only applies within that parent — it is still behind elements in the root context. The fix: move the modal to the root of the DOM or use <code>isolation: isolate</code> deliberately.</p>
+      </section>
+
+      <section>
+        <h2>Flexbox Deep Dive</h2>
+        <p>Flexbox solves one-dimensional layout: distributing items along a row or column. It replaces floats, inline-block hacks, and table-based layouts for almost every case.</p>
+
+        <h3>The Two Axes</h3>
+        <div class="decision-tree">main axis = flex-direction (row by default) → controls horizontal distribution<br>
+cross axis = perpendicular to main → controls alignment</div>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Essential flex properties</span></div>
+          <pre><code>.container {
+  display: flex;
+  justify-content: center;       /* main axis: start, center, end, space-between, space-around, space-evenly */
+  align-items: center;           /* cross axis: stretch, center, start, end, baseline */
+  gap: 1rem;                     /* spacing between items (modern, no collapsing) */
+  flex-wrap: wrap;               /* allow items to wrap to next line */
+}
+
+.item {
+  flex: 1;                       /* shorthand: flex-grow: 1, flex-shrink: 1, flex-basis: 0 */
+  /* flex: 0 1 auto; */          /* default: don't grow, shrink if needed, basis is content width */
+  /* flex: 0 0 200px; */         /* fixed width: don't grow, don't shrink, width 200px */
+}</code></pre>
+        </div>
+
+        <h3>Common Flexbox Patterns</h3>
+        <ul>
+          <li><strong>Centering:</strong> <code>display: flex; justify-content: center; align-items: center;</code> — solves the hardest CSS problem forever</li>
+          <li><strong>Equal-height columns:</strong> Flex items stretch to the height of the tallest sibling by default (no hacks needed)</li>
+          <li><strong>Sticky footer:</strong> Set <code>flex: 1</code> on the main content area, footer stays at bottom</li>
+          <li><strong>Auto margins:</strong> <code>margin-left: auto</code> on a flex item pushes it to the right — useful for nav bars with a logo on the left and links on the right</li>
+        </ul>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Holy grail: sticky footer with flexbox</span></div>
+          <pre><code>body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+main { flex: 1; }  /* pushes footer down */
+footer { /* stays at bottom */ }</code></pre>
+        </div>
+
+        <div class="callout-info">
+          <div class="callout-title">Flexbox vs Grid Decision</div>
+          <p>Use Flexbox when content flows in one direction and you want it to distribute naturally. Use Grid when you need explicit rows AND columns control. The rough rule: <strong>flexbox is for components and small-scale layouts. Grid is for page-level layout.</strong> But they work together — a Grid cell can contain a Flexbox row, and vice versa.</p>
+        </div>
+
+        <div class="decision-tree" style="white-space:normal;overflow:visible;">
+           <svg viewBox="0 0 730 450" style="width:100%;max-width:730px;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+             <defs>
+               <marker id="arrow04" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="var(--color-accent, #2563eb)"/></marker>
+               <marker id="arrow04no" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="var(--color-text-muted, #999)"/></marker>
+             </defs>
+             <rect x="2" y="2" width="726" height="446" rx="8" fill="none" stroke="var(--color-border, #d4d0ca)" stroke-width="1"/>
+             <text x="365" y="24" text-anchor="middle" font-size="16" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">CSS Layout Method Decision Tree</text>
+
+             <text x="365" y="52" text-anchor="middle" font-size="17" font-family="sans-serif" fill="var(--color-text, #1a1a1a)" font-weight="bold">What are you laying out?</text>
+
+             <rect x="240" y="60" width="250" height="36" rx="18" fill="var(--color-accent, #2563eb)" opacity="0.15" stroke="var(--color-accent, #2563eb)" stroke-width="1.5"/>
+             <text x="365" y="83" text-anchor="middle" font-size="14" font-family="var(--font-code, monospace)" fill="var(--color-accent, #2563eb)">START</text>
+
+              <line x1="365" y1="125" x2="365" y2="140" stroke="var(--color-text-muted, #999)" stroke-width="1.5"/>
+
+             <line x1="365" y1="100" x2="175" y2="140" stroke="var(--color-text-muted, #999)" stroke-width="1.5"></line>
+             <line x1="175" y1="140" x2="175" y2="165" stroke="var(--color-text-muted, #999)" stroke-width="1.5" marker-end="url(#arrow04no)"></line>
+             <text x="175" y="115" text-anchor="middle" font-size="13" font-family="sans-serif" fill="var(--color-text-muted, #666)">single axis?</text>
+
+             <rect x="60" y="165" width="230" height="36" rx="6" fill="var(--color-accent, #2563eb)" opacity="0.1" stroke="var(--color-accent, #2563eb)" stroke-width="1"></rect>
+             <text x="175" y="190" text-anchor="middle" font-size="15" font-family="sans-serif" fill="var(--color-text, #1a1a1a)">YES → 1D layout</text>
+
+             <line x1="175" y1="200" x2="175" y2="220" stroke="var(--color-accent, #2563eb)" stroke-width="1.5" marker-end="url(#arrow04)"></line>
+             <rect x="60" y="220" width="230" height="36" rx="6" fill="#e94560" opacity="0.12" stroke="#e94560" stroke-width="1"></rect>
+             <text x="175" y="240" text-anchor="middle" font-size="15" font-family="sans-serif" fill="var(--color-text, #1a1a1a)" font-weight="bold">Use Flexbox</text>
+             <text x="175" y="250" text-anchor="middle" font-size="12" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">nav bars, button rows, card rows</text>
+
+             <line x1="365" y1="100" x2="575" y2="140" stroke="var(--color-text-muted, #999)" stroke-width="1.5"></line>
+             <text x="575" y="115" font-size="13" font-family="sans-serif" fill="var(--color-text-muted, #666)">2D (rows + cols)?</text>
+
+             <line x1="575" y1="140" x2="575" y2="165" stroke="var(--color-text-muted, #999)" stroke-width="1.5" marker-end="url(#arrow04no)"></line>
+             <rect x="460" y="165" width="230" height="36" rx="6" fill="var(--color-accent, #2563eb)" opacity="0.1" stroke="var(--color-accent, #2563eb)" stroke-width="1"></rect>
+             <text x="575" y="185" text-anchor="middle" font-size="15" font-family="sans-serif" fill="var(--color-text, #1a1a1a)">YES → 2D layout</text>
+
+             <line x1="575" y1="200" x2="575" y2="220" stroke="var(--color-accent, #2563eb)" stroke-width="1.5" marker-end="url(#arrow04)"></line>
+             <rect x="460" y="220" width="230" height="36" rx="6" fill="#22c55e" opacity="0.15" stroke="#22c55e" stroke-width="1"></rect>
+             <text x="575" y="240" text-anchor="middle" font-size="15" font-family="sans-serif" fill="var(--color-text, #1a1a1a)" font-weight="bold">Use CSS Grid</text>
+             <text x="575" y="250" text-anchor="middle" font-size="12" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">page layout, card grids, dashboards</text>
+
+             <line x1="365" y1="100" x2="365" y2="250" stroke="var(--color-text-muted, #999)" stroke-width="1.5" marker-end="url(#arrow04no)"></line>
+             <rect x="285" y="270" width="160" height="48" rx="24" fill="var(--color-accent, #2563eb)" opacity="0.08"></rect>
+             <text x="365" y="290" text-anchor="middle" font-size="11" font-family="sans-serif" fill="var(--color-text-muted, #666)">❓ one of these</text>
+             <text x="365" y="305" text-anchor="middle" font-size="11" font-family="sans-serif" fill="var(--color-text-muted, #666)">positioning? overlay? stick?</text>
+
+             <line x1="365" y1="100" x2="365" y2="250" stroke="var(--color-text-muted, #999)" stroke-width="1.5"></line>
+
+             <line x1="365" y1="250" x2="175" y2="295" stroke="var(--color-text-muted, #999)" stroke-width="1.5"></line>
+             <line x1="175" y1="295" x2="175" y2="320" stroke="var(--color-text-muted, #999)" stroke-width="1.5" marker-end="url(#arrow04no)"></line>
+			 
+             <rect x="60" y="325" width="230" height="36" rx="6" fill="var(--color-accent, #2563eb)" opacity="0.1" stroke="var(--color-accent, #2563eb)" stroke-width="1"></rect>
+             <text x="175" y="345" text-anchor="middle" font-size="15" font-family="sans-serif" fill="var(--color-text, #1a1a1a)">YES → positioned</text>
+
+             <line x1="175" y1="365" x2="175" y2="385" stroke="var(--color-accent, #2563eb)" stroke-width="1.5" marker-end="url(#arrow04)"></line>
+             <rect x="20" y="385" width="315" height="62" rx="6" fill="#eab308" opacity="0.15" stroke="#eab308" stroke-width="1"></rect>
+             <text x="40" y="400" font-size="14" font-family="sans-serif" fill="var(--color-text, #1a1a1a)" font-weight="bold">Position property:</text>
+             <text x="40" y="415" font-size="13" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">relative → fine-tune normal flow</text>
+             <text x="40" y="430" font-size="13" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">absolute → overlay / tooltip / modal</text>
+             <text x="40" y="445" font-size="13" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">fixed → floating button / sticky header</text>
+
+             <line x1="365" y1="250" x2="575" y2="295" stroke="var(--color-text-muted, #999)" stroke-width="1.5"></line>
+             <line x1="575" y1="295" x2="575" y2="320" stroke="var(--color-text-muted, #999)" stroke-width="1.5" marker-end="url(#arrow04no)"></line>
+
+             <rect x="460" y="325" width="230" height="36" rx="6" fill="var(--color-accent, #2563eb)" opacity="0.1" stroke="var(--color-accent, #2563eb)" stroke-width="1"></rect>
+			 <text x="575" y="345" text-anchor="middle" font-size="15" font-family="sans-serif" fill="var(--color-text, #1a1a1a)">NO → normal flow</text>
+
+             <line x1="575" y1="365" x2="575" y2="385" stroke="var(--color-accent, #2563eb)" stroke-width="1.5" marker-end="url(#arrow04)"></line>
+             <rect x="460" y="385" width="230" height="50" rx="6" fill="var(--color-bg, #faf8f5)" stroke="var(--color-border, #d4d0ca)" stroke-width="1"></rect>
+             <text x="575" y="410" text-anchor="middle" font-size="15" font-family="sans-serif" fill="var(--color-text, #1a1a1a)" font-weight="bold">Block / Inline Flow</text>
+             <text x="575" y="425" text-anchor="middle" font-size="12" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)">default document flow</text>
+           </svg>
+        </div>
+
+        <h2>CSS Grid</h2>
+        <p>CSS Grid is a two-dimensional layout system. Where Flexbox excels at distributing items along one axis, Grid excels at placing items in rows AND columns simultaneously.</p>
+
+        <h3>Basic Grid Setup</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span>Simple page shell with Grid</span></div>
+          <pre><code>.layout {
+  display: grid;
+  grid-template-columns: 250px 1fr;   /* sidebar 250px, main content fills rest */
+  grid-template-rows: auto 1fr auto;   /* header auto-height, main fills, footer auto-height */
+  grid-template-areas:
+    "header header"
+    "sidebar main"
+    "footer footer";
+  min-height: 100vh;
+  gap: 1rem;
+}
+
+header { grid-area: header; }
+aside  { grid-area: sidebar; }
+main   { grid-area: main; }
+footer { grid-area: footer; }</code></pre>
+        </div>
+
+        <h3>The <code>fr</code> Unit</h3>
+        <p><code>fr</code> stands for "fraction" of available space. <code>grid-template-columns: 1fr 2fr</code> means the second column gets twice as much space as the first. Unlike percentages, <code>fr</code> works with <code>gap</code> and does not overflow — it distributes leftover space after fixed columns are calculated.</p>
+
+        <h3>auto-fit vs auto-fill</h3>
+        <p>These are used with <code>repeat()</code> for responsive grids without media queries:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Auto-filling card grid</span></div>
+          <pre><code>.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}</code></pre>
+        </div>
+        <p><code>auto-fit</code> collapses empty tracks (good for sparse content). <code>auto-fill</code> preserves track sizes even if empty (good for consistent sizing). <code>minmax(280px, 1fr)</code> says "each column is at least 280px, but stretch equally if there is room." This single line creates a fully responsive grid with no breakpoints.</p>
+
+        <div class="callout-warning">
+          <div class="callout-title">Don't Grid Everything</div>
+          <p>Grid is powerful but can be overkill. A simple nav bar with three links is easier with Flexbox. A button row with "Save" and "Cancel" is Flexbox territory. Reserve Grid for when you need both row and column control — page layouts, card grids, dashboards, forms with complex alignment.</p>
+        </div>
+
+        <div class="callout-warning">
+          <div class="callout-title">"How Do I Center a Div?" — The #1 Beginner Question</div>
+          <p>Centering is the most asked CSS question. The answer depends on what you're centering:</p>
+          <ul>
+            <li><strong>Inline text inside a block</strong>: <code>text-align: center</code> on the parent</li>
+            <li><strong>A block inside a block horizontally</strong>: <code>margin: 0 auto</code> (requires width!)</li>
+            <li><strong>A block inside a block vertically + horizontally</strong>: Flexbox — <code>display: flex; justify-content: center; align-items: center;</code></li>
+            <li><strong>An element of unknown size</strong>: Flexbox or Grid — <code>place-items: center</code></li>
+          </ul>
+          <p>The old way: absolute positioning + transforms. The modern way: Flexbox or Grid. Do not use <code>text-align: center</code> on a block element — it does nothing.</p>
+        </div>
+
+        <div class="callout-warning">
+          <div class="callout-title">Why Does Adding Padding Make My Element Wider?</div>
+          <p>By default, CSS adds padding <em>on top of</em> the width. If you write <code>width: 100%; padding: 20px;</code>, the element becomes 100% + 40px wide and breaks out of its container. This trips up every beginner.</p>
+          <p><strong>The fix:</strong> <code>box-sizing: border-box;</code> — this makes padding count toward the width instead of adding to it. Add this to your CSS reset:</p>
+          <pre><code>* { box-sizing: border-box; }</code></pre>
+          <p>Every modern project starts with this line. Without it, building responsive layouts is painful.</p>
+        </div>
+
+        <div class="callout-warning">
+          <div class="callout-title">display: none vs visibility: hidden — Both Hide, But Differently</div>
+          <p>Two ways to hide elements, but they behave very differently:</p>
+          <ul>
+            <li><code>display: none</code> — Removes the element entirely. It takes no space. The page layout acts as if the element doesn't exist.</li>
+            <li><code>visibility: hidden</code> — Hides the element visually, but it still takes up its original space. The layout acts like an invisible ghost.</li>
+          </ul>
+          <p>Common bug: you hide something with <code>visibility: hidden</code> and wonder why there's a blank gap in your layout. Use <code>display: none</code> unless you specifically need the space preserved.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Responsive Design Strategy</h2>
+        <p>Responsive design means the same HTML looks good on every screen. The strategy is not "add breakpoints until it works" — it is a systematic approach to adaptation.</p>
+
+        <h3>Mobile-First vs Desktop-First</h3>
+        <p><strong>Mobile-first</strong> writes the base styles for small screens, then adds complexity with <code>min-width</code> media queries as the viewport grows. <strong>Desktop-first</strong> writes for large screens, then overrides with <code>max-width</code> queries for smaller ones.</p>
+        <div class="decision-tree">Mobile-first → base styles are simple (single column), queries add multi-column layouts. Less code, fewer overrides, inherently accessible. Prefer this.</div>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Mobile-first media queries</span></div>
+          <pre><code>/* Base: single column, works on any screen */
+.content { display: block; }
+
+/* Tablet: two columns */
+@media (min-width: 768px) {
+  .content { display: grid; grid-template-columns: 1fr 1fr; }
+}
+
+/* Desktop: three columns */
+@media (min-width: 1024px) {
+  .content { grid-template-columns: 1fr 1fr 1fr; }
+}</code></pre>
+        </div>
+
+        <h3>Fluid Typography with <code>clamp()</code></h3>
+        <p>Instead of setting a fixed font size, use <code>clamp()</code> to define a minimum, preferred, and maximum value:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Fluid typography</span></div>
+          <pre><code>h1 { font-size: clamp(1.5rem, 4vw, 3rem); }
+/* Minimum: 1.5rem, preferred: 4% of viewport width, maximum: 3rem */</code></pre>
+        </div>
+        <p>This eliminates the need for breakpoint-specific font sizes. The heading grows smoothly with the viewport between the bounds.</p>
+
+        <h3>Responsive Images</h3>
+        <p>Serve different image sizes based on viewport width using <code>srcset</code>:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Responsive image with srcset</span></div>
+          <pre><code>&lt;img src="photo-800.jpg"
+     srcset="photo-400.jpg 400w, photo-800.jpg 800w, photo-1200.jpg 1200w"
+     sizes="(max-width: 600px) 100vw, (max-width: 1000px) 50vw, 800px"
+     alt="Description"&gt;</code></pre>
+        </div>
+        <p>The browser selects the best image size based on viewport width and device pixel ratio. This saves bandwidth and improves load time on mobile without sacrificing quality on desktop.</p>
+
+        <div class="callout-tip">
+          <div class="callout-title">Breakpoints Should Be Content-Based</div>
+          <p>Do not use device-specific breakpoints (iPhone, iPad, etc.). Use breakpoints where your content <em>breaks</em>: "at 700px the sidebar gets too narrow" or "at 900px the cards look too stretched." This makes your design future-proof — new device sizes will not break it.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Custom Properties and Theming</h2>
+        <p>CSS custom properties (variables) bring the most important programming concept to CSS: <strong>don't repeat yourself</strong>. Define a value once, reference it everywhere.</p>
+
+        <h3>Declaration and Usage</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span>Custom properties — design tokens</span></div>
+          <pre><code>:root {
+  --color-primary: #2563eb;
+  --color-text: #1a1a2e;
+  --color-bg: #ffffff;
+  --spacing-md: 1rem;
+  --spacing-lg: 2rem;
+  --font-body: Georgia, serif;
+  --radius-sm: 4px;
+}
+
+.button {
+  background: var(--color-primary);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-sm);
+}</code></pre>
+        </div>
+        <p>Now change <code>--color-primary</code> in one place and every button updates. This is the foundation of a design system.</p>
+
+        <h3>Dark/Light Theme Toggle</h3>
+        <p>Custom properties make runtime theme switching trivial. Define both themes, then toggle with a class or attribute:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Theme system (used in this textbook)</span></div>
+          <pre><code>:root {
+  --color-bg: #ffffff;
+  --color-text: #1a1a2e;
+  --color-code-bg: #f4f4f4;
+}
+
+[data-theme="dark"] {
+  --color-bg: #1a1a2e;
+  --color-text: #e4e4e7;
+  --color-code-bg: #2a2a3e;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  transition: background 0.3s, color 0.3s;
+}</code></pre>
+        </div>
+        <div class="code-block">
+          <div class="code-block-header"><span>JavaScript toggle</span></div>
+          <pre><code>const toggle = document.querySelector('[data-theme-toggle]');
+toggle.addEventListener('click', () => {
+  const theme = document.documentElement.getAttribute('data-theme');
+  const next = theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+});</code></pre>
+        </div>
+
+        <h3>Fallback Values</h3>
+        <p>Always provide a fallback when using <code>var()</code>, especially if the property might not be defined:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Fallback syntax</span></div>
+          <pre><code>.box {
+  background: var(--color-maybe-missing, #ccc);  /* uses #ccc if variable is not set */
+}</code></pre>
+        </div>
+      </section>
+
+      <section>
+        <h2>Animations and Transitions</h2>
+        <p>Animation guides attention. A button that changes color instantly feels jarring. A button that transitions smoothly feels polished. The difference is <code>transition</code>.</p>
+
+        <h3>Transitions</h3>
+        <p>Transitions interpolate between two states — a hover, a class toggle, a property change:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Button hover transition</span></div>
+          <pre><code>.button {
+  background: blue;
+  color: white;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.button:hover {
+  background: darkblue;
+  transform: translateY(-1px);
+}</code></pre>
+        </div>
+        <p>Transitions fire automatically when a property changes. Define only the properties you want to animate and keep durations short (150-300ms for UI elements).</p>
+
+        <h3>Keyframe Animations</h3>
+        <p>For multi-step animations, use <code>@keyframes</code>:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Fade-in animation</span></div>
+          <pre><code>@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.hero-title {
+  animation: fadeIn 0.6s ease-out forwards;
+}</code></pre>
+        </div>
+
+        <h3>Performance Rule</h3>
+        <p>Animating certain properties causes the browser to recalculate layout on every frame — expensive and janky. Stick to these two properties for smooth 60fps animations:</p>
+        <div class="decision-tree">Animate → transform (translate, scale, rotate) and opacity only.<br>
+Avoid animating → width, height, top, left, margin, padding, font-size.</div>
+        <p>The reason: <code>transform</code> and <code>opacity</code> are handled by the GPU compositor thread. Layout properties trigger reflow on the CPU thread, which is slower and causes visible stuttering.</p>
+
+        <h3>Accessibility: Reduced Motion</h3>
+        <p>Some users experience nausea or dizziness from motion effects. Always respect the <code>prefers-reduced-motion</code> media query:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Respecting user preferences</span></div>
+          <pre><code>@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}</code></pre>
+        </div>
+      </section>
+
+      <div class="compare-box">
+        <div class="compare-col junior">
+          <div class="compare-label">Junior Developer</div>
+          <h4>How a Junior Might Think</h4>
+          <ul>
+            <li>Adds properties one at a time until it "looks right"</li>
+            <li>Uses <code>!important</code> to override styles without understanding specificity</li>
+            <li>Struggles with vertical centering and reaches for hacks</li>
+            <li>Doesn't plan for responsive design — writes desktop-first and scrambles to fix breakpoints</li>
+          </ul>
+        </div>
+        <div class="compare-col senior">
+          <div class="compare-label">Senior Developer</div>
+          <h4>How a Senior Thinks</h4>
+          <ul>
+            <li>Chooses layout strategy (flex, grid, or block) based on content and constraints</li>
+            <li>Understands specificity and avoids <code>!important</code> entirely</li>
+            <li>Knows multiple ways to center and picks the robust one</li>
+            <li>Designs mobile-first, uses fluid sizing, and tests early on small screens</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="cheatsheet">
+        <div class="cheatsheet-title">Cheat Sheet</div>
+        <table>
+          <thead>
+            <tr><th>Concept</th><th>Key Takeaway</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Box Model</td><td>Content → Padding → Border → Margin. Always set <code>box-sizing: border-box</code> globally.</td></tr>
+            <tr><td>Flexbox</td><td>One-dimensional layout. Use <code>justify-content</code> (main axis) and <code>align-items</code> (cross axis).</td></tr>
+            <tr><td>CSS Grid</td><td>Two-dimensional layout. Define rows and columns, then place items into the grid.</td></tr>
+            <tr><td>Responsive</td><td>Mobile-first, fluid grids, <code>clamp()</code> for fluid typography, media queries for breakpoints.</td></tr>
+            <tr><td>Animations</td><td>Prefer <code>transform</code> and <code>opacity</code> for performant animations. Respect <code>prefers-reduced-motion</code>.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <nav class="chapter-nav">
+        <a href="06-html.html"><span class="nav-label">Prev</span>Prev: HTML</a>
+        <a href="08-javascript.html"><span class="nav-label">Next</span>Next: JavaScript</a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../../assets/js/sidebar.js"></script>
+  <script src="../../assets/js/navigation.js"></script>
+  <script src="../../assets/js/themes.js"></script>
+</body>
+</html>

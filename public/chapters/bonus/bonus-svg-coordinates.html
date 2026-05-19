@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bonus: SVG Diagram Coordinates | M's Web Development Guide</title>
+  <meta name="description" content="How to plan and compute SVG diagram coordinates for decision trees, flowcharts, and diagrams.">
+  <link rel="stylesheet" href="../../assets/css/main.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/themes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+  <div class="site-wrapper">
+    <header class="site-header">
+      <div class="site-title"><a href="../../index.html"><i class="fa-solid fa-house"></i> M's Web Development Guide</a></div>
+      <div class="header-controls">
+        <button data-sidebar-toggle class="sidebar-toggle" aria-label="Toggle table of contents">&#9776; TOC</button>
+        <button data-theme-toggle aria-label="Switch theme"><span class="icon">☾</span>Dark</button>
+      </div>
+    </header>
+    <aside class="sidebar" aria-label="Table of Contents">
+      <div id="sidebar-toc"></div>
+    </aside>
+    <main class="main-content" id="main">
+      <span class="chapter-number">Bonus</span>
+      <h1>SVG Diagram Coordinates</h1>
+      <p class="chapter-subtitle">How to plan and compute x/y values for decision trees, flowcharts, and inline diagrams</p>
+
+      <p>Inline SVG diagrams power the decision trees and flowcharts throughout this textbook. Getting the coordinates right is the hardest part. This bonus explains the coordinate system we use, the formulas behind every x and y, and provides a template you can reuse for your own diagrams.</p>
+
+      <section>
+        <h2>Every SVG Starts With a viewBox</h2>
+        <p>The viewBox defines the coordinate grid. It's an invisible canvas — elements can go anywhere inside or even outside it, but only what's inside the viewBox is visible.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>viewBox format</span></div>
+          <pre><code>&lt;svg viewBox="0 0 730 450" style="width:100%;max-width:730px;height:auto;"&gt;</code></pre>
+        </div>
+
+        <p>The four numbers are:</p>
+        <table class="classic-table">
+          <thead>
+            <tr><th>Value</th><th>Meaning</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>0</code></td><td>minimum X (left edge, always 0)</td></tr>
+            <tr><td><code>0</code></td><td>minimum Y (top edge, always 0)</td></tr>
+            <tr><td><code>730</code></td><td>width of the coordinate grid in SVG units</td></tr>
+            <tr><td><code>450</code></td><td>height of the coordinate grid in SVG units</td></tr>
+          </tbody>
+        </table>
+
+        <p>The <code>max-width</code> should match the viewBox width so the diagram renders at its intended aspect ratio. The viewBox height should be tall enough to contain all elements plus ~30px of bottom padding.</p>
+      </section>
+
+      <section>
+        <h2>The Three Positioning Rules You Must Know</h2>
+
+        <h3>1. Text y is the baseline, not the top</h3>
+        <p>When you write <code>&lt;text x="100" y="200"&gt;</code>, the text sits <em>on top of</em> y=200 — the baseline is at y=200, and letters extend upward. For a 15px font at y=200, the text occupies roughly y=185 to y=200. Descenders (g, j, p, q, y) extend slightly below.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Text placement rule of thumb</span></div>
+          <pre><code>text_y = box_y + (box_height / 2) + (font_size / 3)
+
+// For a 36px box with 15px font:
+text_y = 145 + (36 / 2) + (15 / 3) = 145 + 18 + 5 = 168</code></pre>
+        </div>
+
+        <h3>2. Rect origin is top-left</h3>
+        <p>A <code>&lt;rect x="60" y="145" width="230" height="36"&gt;</code> starts at the top-left corner (60, 145) and extends 230px right and 36px down. The center is at <code>x + width/2 = 175</code>.</p>
+
+        <h3>3. Arrowheads appear at x2, y2</h3>
+        <p>A <code>&lt;line x1="175" y1="181" x2="175" y2="205" marker-end="url(#arrow04)"&gt;</code> draws the arrowhead at the <strong>end</strong> point (175, 205). This means the arrowhead points <em>into</em> whatever is at that position — the line should end a few px inside the target box.</p>
+      </section>
+
+      <section>
+        <h2>Formula Reference</h2>
+        <p>These formulas cover every coordinate decision in our decision tree diagrams.</p>
+
+        <table class="classic-table">
+          <thead>
+            <tr><th>What you need</th><th>Formula</th><th>Example</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Box left edge</td>
+              <td><code>center - width / 2</code></td>
+              <td><code>60 = 175 - 230/2</code></td>
+            </tr>
+            <tr>
+              <td>Box right edge</td>
+              <td><code>center + width / 2</code></td>
+              <td><code>290 = 175 + 230/2</code></td>
+            </tr>
+            <tr>
+              <td>Text centered in box</td>
+              <td><code>x = box_center, y = box_y + box_height / 2 + font_size / 3</code></td>
+              <td><code>x=175, y≈168</code></td>
+            </tr>
+            <tr>
+              <td>Midpoint label</td>
+              <td><code>(center_1 + center_2) / 2</code></td>
+              <td><code>470 = (365 + 575) / 2</code></td>
+            </tr>
+            <tr>
+              <td>Label above arrow</td>
+              <td><code>y = arrow_y - 10</code></td>
+              <td><code>y=130 for arrow at y=140</code></td>
+            </tr>
+            <tr>
+              <td>Vertical arrow into box</td>
+              <td><code>y2 = box_y + ~15</code></td>
+              <td><code>y2=165 for box at y=145</code></td>
+            </tr>
+            <tr>
+              <td>Arrow from box to next box</td>
+              <td><code>y1 = box_y + box_height, y2 = next_box_y - ~5</code></td>
+              <td><code>181 → 205</code></td>
+            </tr>
+            <tr>
+              <td>ViewBox height</td>
+              <td><code>lowest_element_y + 30</code></td>
+              <td><code>450 = 426 + 24</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>The Grid Paper Approach</h2>
+        <p>Before writing SVG, sketch your diagram on graph paper or in your head using this process:</p>
+
+        <ol>
+          <li><strong>Choose vertical tracks</strong> — pick x positions for each column (left, center, right)</li>
+          <li><strong>Choose horizontal floors</strong> — pick y positions for each row (boxes, decision points)</li>
+          <li><strong>Place elements at intersections</strong> — a box sits at (column_center, floor), arrows connect between them</li>
+          <li><strong>Verify the budget</strong> — add up all heights + gaps to make sure everything fits in the viewBox</li>
+        </ol>
+
+        <p>The decision tree in chapter 7 uses three columns:</p>
+        <table class="classic-table">
+          <thead>
+            <tr><th>Column</th><th>Center X</th><th>Box X</th><th>Box Width</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Left (YES answers)</td><td>175</td><td>60</td><td>230</td></tr>
+            <tr><td>Center (arrow backbone)</td><td>365</td><td>—</td><td>—</td></tr>
+            <tr><td>Right (YES answers)</td><td>575</td><td>460</td><td>230</td></tr>
+          </tbody>
+        </table>
+
+        <p>The left and right boxes are symmetrical: both are 230px wide, 60px from their respective edges. The center arrow sits midway between them.</p>
+      </section>
+
+      <section>
+        <h2>Vertical Spacing Budget</h2>
+        <p>Every element has a height or vertical extent. The total must fit within the viewBox height. Here's the budget from our decision tree:</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Y-spacing budget (viewBox 730×450)</span></div>
+          <pre><code> 60 →  96   START pill (36px tall)
+ 96 → 116   gap (20px)
+116 → 125   short arrow (9px, arrowhead at 125)
+125 ─────   1st decision point (single axis?)
+125 → 140   continuation to 2nd decision (15px)
+140 ─────   2nd decision point (2D rows+cols?)
+140 → 165   branch arrow (25px into YES→2D box)
+145 → 181   YES→2D box (36px)
+181 → 210   arrow to Grid (29px)
+215 → 251   CSS Grid box (36px)
+140 → 196   long arrow to pill (56px, arrowhead at 196)
+196 → 244   ❓ question pill (48px)
+252 → 295   continuation to 3rd decision (43px)
+295 ─────   3rd decision point (positioning YES/NO)
+295 → 320   branch arrows (25px into boxes)
+300 → 336   YES→positioned / NO→normal flow boxes (36px)
+336 → 365   arrows to answer boxes (29px)
+365 → 427   Position property box (62px)
+370 → 420   Block / Inline Flow box (50px)
+426         last text baseline
+450         viewBox bottom</code></pre>
+        </div>
+      </section>
+
+      <section>
+        <h2>Blank Decision Tree Template</h2>
+        <p>Use this template as a starting point for your own diagrams. The three-column layout is pre-configured with proper arrow markers.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Reusable SVG blank</span></div>
+          <pre><code>&lt;svg viewBox="0 0 730 450" style="width:100%;max-width:730px;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg"&gt;
+  &lt;defs&gt;
+    &lt;marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"&gt;
+      &lt;path d="M0,0 L10,5 L0,10 Z" fill="var(--color-accent, #2563eb)"/&gt;
+    &lt;/marker&gt;
+    &lt;marker id="arrow-no" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"&gt;
+      &lt;path d="M0,0 L10,5 L0,10 Z" fill="var(--color-text-muted, #999)"/&gt;
+    &lt;/marker&gt;
+  &lt;/defs&gt;
+
+  &lt;!-- Outer border --&gt;
+  &lt;rect x="2" y="2" width="726" height="446" rx="8" fill="none" stroke="var(--color-border, #d4d0ca)" stroke-width="1"/&gt;
+
+  &lt;!-- Title --&gt;
+  &lt;text x="365" y="24" text-anchor="middle" font-size="16" font-family="var(--font-code, monospace)" fill="var(--color-text-muted, #666)"&gt;Diagram Title&lt;/text&gt;
+
+  &lt;!-- START pill --&gt;
+  &lt;rect x="240" y="60" width="250" height="36" rx="18" fill="var(--color-accent, #2563eb)" opacity="0.15" stroke="var(--color-accent, #2563eb)" stroke-width="1.5"/&gt;
+  &lt;text x="365" y="83" text-anchor="middle" font-size="14" font-family="var(--font-code, monospace)" fill="var(--color-accent, #2563eb)"&gt;START&lt;/text&gt;
+
+  &lt;!-- Decision branches --&gt;
+  &lt;line x1="365" y1="116" x2="365" y2="125" stroke="var(--color-text-muted, #999)" stroke-width="1.5" marker-end="url(#arrow-no)"/&gt;
+  &lt;line x1="365" y1="125" x2="175" y2="125" stroke="var(--color-text-muted, #999)" stroke-width="1.5"/&gt;
+  &lt;line x1="175" y1="125" x2="175" y2="150" stroke="var(--color-text-muted, #999)" stroke-width="1.5" marker-end="url(#arrow-no)"/&gt;
+  &lt;line x1="365" y1="125" x2="365" y2="140" stroke="var(--color-text-muted, #999)" stroke-width="1.5"/&gt;
+  &lt;line x1="365" y1="140" x2="575" y2="140" stroke="var(--color-text-muted, #999)" stroke-width="1.5"/&gt;
+  &lt;line x1="575" y1="140" x2="575" y2="165" stroke="var(--color-text-muted, #999)" stroke-width="1.5" marker-end="url(#arrow-no)"/&gt;
+
+  &lt;!-- Question labels --&gt;
+  &lt;text x="270" y="115" text-anchor="middle" font-size="13" font-family="sans-serif" fill="var(--color-text-muted, #666)"&gt;Question 1?&lt;/text&gt;
+  &lt;text x="470" y="130" font-size="13" font-family="sans-serif" fill="var(--color-text-muted, #666)"&gt;Question 2?&lt;/text&gt;
+
+  &lt;!-- Place your boxes here --&gt;
+&lt;/svg&gt;</code></pre>
+        </div>
+
+        <p>Copy this template, then add your boxes by placing rect + text pairs at the column centers (175, 365, or 575). Connect them with arrows using the spacing conventions above.</p>
+      </section>
+
+      <section>
+        <h2>Quick-Reference Coordinate Sheet</h2>
+        <p>Print this section or keep it open while you work.</p>
+
+        <table class="classic-table">
+          <thead>
+            <tr><th>Element</th><th>X formula</th><th>Y formula</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Center arrow</td><td>fixed (365)</td><td>floor + arrow_length</td></tr>
+            <tr><td>Left box rect</td><td>center - w/2</td><td>floor</td></tr>
+            <tr><td>Left box text</td><td>center (175)</td><td>floor + h/2 + font/3</td></tr>
+            <tr><td>Right box rect</td><td>center - w/2</td><td>floor</td></tr>
+            <tr><td>Right box text</td><td>center (575)</td><td>floor + h/2 + font/3</td></tr>
+            <tr><td>Horizontal arrow</td><td>center→box_center</td><td>floor (same for both)</td></tr>
+            <tr><td>Vertical arrow</td><td>box_center</td><td>floor → floor + length</td></tr>
+            <tr><td>Branch label</td><td>midpoint of two centers</td><td>floor - 10</td></tr>
+            <tr><td>Pill / badge</td><td>center - w/2</td><td>floor</td></tr>
+            <tr><td>Arrow between boxes</td><td>box_center</td><td>box_bottom → next_box_top - gap</td></tr>
+          </tbody>
+        </table>
+
+        <div class="callout-tip">
+          <div class="callout-title">Start With the Floor Plan</div>
+          <p>Plan your Y floors first. List every element from top to bottom, estimate its height, add 15-25px gaps, and sum it all up. If the total exceeds your viewBox height, reduce gaps or shift elements closer together. Only then compute the X positions.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Common Pitfalls</h2>
+
+        <ul>
+          <li><strong>Text outside the box</strong> — your <code>text_y</code> is probably the same as the <code>box_y</code>. Remember text y is the baseline, not the top. Use the formula above.</li>
+          <li><strong>Arrow misses its target</strong> — the <code>x2,y2</code> of a line should point at the box center, and the y should be a few px inside the box edge. If the arrowhead is outside the box, extend <code>y2</code> by 10-15px.</li>
+          <li><strong>Text overflows the pill</strong> — measure your text width before setting the pill width. A rough estimate: <code>text_width ≈ chars × font_size × 0.65</code>. Leave 10-15px padding on each side.</li>
+          <li><strong>ViewBox cuts off the bottom</strong> — the last element's bottom edge (y + height, or text_y + 3) needs to be at least 15px less than the viewBox height. Add <code>viewBox="0 0 W H+30"</code> for breathing room.</li>
+          <li><strong>Dark mode colors don't work</strong> — use CSS variables (<code>var(--color-text, #1a1a1a)</code>) instead of hardcoded colors so the diagram adapts to theme changes. The <code>&lt;defs&gt;</code> markers should use variables too.</li>
+        </ul>
+      </section>
+
+      <nav class="chapter-nav">
+        <a href="bonus-cicd.html"><span class="nav-label">Next</span>Next: CI/CD Fundamentals</a>
+      </nav>
+    </main>
+  </div>
+
+  <script src="../../assets/js/sidebar.js"></script>
+  <script src="../../assets/js/navigation.js"></script>
+  <script src="../../assets/js/themes.js"></script>
+</body>
+</html>

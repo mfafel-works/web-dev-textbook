@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>20 — Accessibility | M's Web Development Guide</title>
+  <meta name="description" content="WCAG POUR, screen reader testing, focus management, ARIA, keyboard navigation, accessible forms, and legal requirements.">
+  <link rel="stylesheet" href="../../assets/css/main.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/themes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <div class="site-wrapper">
+    <header class="site-header">
+      <div class="site-title"><a href="../../index.html"><i class="fa-solid fa-house"></i> M's Web Development Guide</a></div>
+      <div class="header-controls">
+        <button data-sidebar-toggle class="sidebar-toggle" aria-label="Toggle table of contents">&#9776; TOC</button>
+        <button data-theme-toggle aria-label="Switch theme"><span class="icon">☾</span>Dark</button>
+      </div>
+    </header>
+
+    <aside class="sidebar" aria-label="Table of Contents">
+      <div id="sidebar-toc"></div>
+    </aside>
+
+    <main class="main-content" id="main">
+      <span class="chapter-number">Chapter 11</span>
+      <h1>Accessibility</h1>
+      <p class="chapter-subtitle">WCAG POUR, screen readers, focus management, ARIA, keyboard navigation, and legal requirements</p>
+
+      <p>Accessibility (a11y) is not a feature. It is a property of your code — a page is either accessible or it is not. Approximately 15% of the global population has some form of disability. If your site is not accessible, you are excluding one in seven people. Beyond the ethical argument: inaccessible sites face lawsuits (in many jurisdictions), rank lower in search engines, and provide a worse experience for all users (captions help people in noisy environments, good contrast helps people in bright sunlight, keyboard navigation helps power users).</p>
+
+      <section>
+        <h2>WCAG POUR Principles</h2>
+        <p>The Web Content Accessibility Guidelines define four principles. Every accessibility requirement falls under one of these:</p>
+
+        <div class="decision-tree">POUR Principles:
+├── Perceivable — Users must be able to perceive the content
+│   ├── Text alternatives for non-text content (img alt, video captions)
+│   ├── Captions and alternatives for multimedia
+│   └── Content adaptable without losing meaning
+├── Operable — Users must be able to operate the interface
+│   ├── Keyboard-only operation
+│   ├── Enough time to read and use content
+│   ├── No seizure-inducing flashing (more than 3 flashes per second)
+│   └── Easy navigation (skip links, headings, clear focus)
+├── Understandable — Users must be able to understand the content
+│   ├── Readable language
+│   ├── Predictable behavior (consistent navigation)
+│   └── Input assistance (clear labels, helpful errors)
+└── Robust — Content must work with current and future tools
+    ├── Valid HTML
+    ├── Proper ARIA usage when needed
+    └── Works with assistive technologies (screen readers, switch devices)</div>
+
+        <div class="callout-info">
+          <div class="callout-title">WCAG Compliance Levels</div>
+          <p>WCAG has three levels: <strong>A</strong> (minimum), <strong>AA</strong> (standard — most legal requirements target this), and <strong>AAA</strong> (highest). AA compliance is the practical target for most web projects. It requires: 4.5:1 color contrast for text, captions for prerecorded video, keyboard navigation for all functionality, and clear labels on all inputs. AAA is rarely achievable site-wide (e.g., 7:1 contrast for all text is very restrictive).</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Practical Checklist</h2>
+        <p>These are the highest-impact accessibility checks. Fix these first before worrying about edge cases.</p>
+
+        <table>
+          <thead>
+            <tr><th>Check</th><th>Why</th><th>How to Test</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Every <code>&lt;img&gt;</code> has meaningful <code>alt</code> text</td><td>Screen readers describe images via alt text</td><td>Scan all images. Decorative → <code>alt=""</code>. Informative → describe the content.</td></tr>
+            <tr><td>Every <code>&lt;input&gt;</code> has a matching <code>&lt;label&gt;</code></td><td>Labels identify fields to screen readers and make clicking the label focus the input</td><td>Click each label — the corresponding input should receive focus.</td></tr>
+            <tr><td>Heading hierarchy is sequential</td><td>Screen reader users navigate by heading levels</td><td>Run a heading outline tool. Should start with <code>h1</code>, no skipped levels.</td></tr>
+            <tr><td>Color contrast meets WCAG AA (4.5:1)</td><td>Low contrast is invisible to users with visual impairments</td><td>WebAIM Contrast Checker. Check all text against its background.</td></tr>
+            <tr><td>Focus indicators are visible</td><td>Keyboard users need to see their location</td><td>Tab through the page. Can you see where you are at every step?</td></tr>
+            <tr><td>All functionality works with keyboard alone</td><td>Many users cannot use a mouse</td><td>Unplug your mouse. Can you complete every task with Tab, Shift+Tab, Enter, and Space?</td></tr>
+            <tr><td>Forms have clear error messages</td><td>Users need to know what went wrong and how to fix it</td><td>Submit an empty form. Are errors clear and associated with the right field?</td></tr>
+            <tr><td>Page has a skip-to-content link</td><td>Keyboard users can bypass repetitive navigation</td><td>Press Tab on page load. Is there a visible "Skip to content" link?</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Keyboard Navigation</h2>
+        <p>Keyboard navigation is the foundation of accessibility for motor disability. Many users cannot use a mouse — they rely on Tab, arrow keys, Enter, and Space to navigate.</p>
+
+        <h3>Tab Order</h3>
+        <p>The natural tab order follows DOM order. Interactive elements (links, buttons, form controls) are focusable by default. Use <code>tabindex</code> carefully:</p>
+        <ul>
+          <li><code>tabindex="0"</code> — makes an element focusable in natural DOM order (use for custom interactive components)</li>
+          <li><code>tabindex="-1"</code> — makes an element programmatically focusable but not reachable by Tab (use for off-screen panels that should receive focus when opened)</li>
+          <li><code>tabindex="5"</code> (or any positive value) — <strong>never use</strong>. Positive tabindex overrides natural order and creates confusing tab flows.</li>
+        </ul>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Managing focus for a modal</span></div>
+          <pre><code>function openModal(modal) {
+  modal.style.display = 'block';
+  // Trap focus inside the modal
+  modal.querySelector('[data-autofocus]').focus();
+  // Prevent tabbing to elements behind the modal
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(modal) {
+  modal.style.display = 'none';
+  // Return focus to the element that opened the modal
+  document.activeElement.blur();
+  lastFocusedElement.focus();
+}</code></pre>
+        </div>
+
+        <h3>Focus Trapping</h3>
+        <p>When a modal, dialog, or flyout menu opens, focus must be trapped inside it — tabbing past the last element should cycle back to the first. This is called <strong>focus trapping</strong> or <strong>roving tabindex</strong>. Libraries like <code>focus-trap</code> handle this, or you can implement it manually by intercepting Tab key events and cycling focus within the container.</p>
+
+        <div class="callout-warning">
+          <div class="callout-title">Never Remove Focus Indicators</div>
+          <p><code>outline: none</code> or <code>outline: 0</code> without a replacement makes your site unusable for keyboard users. If you remove the default focus ring, you must provide an alternative style — a visible box-shadow, a different background color, or a thicker border. The focus indicator must have a contrast ratio of at least 3:1 against the unfocused state.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Screen Reader Testing</h2>
+        <p>You cannot test accessibility by looking at the screen. You must test with a screen reader.</p>
+
+        <table>
+          <thead>
+            <tr><th>Screen Reader</th><th>Platform</th><th>Usage</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>VoiceOver</strong></td><td>macOS / iOS</td><td>Built-in. <code>Cmd+F5</code> to toggle. Rotor navigates by headings, links, landmarks.</td></tr>
+            <tr><td><strong>NVDA</strong></td><td>Windows</td><td>Free, open-source. The most commonly used screen reader on Windows.</td></tr>
+            <tr><td><strong>JAWS</strong></td><td>Windows</td><td>Paid, expensive. The most commonly used screen reader overall (many workplaces require it).</td></tr>
+            <tr><td><strong>TalkBack</strong></td><td>Android</td><td>Built-in screen reader for Android devices.</td></tr>
+            <tr><td><strong>ChromeVox</strong></td><td>ChromeOS</td><td>Built-in screen reader for Chromebooks.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>What to Listen For</h3>
+        <ul>
+          <li>Does the page announce its structure (banner, navigation, main, content info landmarks)?</li>
+          <li>Are images announced with useful alt text or skipped with <code>alt=""</code>?</li>
+          <li>Can you navigate by headings (<code>h1</code> → <code>h2</code> → <code>h3</code>) and does the hierarchy make sense?</li>
+          <li>Are dynamic content updates announced (aria-live regions)?</li>
+          <li>Does the screen reader announce form field labels, required states, and errors?</li>
+        </ul>
+
+        <div class="callout-tip">
+          <div class="callout-title">Quick Screen Reader Test</div>
+          <p>With VoiceOver on Mac: turn it on (<code>Cmd+F5</code>), then use <code>Ctrl+Option+Left/Right</code> to navigate by element and <code>Ctrl+Option+U</code> to open the Rotor for quick navigation by headings or links. If you can navigate your entire page using only these keys and understand the content, your basic structure is accessible. Most issues become obvious within 30 seconds of screen reader testing.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>ARIA and Live Regions</h2>
+        <p>ARIA (Accessible Rich Internet Applications) attributes supplement HTML semantics. The first rule of ARIA: <strong>do not use it if a native HTML element works</strong>.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>ARIA when needed, not by default</span></div>
+          <pre><code>&lt;!-- Good: native button, zero ARIA needed --&gt;
+&lt;button&gt;Submit&lt;/button&gt;
+
+&lt;!-- Bad: div pretending to be a button, lots of ARIA --&gt;
+&lt;div role="button" tabindex="0" aria-pressed="false"
+     onclick="submit()" onkeydown="if(event.key==='Enter')submit()"&gt;
+  Submit
+&lt;/div&gt;</code></pre>
+        </div>
+
+        <h3>aria-live Regions</h3>
+        <p><code>aria-live</code> tells screen readers to announce dynamic content changes without the user needing to focus the element:</p>
+        <ul>
+          <li><code>aria-live="polite"</code> — announce when the user is idle (use for status updates, search results)</li>
+          <li><code>aria-live="assertive"</code> — announce immediately (use for critical errors, but sparingly — it interrupts the user)</li>
+        </ul>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Live region for form validation</span></div>
+          <pre><code>&lt;div aria-live="polite" aria-atomic="true" role="alert"&gt;
+  &lt;!-- error messages injected here by JavaScript --&gt;
+  &lt;p&gt;Please enter a valid email address.&lt;/p&gt;
+&lt;/div&gt;</code></pre>
+        </div>
+
+        <h3>Common ARIA Attributes</h3>
+        <table>
+          <thead>
+            <tr><th>Attribute</th><th>When to Use</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>role="navigation"</code></td><td>Rarely needed — use <code>&lt;nav&gt;</code> instead</td></tr>
+            <tr><td><code>role="button"</code></td><td>When a non-button element (div, span) acts as a button — better to use <code>&lt;button&gt;</code></td></tr>
+            <tr><td><code>role="alert"</code></td><td>For dynamically shown error messages (adds emphasis to the announcement)</td></tr>
+            <tr><td><code>role="dialog"</code></td><td>For modal dialogs — paired with <code>aria-modal="true"</code> and <code>aria-labelledby</code></td></tr>
+            <tr><td><code>aria-label</code></td><td>When the element has no visible label (icon buttons, close buttons with "X")</td></tr>
+            <tr><td><code>aria-labelledby</code></td><td>When an element's label is provided by another visible element on the page</td></tr>
+            <tr><td><code>aria-describedby</code></td><td>When an element has additional descriptive text elsewhere</td></tr>
+            <tr><td><code>aria-expanded</code></td><td>For accordions, dropdowns, and menus to indicate open/closed state</td></tr>
+            <tr><td><code>aria-hidden="true"</code></td><td>To hide decorative or off-screen content from screen readers</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Accessible Forms</h2>
+        <p>Forms are the most common point of failure for accessibility. A form that cannot be filled out by a screen reader user is a form that excludes people.</p>
+
+        <h3>Label Every Input</h3>
+        <p>Every <code>&lt;input&gt;</code>, <code>&lt;select&gt;</code>, and <code>&lt;textarea&gt;</code> must have a <code>&lt;label&gt;</code>. The <code>for</code> attribute connects the label to the input's <code>id</code>:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Properly labeled form field</span></div>
+          <pre><code>&lt;label for="email"&gt;Email address&lt;/label&gt;
+&lt;input type="email" id="email" name="email" required&gt;</code></pre>
+        </div>
+
+        <h3>Group Related Fields</h3>
+        <p>Use <code>&lt;fieldset&gt;</code> and <code>&lt;legend&gt;</code> to group related inputs (radio buttons, checkboxes, address fields):</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Grouped radio buttons</span></div>
+          <pre><code>&lt;fieldset&gt;
+  &lt;legend&gt;Shipping method&lt;/legend&gt;
+  &lt;label&gt;&lt;input type="radio" name="shipping" value="standard"&gt; Standard (5-7 days)&lt;/label&gt;
+  &lt;label&gt;&lt;input type="radio" name="shipping" value="express"&gt; Express (2-3 days)&lt;/label&gt;
+&lt;/fieldset&gt;</code></pre>
+        </div>
+
+        <h3>Error Association</h3>
+        <p>When validation fails, associate the error message with the input using <code>aria-describedby</code>:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Accessible error association</span></div>
+          <pre><code>&lt;label for="email"&gt;Email&lt;/label&gt;
+&lt;input type="email" id="email" name="email"
+       aria-describedby="email-error" aria-invalid="true"&gt;
+&lt;p id="email-error" role="alert"&gt;Please enter a valid email address.&lt;/p&gt;</code></pre>
+        </div>
+      </section>
+
+      <section>
+        <h2>Color and Contrast</h2>
+        <p>Color contrast is the most common accessibility failure on the web. WCAG AA requires:</p>
+        <ul>
+          <li><strong>4.5:1</strong> contrast ratio for normal text (below 18px or not bold)</li>
+          <li><strong>3:1</strong> for large text (18px+ bold or 24px+ regular)</li>
+          <li><strong>3:1</strong> for UI components and graphical objects (icons, chart lines)</li>
+        </ul>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>Safe and unsafe color combinations</span></div>
+          <pre><code>/* GOOD: #333 on #fff — 10.7:1 contrast ratio */
+body { color: #333; background: #fff; }
+
+/* BAD: #999 on #fff — 2.8:1 contrast ratio (fails AA) */
+body { color: #999; background: #fff; }
+
+/* GOOD: #fff on #2563eb — 5.8:1 contrast ratio */
+.button { color: #fff; background: #2563eb; }
+
+/* BAD: #fff on #a0c4ff — 2.6:1 contrast ratio (fails AA) */
+.button { color: #fff; background: #a0c4ff; }</code></pre>
+        </div>
+
+        <div class="callout-warning">
+          <div class="callout-title">Never Rely on Color Alone</div>
+          <p>Approximately 8% of men have red-green color blindness. Never convey information using only color: links should be underlined (not just colored), required fields should have an asterisk (not just a red label), charts should use patterns (not just colored bars), and error states should include text (not just a red border).</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Testing Tools</h2>
+        <table>
+          <thead>
+            <tr><th>Tool</th><th>Type</th><th>What It Does</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>axe DevTools</strong></td><td>Browser extension</td><td>Automated accessibility audit in DevTools. Finds 50%+ of common issues automatically.</td></tr>
+            <tr><td><strong>Lighthouse</strong></td><td>Built into Chrome</td><td>Accessibility audit with clear recommendations. Part of the standard Lighthouse report.</td></tr>
+            <tr><td><strong>WAVE</strong></td><td>Browser extension</td><td>Visual overlay showing accessibility issues directly on the page.</td></tr>
+            <tr><td><strong>WebAIM Contrast Checker</strong></td><td>Web tool</td><td>Check color pairs for WCAG contrast compliance.</td></tr>
+            <tr><td><strong>NVDA</strong></td><td>Screen reader (Windows)</td><td>Free screen reader for manual testing. Essential for validating screen reader experience.</td></tr>
+            <tr><td><strong>VoiceOver</strong></td><td>Screen reader (macOS)</td><td>Built into every Mac. <code>Cmd+F5</code> to enable.</td></tr>
+            <tr><td><strong>NoCoffee</strong></td><td>Browser extension</td><td>Simulates various vision impairments (glaucoma, cataracts, color blindness).</td></tr>
+          </tbody>
+        </table>
+
+        <div class="callout-info">
+          <div class="callout-title">Automated Testing Finds ~50% of Issues</div>
+          <p>Tools like axe and Lighthouse catch the low-hanging fruit: missing alt text, insufficient contrast, missing labels. They cannot catch: whether alt text is actually meaningful, whether a screen reader user can complete a workflow, or whether focus management is logical. Automated testing is a necessary first pass — manual screen reader testing is what catches the rest.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Legal Landscape</h2>
+        <p>Accessibility is increasingly a legal requirement, not just a best practice:</p>
+        <ul>
+          <li><strong>ADA (US)</strong> — Title III requires places of public accommodation to be accessible. Courts have consistently ruled that websites are covered.</li>
+          <li><strong>Section 508 (US)</strong> — Government websites and federally-funded projects must meet WCAG AA.</li>
+          <li><strong>EAA / EN 301 549 (EU)</strong> — European Accessibility Act requires public sector websites and apps to meet WCAG AA.</li>
+          <li><strong>AODA (Ontario, Canada)</strong> — Requires WCAG AA compliance for public organizations.</li>
+          <li><strong>Equal Act (proposed US)</strong> — If passed, would explicitly codify website accessibility under the ADA.</li>
+        </ul>
+        <p>The number of website accessibility lawsuits in the US has been increasing year over year (over 4,000 in 2024). In many cases, the plaintiff's law firm sends a demand letter first — fixing the issues before litigation is almost always cheaper than fighting the lawsuit. The best defense: maintain WCAG AA compliance as a standard practice, not a reaction to a lawsuit.</p>
+      </section>
+
+      <div class="compare-box">
+        <div class="compare-col junior">
+          <div class="compare-label">Junior Developer</div>
+          <h4>How a Junior Might Think</h4>
+          <ul>
+            <li>Thinks accessibility is "just about alt text"</li>
+            <li>Uses <code>outline: none</code> without a replacement</li>
+            <li>Only tests with automated tools and considers it done</li>
+            <li>Does not know how to open or use a screen reader</li>
+            <li>Adds ARIA attributes without understanding them</li>
+            <li>Uses color alone to convey state (red for error, green for success)</li>
+          </ul>
+        </div>
+        <div class="compare-col senior">
+          <div class="compare-label">Senior Developer</div>
+          <h4>How a Senior Thinks</h4>
+          <ul>
+            <li>Tests with a real screen reader as part of every feature's definition of done</li>
+            <li>Provides custom focus styles instead of removing the default ring</li>
+            <li>Knows that automated tools only catch ~50% of issues — manual testing is required</li>
+            <li>Uses native HTML elements before reaching for ARIA</li>
+            <li>Designs with color-blind users in mind (patterns, text labels, underlines)</li>
+            <li>Monitors the legal landscape and maintains WCAG AA as standard practice</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="cheatsheet">
+        <div class="cheatsheet-title">Cheat Sheet</div>
+        <table>
+          <thead>
+            <tr><th>Concept</th><th>Key Takeaway</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>WCAG POUR</td><td>Perceivable, Operable, Understandable, Robust. AA is the practical target.</td></tr>
+            <tr><td>Alt text</td><td><code>alt="description"</code> for informative images. <code>alt=""</code> for decorative.</td></tr>
+            <tr><td>Labels</td><td>Every input needs a <code>&lt;label&gt;</code>. Use <code>&lt;fieldset&gt;</code> for groups.</td></tr>
+            <tr><td>Keyboard</td><td>Tab through your site. Can you do everything without a mouse?</td></tr>
+            <tr><td>Focus</td><td>Never remove the focus ring. Trap focus in modals.</td></tr>
+            <tr><td>Contrast</td><td>4.5:1 for normal text, 3:1 for large text. Check with WebAIM.</td></tr>
+            <tr><td>Color</td><td>Never rely on color alone. Underline links, add text labels to errors.</td></tr>
+            <tr><td>ARIA</td><td>Use native HTML first. ARIA supplements, does not replace.</td></tr>
+            <tr><td>Testing</td><td>Automated (axe) + manual (screen reader). Both are required.</td></tr>
+            <tr><td>Legal</td><td>WCAG AA is increasingly legally mandated worldwide.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+<nav class="chapter-nav">
+  <a href="10-ux-design.html"><span class="nav-label">Prev</span>Prev: UX Design Fundamentals</a>
+  <a href="12-figma.html"><span class="nav-label">Next</span>Next: Figma for Web</a>
+</nav>
+    </main>
+  </div>
+
+  <script src="../../assets/js/sidebar.js"></script>
+  <script src="../../assets/js/navigation.js"></script>
+  <script src="../../assets/js/themes.js"></script>
+</body>
+</html>

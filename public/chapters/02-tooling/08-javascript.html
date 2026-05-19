@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>04 — JavaScript | M's Web Development Guide</title>
+  <meta name="description" content="Core language, DOM manipulation, async programming, and modern ES features.">
+  <link rel="stylesheet" href="../../assets/css/main.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/themes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <div class="site-wrapper">
+    <header class="site-header">
+      <div class="site-title"><a href="../../index.html"><i class="fa-solid fa-house"></i> M's Web Development Guide</a></div>
+      <div class="header-controls">
+        <button data-sidebar-toggle class="sidebar-toggle" aria-label="Toggle table of contents">&#9776; TOC</button>
+        <button data-theme-toggle aria-label="Switch theme"><span class="icon">☾</span>Dark</button>
+      </div>
+    </header>
+
+    <aside class="sidebar" aria-label="Table of Contents">
+      <div id="sidebar-toc"></div>
+    </aside>
+
+    <main class="main-content" id="main">
+      <span class="chapter-number">Chapter 8</span>
+      <h1>JavaScript</h1>
+      <p class="chapter-subtitle">Core language, DOM manipulation, async programming, modern ES features, and debugging methodology</p>
+
+      <section>
+        <h2>Variables and Types</h2>
+        <p>JavaScript has dynamic types — a variable can hold a string, then a number, then an object. This flexibility is powerful but requires discipline. Understanding types is the foundation of avoiding bugs.</p>
+
+        <h3>Primitive Types</h3>
+        <table>
+          <thead>
+            <tr><th>Type</th><th>Example</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>string</code></td><td><code>"hello"</code>, <code>'world'</code>, <code>`template`</code></td><td>Text. Three quoting options (see Strings section).</td></tr>
+            <tr><td><code>number</code></td><td><code>42</code>, <code>3.14</code>, <code>NaN</code>, <code>Infinity</code></td><td>All numbers are floating-point (no integer type). <code>NaN</code> is the result of invalid math.</td></tr>
+            <tr><td><code>boolean</code></td><td><code>true</code>, <code>false</code></td><td>Used in conditions, comparisons, and toggles.</td></tr>
+            <tr><td><code>null</code></td><td><code>null</code></td><td>Explicitly "no value." Must be assigned.</td></tr>
+            <tr><td><code>undefined</code></td><td><code>let x;</code> → x is undefined</td><td>Default value of unassigned variables. Different from <code>null</code>.</td></tr>
+            <tr><td><code>bigint</code></td><td><code>9007199254740991n</code></td><td>For integers larger than Number.MAX_SAFE_INTEGER. Rarely needed.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>let, const, and var</h3>
+        <table>
+          <thead>
+            <tr><th>Keyword</th><th>Scope</th><th>Can reassign?</th><th>Hoisted?</th><th>Use?</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>const</code></td><td>Block</td><td>No</td><td>Yes (but not initialized)</td><td><strong>Default choice.</strong> Use for everything that does not need reassignment.</td></tr>
+            <tr><td><code>let</code></td><td>Block</td><td>Yes</td><td>Yes (but not initialized)</td><td>Use when you need to reassign (loop counters, accumulating values).</td></tr>
+            <tr><td><code>var</code></td><td>Function</td><td>Yes</td><td>Yes (initialized as undefined)</td><td><strong>Never use.</strong> Function scoping causes bugs that block scoping prevents.</td></tr>
+          </tbody>
+        </table>
+        <div class="code-block">
+          <div class="code-block-header"><span>const vs let — when to use each</span></div>
+          <pre><code>const name = 'Alice';        // never reassigned — use const
+const items = [1, 2, 3];     // array content CAN change, reference stays the same — const is fine
+items.push(4);               // allowed
+
+let count = 0;               // will be reassigned — use let
+for (let i = 0; i &lt; 10; i++) { // loop counter — use let
+  count += i;
+}</code></pre>
+        </div>
+
+        <h3>Truthy and Falsy</h3>
+        <p>In conditions, JavaScript coerces values to boolean. Only six values are falsy — everything else is truthy:</p>
+        <div class="decision-tree">Falsy: false, 0, "" (empty string), null, undefined, NaN<br>
+Truthy: everything else including "false" (non-empty string), [] (empty array), {} (empty object)</div>
+        <p>This is why <code>if (value)</code> works for checking if a string is non-empty, but does NOT work for checking if a number is 0 (0 is falsy but may be a valid value).</p>
+
+        <h3>== vs ===</h3>
+        <p><code>==</code> compares values after type coercion. <code>===</code> compares values AND types without coercion (strict equality). <strong>Always use <code>===</code></strong> unless you explicitly need coercion (rare).</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>== vs === surprises</span></div>
+          <pre><code>0 == ''      // true  — because '' coerces to 0
+0 === ''     // false — different types
+false == '0' // true  — because both coerce to 0
+false === '0' // false — different types
+null == undefined  // true  — special case
+null === undefined // false — different types</code></pre>
+        </div>
+      </section>
+
+      <section>
+        <h2>Functions and Scope</h2>
+        <p>Functions in JavaScript are first-class citizens: they can be assigned to variables, passed as arguments, returned from other functions, and stored in data structures. This is the key to many JS patterns.</p>
+
+        <h3>Function Forms</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span>Three ways to write a function</span></div>
+          <pre><code>// Declaration — hoisted, can be called before definition
+function add(a, b) { return a + b; }
+
+// Expression — not hoisted, assigned to a variable
+const subtract = function(a, b) { return a - b; };
+
+// Arrow — concise, inherits 'this' from parent scope
+const multiply = (a, b) => a + b;  // implicit return for single-expression functions
+
+// Arrow with body block
+const divide = (a, b) => {
+  if (b === 0) throw new Error('Cannot divide by zero');
+  return a / b;
+};</code></pre>
+        </div>
+
+        <h3>The <code>this</code> Keyword</h3>
+        <p><code>this</code> is the single most confusing concept in JavaScript. The rule: <code>this</code> refers to <strong>how a function is called</strong>, not where it is defined.</p>
+        <ul>
+          <li>Regular function: <code>this</code> is the object the method is called on (<code>obj.method()</code> → <code>this</code> is <code>obj</code>)</li>
+          <li>Standalone call: <code>this</code> is <code>undefined</code> in strict mode, <code>window</code> in sloppy mode</li>
+          <li>Arrow function: <code>this</code> is inherited from the enclosing scope (lexical <code>this</code>) — it does not have its own</li>
+          <li>Event handler: <code>this</code> is the element the handler is attached to</li>
+        </ul>
+        <div class="code-block">
+          <div class="code-block-header"><span>this — the arrow function advantage</span></div>
+          <pre><code>button.addEventListener('click', function() {
+  console.log(this);  // the button element
+});
+
+button.addEventListener('click', () => {
+  console.log(this);  // the surrounding scope (e.g., window or class instance)
+});</code></pre>
+        </div>
+
+        <h3>Closures</h3>
+        <p>A closure is a function that remembers the variables from its defining scope even after that scope has exited. This is how data privacy works in JavaScript:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Closure — counter with private state</span></div>
+          <pre><code>function createCounter() {
+  let count = 0;  // private — cannot be accessed from outside
+  return function() {
+    count++;
+    return count;
+  };
+}
+
+const counter = createCounter();
+console.log(counter()); // 1
+console.log(counter()); // 2
+console.log(counter()); // 3
+// count is NOT accessible here — it is closed over</code></pre>
+        </div>
+
+        <div class="callout-info">
+          <div class="callout-title">Why Closures Matter</div>
+          <p>Closures are everywhere in JavaScript: event handlers, callbacks, React hooks, debounce functions, module patterns. Understanding closures means understanding how JavaScript preserves state across time — a function defined now that runs later still has access to the variables that existed when it was created.</p>
+        </div>
+
+        <h3>Scope Rules</h3>
+        <p>Scope determines where variables are visible. Three levels:</p>
+        <ul>
+          <li><strong>Global</strong> — declared outside any function. Visible everywhere. Avoid — pollutes the namespace.</li>
+          <li><strong>Function</strong> — declared with <code>var</code> inside a function. Visible anywhere in that function.</li>
+          <li><strong>Block</strong> — declared with <code>let</code> or <code>const</code> inside <code>{}</code>. Visible only within that block.</li>
+        </ul>
+        <div class="code-block">
+          <div class="code-block-header"><span>Block scope vs function scope</span></div>
+          <pre><code>if (true) {
+  var x = 1;   // function-scoped — leaks out
+  let y = 2;   // block-scoped — stays inside
+}
+console.log(x); // 1
+console.log(y); // ReferenceError: y is not defined</code></pre>
+        </div>
+        <p>This is why <code>var</code> causes bugs: a variable declared inside an <code>if</code> block is visible outside it. <code>let</code> and <code>const</code> fix this.</p>
+      </section>
+
+      <section>
+        <h2>The DOM and Events</h2>
+        <p>The Document Object Model is the bridge between JavaScript and HTML. You select elements, listen to what users do, and respond. The single most important skill in DOM work is choosing the <em>right event for the right intent</em>.</p>
+
+        <h3>Selecting Elements</h3>
+        <p>Before you can attach an event, you need the element:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Query selectors</span></div>
+          <pre><code>const btn = document.querySelector('.submit-btn');   // first match
+const allBtns = document.querySelectorAll('.btn');    // NodeList
+const el = document.getElementById('header');         // fast, but less flexible
+const els = document.getElementsByClassName('card');  // live collection, rare need
+</code></pre>
+        </div>
+        <p>Prefer <code>querySelector</code> and <code>querySelectorAll</code> for almost everything. They accept any CSS selector and return static (non-live) collections, avoiding subtle bugs that live collections cause.</p>
+
+        <h3>Three Ways to Attach Events</h3>
+        <p>There are three registration methods. Only one is correct in production:</p>
+        <div class="cheatsheet" style="margin-top:0.5em;">
+          <table>
+            <thead>
+              <tr><th>Method</th><th>Example</th><th>Problem</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>HTML attribute</td><td><code>&lt;button onclick="handle()"&gt;</code></td><td>Mixes behavior into markup. Limited to one handler. Global scope pollution.</td></tr>
+              <tr><td>DOM property</td><td><code>btn.onclick = handle</code></td><td>Only one handler at a time — assigning a second overwrites the first.</td></tr>
+              <tr><td><code>addEventListener</code></td><td><code>btn.addEventListener('click', handle)</code></td><td>Multiple handlers, capture/bubble control, <code>removeEventListener</code> works. Use this.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>addEventListener — the right way</span></div>
+          <pre><code>const btn = document.querySelector('.submit-btn');
+
+// Attach multiple handlers (both will fire)
+btn.addEventListener('click', handleClick);
+btn.addEventListener('click', trackAnalytics);
+
+// Remove a specific handler later
+btn.removeEventListener('click', handleClick);
+
+// Options: run once, use capture phase
+btn.addEventListener('click', handleOnce, { once: true });
+</code></pre>
+        </div>
+
+        <h3>Event Type Decision Tree</h3>
+        <p>The most common mistake junior developers make: using <code>click</code> for everything. The right event makes your app feel right. Run through this tree every time you attach a listener:</p>
+        <div class="decision-tree">User interaction?
+├── Click/tap?
+│   ├── Full action (button, link, toggle)?       → click
+│   ├── Press started (drag, hold)?               → mousedown
+│   └── Press released (drop)?                    → mouseup
+├── Keyboard?
+│   ├── Any key press (game, shortcut)?           → keydown
+│   ├── Key released (character input)?           → keyup
+│   └── Typed a character (deprecated, avoid)?    → keypress (don't use)
+├── Form field?
+│   ├── Every keystroke/paste (live preview)?     → input
+│   ├── Value committed (user left field)?        → change
+│   ├── Field lost focus (validate on exit)?      → blur
+│   └── Field gained focus (show help)?           → focus
+├── Form submission?
+│   └── Always on the &lt;form&gt;, not the button     → submit
+├── Page loaded?
+│   ├── HTML parsed, DOM ready?                   → DOMContentLoaded
+│   └── All resources loaded (images, CSS)?       → load
+├── Scroll / resize?
+│   └── Performance-sensitive — always debounce   → scroll, resize
+└── Mobile touch?
+    ├── Touch began                               → touchstart
+    ├── Touch moved (swipe)?                      → touchmove
+    └── Touch ended                               → touchend</div>
+
+        <h3>Key Distinctions People Get Wrong</h3>
+
+        <h4><code>blur</code> vs <code>change</code></h4>
+        <p><code>blur</code> fires when an element loses focus — regardless of whether the value changed. <code>change</code> fires only when the value changed AND focus is lost. Use <code>blur</code> for inline validation (check every field exit). Use <code>change</code> when you only care about actual edits.</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>blur vs change</span></div>
+          <pre><code>// Validate on every field exit — catches empty fields
+emailInput.addEventListener('blur', () =&gt; {
+  if (!emailInput.value) showError('Email is required');
+});
+
+// Only react when user actually changed something
+emailInput.addEventListener('change', () =&gt; {
+  saveDraft(emailInput.value);
+});
+</code></pre>
+        </div>
+
+        <h4><code>input</code> vs <code>change</code></h4>
+        <p><code>input</code> fires on every keystroke, paste, or input event — great for live previews, character counts, and search-as-you-type. <code>change</code> fires only when the user commits (blur + value changed). Warning: <code>input</code> without debouncing will fire dozens of events per second.</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>input with debouncing</span></div>
+          <pre><code>let debounceTimer;
+searchInput.addEventListener('input', () =&gt; {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() =&gt; {
+    fetchSearchResults(searchInput.value);  // expensive call
+  }, 300);  // wait 300ms after user stops typing
+});
+</code></pre>
+        </div>
+
+        <h4><code>click</code> vs <code>submit</code></h4>
+        <p>Always listen for <code>submit</code> on the <code>&lt;form&gt;</code> element, not <code>click</code> on the submit button. The <code>submit</code> event also fires when the user presses Enter in any input field. A button <code>click</code> won't catch that.</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Form submission — correct pattern</span></div>
+          <pre><code>const form = document.querySelector('#contact-form');
+
+form.addEventListener('submit', (e) =&gt; {
+  e.preventDefault();  // stop page reload
+
+  if (!validate(form)) return;
+
+  submitBtn.disabled = true;  // prevent double-submit
+  submitFormData(form);
+});
+</code></pre>
+        </div>
+
+        <h4><code>mousedown</code> vs <code>click</code></h4>
+        <p><code>click</code> fires after a full press+release cycle. <code>mousedown</code> fires immediately on press. Use <code>mousedown</code> for drag initiation, drawing, or any interaction where response time matters more than completion.</p>
+
+        <h3>Event Delegation</h3>
+        <p>Instead of attaching a listener to every matching element, attach one to a parent and use event bubbling to catch events from children. This works for dynamically added elements and is more performant.</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Event delegation pattern</span></div>
+          <pre><code>// Instead of:
+document.querySelectorAll('.list-item').forEach(el =&gt; {
+  el.addEventListener('click', handleItem);
+});
+
+// Do this:
+document.querySelector('.item-list').addEventListener('click', (e) =&gt; {
+  const item = e.target.closest('.list-item');
+  if (item) handleItem(item);
+});
+</code></pre>
+        </div>
+
+        <h3>Bubbling vs Capturing</h3>
+        <p>Events flow in three phases: <strong>capture</strong> (window → target), <strong>target</strong>, <strong>bubble</strong> (target → window). By default, listeners fire during the bubble phase. Pass <code>{ capture: true }</code> to intercept during capture. Know this exists — you'll need it for things like stopping event propagation from specific layers.</p>
+
+        <div class="callout callout-tip">
+          <div class="callout-title">Why Event Choice Matters</div>
+          <p>The right event makes your app feel right. Using <code>change</code> for a live search makes it feel sluggish (only updates when the user leaves the field). Using <code>input</code> without debouncing fires 50+ requests per second. Using <code>click</code> on a submit button misses Enter-key submissions. A senior engineer doesn't just know event names — they match event strategy to user intent.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Asynchronous JavaScript</h2>
+        <p>JavaScript runs on a single thread — it can do only one thing at a time. But the browser (Node.js, etc.) is multi-threaded. Asynchronous patterns let you perform slow operations (network requests, file reads, timers) without blocking the entire program.</p>
+
+        <h3>The Event Loop</h3>
+        <p>Understanding the event loop is the key to understanding all async JavaScript:</p>
+        <div class="decision-tree">Call Stack (one thing at a time) → Web APIs (timers, fetch, DOM) → Task Queue (callbacks, events) → Microtask Queue (Promises, MutationObserver)</div>
+        <ol>
+          <li>Execute code on the call stack (synchronous)</li>
+          <li>When an async operation completes, its callback goes to the task queue</li>
+          <li>Promise resolutions go to the <em>microtask</em> queue (higher priority)</li>
+          <li>When the call stack is empty, process ALL microtasks first</li>
+          <li>Then process one task from the task queue</li>
+          <li>Repeat</li>
+        </ol>
+        <p>This is why <code>setTimeout(callback, 0)</code> does not run immediately — it still has to wait for the call stack and microtask queue to empty. This is also why promise resolutions always run before timer callbacks.</p>
+
+        <h3>Callbacks → Promises → async/await</h3>
+        <p>The evolution of async patterns in JavaScript:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Three eras of async code</span></div>
+          <pre><code>// 1. Callbacks (old — avoid)
+getUser(id, (err, user) => {
+  if (err) handleError(err);
+  else getPosts(user.id, (err, posts) => {
+    if (err) handleError(err);
+    else render(posts);  // callback hell
+  });
+});
+
+// 2. Promises (better — chainable)
+getUser(id)
+  .then(user => getPosts(user.id))
+  .then(posts => render(posts))
+  .catch(err => handleError(err));
+
+// 3. async/await (best — reads like sync code)
+async function loadUserPosts(id) {
+  try {
+    const user = await getUser(id);
+    const posts = await getPosts(user.id);
+    render(posts);
+  } catch (err) {
+    handleError(err);
+  }
+}</code></pre>
+        </div>
+
+        <h3>Promise Fundamentals</h3>
+        <p>A Promise is an object representing a value that may not be available yet. It has three states: <strong>pending</strong>, <strong>fulfilled</strong>, or <strong>rejected</strong>.</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Creating and consuming promises</span></div>
+          <pre><code>// Creating a promise
+const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+await wait(1000); // pauses for 1 second
+
+// Promise.all — run multiple promises in parallel
+const [user, posts] = await Promise.all([
+  fetchUser(id),
+  fetchPosts(id)
+]);</code></pre>
+        </div>
+        <p><code>Promise.all</code> is critical for performance — it runs all promises concurrently. The <code>await</code> version with sequential <code>await</code>s runs them one at a time. If the operations are independent, use <code>Promise.all</code>.</p>
+
+        <div class="callout-warning">
+          <div class="callout-title">Unhandled Rejections Crash Node.js</div>
+          <p>An unhandled promise rejection will crash Node.js (since version 15) and log warnings in browsers. Every <code>async</code> function should have a <code>try</code>/<code>catch</code>. Every <code>.then()</code> chain should have a <code>.catch()</code>. The most common cause: forgetting <code>await</code> — if you call <code>fetchData()</code> without <code>await</code> and it rejects, the rejection is unhandled because no <code>try</code>/<code>catch</code> wraps the async call. Node will print <code>UnhandledPromiseRejection</code> and terminate. Add a global handler with <code>process.on('unhandledRejection', ...)</code> as a safety net, but fix the root cause.</p>
+        </div>
+
+        <div class="callout-warning">
+          <div class="callout-title">Why Does "1" == 1 Return True? The == vs === Trap</div>
+          <p>JavaScript has two equality operators that behave very differently:</p>
+          <ul>
+            <li><code>==</code> (loose equality): converts types before comparing. <code>"1" == 1</code> is <code>true</code>. <code>"" == 0</code> is <code>true</code>. <code>null == undefined</code> is <code>true</code>.</li>
+            <li><code>===</code> (strict equality): no type conversion. <code>"1" === 1</code> is <code>false</code>.</li>
+          </ul>
+          <p>The loose <code>==</code> does type coercion — it was a mistake in JavaScript's original design. <strong>Always use <code>===</code></strong> unless you have a specific reason not to. It prevents subtle bugs like comparing user input "42" to the number 42 and getting a false positive.</p>
+        </div>
+
+        <div class="callout-warning">
+          <div class="callout-title">I Declared x with let Twice and It Broke — But Assigning Without let Works?</div>
+          <p>Re-declaring a variable with <code>let</code> in the same scope throws an error:</p>
+          <pre><code>let x = 1;
+let x = 2;  // SyntaxError: Identifier 'x' has already been declared</code></pre>
+          <p>But reassigning without <code>let</code> works fine:</p>
+          <pre><code>let x = 1;
+x = 2;  // This is allowed</code></pre>
+          <p>Why? <code>let x = ...</code> declares AND assigns. <code>x = ...</code> only assigns. Using <code>let</code> twice in the same scope is a syntax error — it's trying to create two variables with the same name. Using <code>var</code> instead would allow re-declaration (which is why <code>var</code> is dangerous and you should never use it).</p>
+        </div>
+
+        <div class="callout-warning">
+          <div class="callout-title">Cannot Read Property of undefined — The #1 Runtime Error</div>
+          <p>This error stops every JavaScript beginner:</p>
+          <pre><code>const user = { name: "Alice" };
+console.log(user.email);        // undefined (property doesn't exist)
+console.log(user.email.city);   // TypeError: Cannot read property 'city' of undefined</code></pre>
+          <p>You can't access a property of <code>undefined</code> or <code>null</code>. Even if <code>user.email</code> is undefined, trying to go deeper crashes. Fix with optional chaining:</p>
+          <pre><code>console.log(user.email?.city);   // undefined (safe, no error)</code></pre>
+          <p>Always check if an object exists before accessing its properties, or use <code>?.</code> (optional chaining) to safely traverse uncertain paths.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Fetch and APIs</h2>
+        <p>The <code>fetch</code> API is the modern, browser-native way to make HTTP requests. It returns a Promise and works seamlessly with <code>async</code>/<code>await</code>.</p>
+
+        <h3>Basic GET Request</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span>Fetching and displaying data</span></div>
+          <pre><code>async function loadUsers() {
+  try {
+    const response = await fetch('/api/users');
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const users = await response.json();
+    renderUserList(users);
+  } catch (err) {
+    showError('Failed to load users. Please try again.');
+    console.error(err);  // always log for debugging
+  }
+}</code></pre>
+        </div>
+        <p>Two critical details: <code>response.ok</code> is <code>false</code> for any non-2xx status (including 404, 500). And <code>response.json()</code> is itself async — it returns a Promise because the body arrives as a stream.</p>
+
+        <h3>POST Request with JSON Body</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span>Submitting data with fetch</span></div>
+          <pre><code>async function submitForm(data) {
+  try {
+    const response = await fetch('/api/contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Submission failed');
+    }
+
+    return await response.json();
+  } catch (err) {
+    // Network errors (offline, DNS failure) and HTTP errors both land here
+    throw err;
+  }
+}</code></pre>
+        </div>
+
+        <h3>Aborting Requests</h3>
+        <p>When a user navigates away or a search field changes, you should cancel in-flight requests to avoid race conditions and wasted bandwidth:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>AbortController pattern</span></div>
+          <pre><code>let currentRequest;
+
+async function search(query) {
+  // Cancel previous request
+  if (currentRequest) currentRequest.abort();
+
+  const controller = new AbortController();
+  currentRequest = controller;
+
+  try {
+    const response = await fetch(`/api/search?q=${query}`, {
+      signal: controller.signal
+    });
+    const results = await response.json();
+    displayResults(results);
+  } catch (err) {
+    if (err.name === 'AbortError') return; // expected — ignore
+    showError('Search failed');
+  }
+}</code></pre>
+        </div>
+
+        <div class="callout-tip">
+          <div class="callout-title">CORS Explained Simply</div>
+          <p>CORS (Cross-Origin Resource Sharing) is a browser security mechanism. When your frontend at <code>yoursite.com</code> tries to fetch from <code>api.othersite.com</code>, the browser sends a preflight <code>OPTIONS</code> request and checks the response headers. The server must explicitly allow your origin with <code>Access-Control-Allow-Origin: https://yoursite.com</code>. This is not a backend-to-backend restriction — only browsers enforce it.</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Strings: Quotes vs Template Literals</h2>
+        <p>JavaScript gives you three ways to write strings. Understanding <em>when</em> to use each is a deceptively important skill — it affects readability, maintainability, and how naturally your code communicates intent.</p>
+
+        <h3>The Three Options</h3>
+        <p>Each syntax is valid for creating a string. The difference is what they enable:</p>
+        <div class="cheatsheet" style="margin-top:0.5em;">
+          <table>
+            <thead>
+              <tr><th>Syntax</th><th>Name</th><th>Best Use Case</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>'...'</code></td><td>Single quotes</td><td>Simple strings by convention. Most JS style guides (Airbnb, Standard, Prettier) prefer these.</td></tr>
+              <tr><td><code>"..."</code></td><td>Double quotes</td><td>JSON (required). HTML attributes. Some language ecosystems (PHP, Java) favor these — consistency across a stack can matter.</td></tr>
+              <tr><td><code>`...`</code></td><td>Template literals</td><td>Interpolation, multi-line strings, and tagged templates. The modern choice for dynamic strings.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Decision Tree</h3>
+        <p>When you need to write a string, run through these questions:</p>
+        <div class="decision-tree">Need variable/expression interpolation?
+  ├── YES → Template literals  `Hello, ${name}!`
+  └── NO
+      ├── Multi-line string?
+      │   ├── YES → Template literals
+      │   └── NO
+      │       ├── Writing JSON?           → Double quotes "   (JSON spec)
+      │       ├── Contains single quote '? → Double quotes "  (no escaping)
+      │       ├── Contains double quote "? → Single quotes '  (no escaping)
+      │       └── None of the above?      → Single quotes '   (convention)</div>
+
+        <h3>Interpolation: <code>+</code> vs Template Literals</h3>
+        <p>This is where template literals earn their keep. Compare these two patterns that produce the same output:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Concatenation (old style)</span></div>
+          <pre><code>const name = 'Alice';
+const role = 'developer';
+const message = 'Hello, ' + name + '! You are a ' + role + '.';
+// Result: "Hello, Alice! You are a developer."
+</code></pre>
+        </div>
+        <div class="code-block">
+          <div class="code-block-header"><span>Template literal (modern)</span></div>
+          <pre><code>const name = 'Alice';
+const role = 'developer';
+const message = `Hello, ${name}! You are a ${role}.`;
+// Result: "Hello, Alice! You are a developer."
+</code></pre>
+        </div>
+        <p>The template literal is shorter, more readable, and makes the structure of the string visible at a glance. The <code>+</code> version forces you to mentally parse quoted fragments and operators. <strong>This is not about performance — there is no meaningful difference. It is about human readability.</strong></p>
+
+        <h3>Multi-line Strings</h3>
+        <div class="code-block">
+          <div class="code-block-header"><span>Multi-line comparison</span></div>
+          <pre><code>// With concatenation:
+const address = '123 Main St.\n' +
+  'Suite 100\n' +
+  'New York, NY 10001';
+
+// With template literals:
+const address = `123 Main St.
+Suite 100
+New York, NY 10001`;
+</code></pre>
+        </div>
+        <p>The template literal preserves actual line breaks in the source code. No <code>\n</code>, no <code>+</code>. But be aware: those line breaks become literal newlines in the string, including indentation.</p>
+
+        <h3>Escaping: Choosing the Right Quote</h3>
+        <p>A practical skill: pick the quote that minimizes escaping.</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Escaping scenarios</span></div>
+          <pre><code>// Contains apostrophe — use double quotes to avoid backslash:
+const sentence = "It's a beautiful day";     // clean
+const sentence = 'It\'s a beautiful day';     // noisy
+
+// Contains double quote — use single quotes:
+const html = '&lt;button class="btn"&gt;Click&lt;/button&gt;';  // clean
+const html = "&lt;button class=\"btn\"&gt;Click&lt;/button&gt;";  // noisy
+
+// Contains both — template literal saves you:
+const msg = `He said "It's done" and left.`;  // clean with backticks</code></pre>
+        </div>
+        <div class="callout callout-tip">
+          <div class="callout-title">Why This Works</div>
+          <p>The goal is not to have a favorite quote type. The goal is to recognize the context you're in and choose the syntax that produces the cleanest, least ambiguous result. A senior engineer doesn't "prefer" one quote — they assess the string contents and pick accordingly.</p>
+        </div>
+
+        <h3>Tagged Templates (Advanced)</h3>
+        <p>Template literals have a less common but powerful feature: you can pass them through a "tag" function that processes the string and interpolated values. Libraries like <code>styled-components</code> in React use this pattern. This is an intermediate-to-advanced concept — understand that it exists, return to it when you need it.</p>
+      </section>
+
+      <section>
+        <h2>Modern ES6+ Features</h2>
+        <p>ES6 (ES2015) transformed JavaScript. These features are not optional — they are the standard way to write modern JS. If you are not using them, your code is harder to read and more error-prone than it needs to be.</p>
+
+        <h3>Destructuring</h3>
+        <p>Extract values from objects and arrays in a single, readable statement:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Object and array destructuring</span></div>
+          <pre><code>// Object destructuring
+const user = { name: 'Alice', email: 'alice@example.com', role: 'admin' };
+const { name, email } = user;
+console.log(name);  // 'Alice'
+
+// Renaming during destructuring
+const { name: fullName, role: userRole } = user;
+
+// Array destructuring
+const [first, second, ...rest] = [1, 2, 3, 4, 5];
+console.log(first);  // 1
+console.log(rest);   // [3, 4, 5]
+
+// Function parameter destructuring
+function greet({ name, role }) {
+  return `Hello ${name} (${role})`;
+}</code></pre>
+        </div>
+
+        <h3>Modules: import / export</h3>
+        <p>Modules let you split code into separate files with explicit dependencies:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Module pattern</span></div>
+          <pre><code>// utils.js
+export function formatDate(date) { ... }
+export const API_URL = 'https://api.example.com';
+
+// Or export as default (one per file)
+export default function logError(err) { ... }
+
+// app.js
+import logError, { formatDate, API_URL } from './utils.js';</code></pre>
+        </div>
+        <p>Modules are the reason global scope pollution is no longer an issue. Everything is explicitly imported. If a file needs something, it imports it. If it does not, it is not available.</p>
+
+        <h3>Array Methods: map, filter, reduce</h3>
+        <p>These three methods replace most <code>for</code> loops. They express <em>intent</em> — you can tell at a glance what the code does:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>map, filter, reduce in action</span></div>
+          <pre><code>const numbers = [1, 2, 3, 4, 5];
+
+// map — transform every element
+const doubled = numbers.map(n => n * 2);
+// [2, 4, 6, 8, 10]
+
+// filter — keep elements that pass a test
+const evens = numbers.filter(n => n % 2 === 0);
+// [2, 4]
+
+// reduce — accumulate a single value
+const sum = numbers.reduce((acc, n) => acc + n, 0);
+// 15
+
+// Chained: get total of even numbers doubled
+const total = numbers
+  .filter(n => n % 2 === 0)
+  .map(n => n * 2)
+  .reduce((acc, n) => acc + n, 0);
+// 12 (2*2 + 4*2)</code></pre>
+        </div>
+        <p>Compare the chained version to the equivalent <code>for</code> loop — the chain communicates <em>what</em> it does (filter, then map, then sum) rather than <em>how</em> (create variable, loop, check condition, transform, accumulate).</p>
+
+        <h3>Optional Chaining and Nullish Coalescing</h3>
+        <p>Two modern operators that prevent the most common runtime error: "Cannot read property of undefined":</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>?. and ?? — safe access and default values</span></div>
+          <pre><code>const user = { profile: { name: 'Alice' } };
+
+// Optional chaining — safe nested access
+const city = user?.profile?.address?.city;
+// undefined instead of TypeError
+
+// Nullish coalescing — default for null/undefined only
+const name = user?.profile?.name ?? 'Anonymous';
+// 'Alice' if name exists, 'Anonymous' if null/undefined
+
+// Compare with || — treats 0 and '' as falsy
+const count = 0;
+console.log(count || 10);   // 10  (0 is falsy — wrong!)
+console.log(count ?? 10);   // 0   (0 is not null/undefined — correct)</code></pre>
+        </div>
+        <p>The critical difference: <code>??</code> only replaces <code>null</code> and <code>undefined</code>. <code>||</code> replaces any falsy value (0, "", false). Use <code>??</code> when 0 or "" are valid values.</p>
+      </section>
+
+      <section>
+        <h2>Browser DevTools and Debugging</h2>
+        <p>Writing code is only half the job — debugging is where you earn your reputation. Browser DevTools are your most important tool as a frontend developer. Learning to use them systematically separates engineers who fix bugs from those who chase them.</p>
+
+        <h3>Opening DevTools</h3>
+        <p>Every major browser has built-in developer tools. The shortcuts are muscle memory:</p>
+        <ul>
+          <li><strong>F12</strong> or <strong>Ctrl+Shift+I</strong> (Windows/Linux)</li>
+          <li><strong>Cmd+Option+I</strong> (Mac)</li>
+          <li>Right-click → <strong>Inspect</strong> on any element</li>
+        </ul>
+
+        <h3>The Console Panel</h3>
+        <p>The console is your first line of defense. Use it for logging, testing expressions, and inspecting errors:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Console logging levels</span></div>
+          <pre><code>console.log('General info');        // standard log
+console.warn('Heads up');          // yellow warning
+console.error('Something broke');  // red error with stack trace
+console.table([{name: 'Alice'}, {name: 'Bob'}]);  // table format for arrays/objects
+console.time('timer');             // start a timer
+console.timeEnd('timer');          // end timer, prints duration</code></pre>
+        </div>
+        <p>The console also shows runtime errors with a stack trace. Click the file link in the error to jump directly to the source line.</p>
+
+        <div class="callout-tip">
+          <div class="callout-title">console.log is Not Debugging</div>
+          <p>Logging is a useful first step, but it's passive — you only see what you thought to log. Breakpoints are active: they stop execution and let you inspect everything. Use <code>console.log</code> for quick checks, breakpoints for real debugging.</p>
+        </div>
+
+        <h3>The Sources Panel</h3>
+        <p>The Sources panel (called "Debugger" in some browsers) is where breakpoints live. It shows all loaded files and lets you set breakpoints, step through code, and inspect variables.</p>
+
+        <h4>Setting Breakpoints</h4>
+        <p>Click a line number in the Sources panel to set a breakpoint. Execution pauses on that line, and you can:</p>
+        <ul>
+          <li>Hover over variables to see their current value</li>
+          <li>View the full scope tree (Local, Closure, Global) in the right panel</li>
+          <li>Watch specific expressions update as you step through</li>
+          <li>View the call stack to see how you got to this point</li>
+        </ul>
+
+        <h4>Conditional Breakpoints</h4>
+        <p>Right-click a line number and select "Add conditional breakpoint". Enter an expression — execution only pauses when the expression is true. Use this to skip unrelated iterations in a loop:</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>Conditional breakpoint scenario</span></div>
+          <pre><code>// Instead of adding console.log inside a 1000-item loop:
+for (let i = 0; i &lt; 1000; i++) {
+  process(items[i]);
+}
+// Set a conditional breakpoint on the process() line with: i === 500
+// No code changes needed — pauses only on that iteration.</code></pre>
+        </div>
+
+        <h4>Breakpoint Types</h4>
+        <div class="cheatsheet" style="margin-top:0.5em;">
+          <table>
+            <thead>
+              <tr><th>Type</th><th>When to Use</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Line breakpoint</td><td>Pause on a specific line of code</td></tr>
+              <tr><td>Conditional breakpoint</td><td>Pause only when an expression is true (loop iterations, specific state)</td></tr>
+              <tr><td>DOM breakpoint</td><td>Pause when an element is modified, attribute changes, or subtree changes</td></tr>
+              <tr><td>XHR/fetch breakpoint</td><td>Pause when a specific URL or any network request is made</td></tr>
+              <tr><td>Event listener breakpoint</td><td>Pause when a specific event type fires (click, keydown, etc.)</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Stepping Through Code</h3>
+        <p>Once paused on a breakpoint, use the stepping controls to navigate execution:</p>
+        <div class="decision-tree">Step controls (in order of frequency):
+├── Step Over (F10) — execute current line, go to next
+├── Step Into (F11) — enter a function call to debug its internals
+├── Step Out (Shift+F11) — finish current function and return to caller
+└── Resume (F8) — continue execution until next breakpoint</div>
+
+        <h3>DOM Breakpoints</h3>
+        <p>Right-click any element in the Elements panel → Break on → and choose:</p>
+        <ul>
+          <li><strong>Subtree modifications</strong> — when children are added or removed</li>
+          <li><strong>Attribute modifications</strong> — when attributes like <code>class</code> or <code>style</code> change</li>
+          <li><strong>Node removal</strong> — when the element itself is removed from the DOM</li>
+        </ul>
+        <p>This is invaluable when something is changing the DOM and you don't know what code is responsible. The debugger pauses on the exact line that made the change.</p>
+
+        <h3>The debugger Statement</h3>
+        <p>You can insert a <code>debugger;</code> statement directly in your code. When DevTools is open, execution pauses at that line. This is useful when you can't easily set a breakpoint in the Sources panel (e.g., code in a <code>setTimeout</code> or an event handler that's hard to reach).</p>
+        <div class="code-block">
+          <div class="code-block-header"><span>debugger statement</span></div>
+          <pre><code>function calculateTotal(items) {
+  debugger;  // pause here when DevTools is open
+  return items.reduce((sum, item) => sum + item.price, 0);
+}</code></pre>
+        </div>
+        <p>Remove <code>debugger</code> statements before committing — they'll pause execution for anyone with DevTools open.</p>
+
+        <h3>Debugging Methodology</h3>
+        <p>A systematic approach to debugging separates productive developers from frustrated ones. Follow this process every time:</p>
+
+        <h4>Step 1: Reproduce Reliably</h4>
+        <p>You cannot fix what you cannot trigger. Identify the exact steps that cause the bug. If it's intermittent, find the pattern (network speed, specific input, timing).</p>
+
+        <h4>Step 2: Read the Error</h4>
+        <p>The console gives you a file name, line number, and stack trace. Read it carefully. "Cannot read property of undefined" means something you expect to be an object is undefined — trace back to where it was set.</p>
+
+        <h4>Step 3: Set a Breakpoint, Not a console.log</h4>
+        <p>Go to the file and line the error points to. Set a breakpoint one line before the error. Reload. When execution pauses, inspect variables in the Scope panel. What is the actual state vs. what did you expect?</p>
+
+        <h4>Step 4: Form a Hypothesis</h4>
+        <p>Before changing code, state what you think is wrong: "The user object is undefined because the API call hasn't resolved yet." This prevents random guess-and-check debugging.</p>
+
+        <h4>Step 5: Make One Change</h4>
+        <p>Change one thing. Test. Did it fix the bug? Did it break anything else? Change multiple things at once and you won't know which one worked.</p>
+
+        <h4>Step 6: Verify the Fix</h4>
+        <p>Run the reproduction steps. The bug should be gone. Then test edge cases — what happens with empty input, null values, or unexpected data?</p>
+
+        <div class="decision-tree">Debugging process:
+Reproduce → Read Error → Set Breakpoint → Inspect State → Form Hypothesis → Make One Change → Verify
+If not fixed → Refine Hypothesis → Repeat</div>
+
+        <div class="callout-warning">
+          <div class="callout-title">The "Random Fix" Trap</div>
+          <p>Making random changes and reloading until the bug goes away is the most common junior mistake. You haven't fixed the bug — you've hidden it. It will reappear with different input. Always understand the root cause before making changes.</p>
+        </div>
+
+        <h3>Common Debugging Scenarios</h3>
+
+        <h4>"X is not a function" or "Cannot read property of X"</h4>
+        <p>Set a breakpoint at the failing line. Inspect what the variable actually contains. Trace back to where it should have been set. Common causes: API response missing a field, async code hasn't resolved, or a function parameter wasn't passed.</p>
+
+        <h4>Event handler not firing</h4>
+        <p>Check: Is the element selected correctly? Is the event name correct (it's <code>click</code>, not <code>onclick</code>)? Is the element dynamically added after the listener was attached? Use event delegation or attach the listener after the element exists. Check for JS errors before registration that may have stopped execution.</p>
+
+        <h4>Async code executing in wrong order</h4>
+        <p>Use breakpoints inside <code>async</code> functions to trace actual execution order. Common issue: forgetting <code>await</code> — the code continues synchronously while the promise is still pending.</p>
+
+        <h4>State updates not reflected in UI</h4>
+        <p>Verify you're modifying the correct variable. With objects or arrays, ensure you're creating a new reference rather than mutating. Check that the UI re-render is triggered.</p>
+      </section>
+
+      <div class="compare-box">
+        <div class="compare-col junior">
+          <div class="compare-label">Junior Developer</div>
+          <h4>How a Junior Might Think</h4>
+          <ul>
+            <li>Uses <code>var</code> everywhere and doesn't understand scope issues</li>
+            <li>Writes deeply nested callbacks instead of using promises or async/await</li>
+            <li>Picks quote types at random, escapes unnecessarily</li>
+            <li>Concatenates strings with <code>+</code> even with variables</li>
+            <li>Uses <code>click</code> for everything, attaches events via HTML <code>onclick</code> attributes</li>
+            <li>Doesn't know the difference between <code>blur</code>, <code>change</code>, and <code>input</code></li>
+            <li>Manipulates the DOM directly without considering performance</li>
+            <li>Doesn't handle promise rejections or network errors</li>
+            <li>Sprinkles <code>console.log</code> everywhere, never opens DevTools breakpoints</li>
+            <li>Makes random code changes until the bug "seems fixed"</li>
+          </ul>
+        </div>
+        <div class="compare-col senior">
+          <div class="compare-label">Senior Developer</div>
+          <h4>How a Senior Thinks</h4>
+          <ul>
+            <li>Uses <code>const</code> by default, <code>let</code> when reassignment is needed, never <code>var</code></li>
+            <li>Writes async code with <code>async</code>/<code>await</code> and proper error handling</li>
+            <li>Uses single quotes by convention, switches to template literals for interpolation</li>
+            <li>Chooses the quote type that minimizes escaping based on string contents</li>
+            <li>Matches event type to intent: <code>submit</code> on forms, <code>input</code> with debounce, <code>blur</code> for validation</li>
+            <li>Uses event delegation for dynamic lists, <code>addEventListener</code> over HTML attributes</li>
+            <li>Always handles the error case — network failures, empty responses, timeouts</li>
+            <li>Uses breakpoints and systematic debugging methodology — reproduce, isolate, fix, verify</li>
+            <li>Reads stack traces and understands the root cause before changing code</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="cheatsheet">
+        <div class="cheatsheet-title">Cheat Sheet</div>
+        <table>
+          <thead>
+            <tr><th>Concept</th><th>Key Takeaway</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Variables</td><td>Prefer <code>const</code>. Use <code>let</code> for reassignment. Never use <code>var</code>.</td></tr>
+            <tr><td>Functions</td><td>Arrow functions inherit <code>this</code> from parent scope. Regular functions have their own <code>this</code>.</td></tr>
+            <tr><td>DOM</td><td>Use <code>querySelector</code>/<code>querySelectorAll</code>. Prefer <code>addEventListener</code> over HTML attributes.</td></tr>
+            <tr><td>Events</td><td>Match event to intent: <code>input</code> for live updates, <code>change</code> for committed values, <code>blur</code> for validation, <code>submit</code> on the form, not <code>click</code> on the button.</td></tr>
+            <tr><td>Async</td><td><code>async</code>/<code>await</code> is syntactic sugar over promises. Always use <code>try</code>/<code>catch</code>.</td></tr>
+            <tr><td>Strings</td><td>Single quotes <code>'</code> by convention. Template literals <code>`</code> for interpolation/multi-line. Double quotes <code>"</code> for JSON. Choose the quote that needs no escaping.</td></tr>
+            <tr><td>Modern JS</td><td>Destructure objects and arrays. Use <code>map</code>/<code>filter</code>/<code>reduce</code> instead of loops.</td></tr>
+            <tr><td>Debugging</td><td>Use breakpoints, not <code>console.log</code>. Reproduce → isolate → fix → verify. Read the stack trace first.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <nav class="chapter-nav">
+  <a href="07-css.html"><span class="nav-label">Prev</span>Prev: CSS</a>
+  <a href="09-package-management.html"><span class="nav-label">Next</span>Next: Package Management &amp; npm</a>
+</nav>
+    </main>
+  </div>
+
+  <script src="../../assets/js/sidebar.js"></script>
+  <script src="../../assets/js/navigation.js"></script>
+  <script src="../../assets/js/themes.js"></script>
+</body>
+</html>
