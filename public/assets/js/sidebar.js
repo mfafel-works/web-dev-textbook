@@ -44,6 +44,21 @@ const tocData = [
   { type: 'item', href: '/resources.html', label: 'Resources &amp; Links' },
 ];
 
+function getBasePath() {
+  const scripts = document.getElementsByTagName('script');
+  for (let i = 0; i < scripts.length; i++) {
+    const src = scripts[i].src;
+    if (src && src.includes('sidebar.js')) {
+      const path = new URL(src).pathname;
+      const idx = path.indexOf('/assets/');
+      if (idx > 0) return path.substring(0, idx);
+    }
+  }
+  return '';
+}
+
+const basePath = getBasePath();
+
 function renderSidebar() {
   const container = document.getElementById('sidebar-toc');
   if (!container) return;
@@ -62,7 +77,7 @@ function renderSidebar() {
         }
         const isActive = currentPath.endsWith(item.href);
         const activeClass = isActive ? ' active' : '';
-        return `<li class="toc-item"><a href="${item.href}" class="${activeClass}">${item.label}</a></li>`;
+        return `<li class="toc-item"><a href="${basePath}${item.href}" class="${activeClass}">${item.label}</a></li>`;
       }).join('')}
     </ul>
   `;
